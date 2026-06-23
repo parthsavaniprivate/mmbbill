@@ -37,8 +37,10 @@ function ReportsPage() {
 
   if (!data) return <div className="text-muted-foreground">Loading…</div>;
 
-  const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) =>
-    isAll ? rows : rows.filter((r) => r.company_id === selected);
+  const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) => {
+    const byGlobal = isAll ? rows : rows.filter((r) => r.company_id === selected);
+    return companyFilter === "all" ? byGlobal : byGlobal.filter((r) => r.company_id === companyFilter);
+  };
 
   const invoices = filtCompany(data.invoices);
   const expenses = filtCompany(data.expenses);

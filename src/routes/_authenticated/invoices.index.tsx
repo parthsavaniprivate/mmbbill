@@ -30,6 +30,7 @@ function InvoicesPage() {
   const { selected, isAll, companies } = useCompany();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices"],

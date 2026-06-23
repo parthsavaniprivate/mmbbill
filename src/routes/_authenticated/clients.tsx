@@ -156,7 +156,7 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
     mobile: initial?.mobile ?? "",
     whatsapp: initial?.whatsapp ?? "",
     email: initial?.email ?? "",
-    gst_number: initial?.gst_number ?? "",
+    
     address: initial?.address ?? "",
     notes: initial?.notes ?? "",
     status: (initial?.status ?? "active") as Status,
@@ -191,7 +191,7 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
         <Field label="Mobile" value={form.mobile} onChange={(v) => setForm({ ...form, mobile: v })} />
         <Field label="WhatsApp" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
         <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-        <Field label="GST Number" value={form.gst_number} onChange={(v) => setForm({ ...form, gst_number: v })} />
+        
         <div className="space-y-1.5">
           <Label>Status</Label>
           <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>

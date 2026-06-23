@@ -94,13 +94,10 @@ function InvoiceDetail() {
             <div>
               <h2 className="text-2xl font-bold">{co?.name}</h2>
               {co?.address && <p className="text-sm text-muted-foreground whitespace-pre-line">{co.address}</p>}
-              {co?.gst_number && <p className="text-sm">GSTIN: {co.gst_number}</p>}
               {co?.phone && <p className="text-sm">{co.phone} {co.email && `· ${co.email}`}</p>}
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                {inv.invoice_type === "gst" ? "Tax Invoice" : "Proforma Invoice"}
-              </p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Invoice</p>
               <p className="text-2xl font-bold mt-1">{inv.invoice_number}</p>
               <Badge variant="outline" className="mt-2">{inv.status.replace("_", " ")}</Badge>
             </div>
@@ -112,7 +109,7 @@ function InvoiceDetail() {
               <p className="font-semibold">{cl?.business_name || cl?.client_name}</p>
               {cl?.business_name && <p className="text-sm">{cl.client_name}</p>}
               {cl?.address && <p className="text-sm text-muted-foreground whitespace-pre-line">{cl.address}</p>}
-              {cl?.gst_number && <p className="text-sm">GSTIN: {cl.gst_number}</p>}
+              
             </div>
             <div className="text-right">
               <p className="text-sm"><span className="text-muted-foreground">Date:</span> {formatDate(inv.invoice_date)}</p>
@@ -147,7 +144,7 @@ function InvoiceDetail() {
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{inr(Number(inv.subtotal))}</span></div>
               {Number(inv.discount) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span>- {inr(Number(inv.discount))}</span></div>}
-              {inv.invoice_type === "gst" && <div className="flex justify-between"><span className="text-muted-foreground">GST ({inv.gst_rate}%)</span><span>{inr(Number(inv.gst_amount))}</span></div>}
+              
               <div className="flex justify-between font-bold text-base border-t pt-2"><span>Total</span><span>{inr(Number(inv.total))}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Paid</span><span className="text-success">{inr(Number(inv.amount_paid))}</span></div>
               <div className="flex justify-between font-medium"><span>Balance</span><span className={pending > 0 ? "text-destructive" : ""}>{inr(pending)}</span></div>

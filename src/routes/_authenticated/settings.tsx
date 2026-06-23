@@ -28,7 +28,7 @@ function SettingsPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Configure company info, GST details, invoice settings, and WhatsApp templates.</p>
+        <p className="text-muted-foreground">Configure company info, invoice settings, and WhatsApp templates.</p>
       </div>
 
       <Tabs defaultValue={companies[0]?.id ?? ""}>
@@ -82,9 +82,8 @@ function CompanyForm({ company }: { company: Company }) {
         </CardContent>
       </Card>
 
-      <Card><CardHeader><CardTitle>GST & Invoice</CardTitle></CardHeader>
+      <Card><CardHeader><CardTitle>Invoice</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-3">
-          <F label="GST Number" value={form.gst_number ?? ""} onChange={(v) => upd("gst_number", v)} />
           <F label="PAN" value={form.pan_number ?? ""} onChange={(v) => upd("pan_number", v)} />
           <F label="Invoice Prefix" value={form.invoice_prefix} onChange={(v) => upd("invoice_prefix", v)} />
           <div className="space-y-1.5 md:col-span-2"><Label>Default Invoice Terms</Label>

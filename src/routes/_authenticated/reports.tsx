@@ -68,7 +68,7 @@ function ReportsPage() {
     } else {
       downloadCSV(fname, clients.map((c) => ({
         company: companies.find((co) => co.id === c.company_id)?.name,
-        name: c.client_name, business: c.business_name, status: c.status, email: c.email, mobile: c.mobile, gst: c.gst_number,
+        name: c.client_name, business: c.business_name, status: c.status, email: c.email, mobile: c.mobile,
       })));
     }
   };

@@ -112,7 +112,7 @@ function ClientDetail() {
       <div className="grid md:grid-cols-3 gap-4">
         <InfoCard label="Mobile" value={client.mobile} />
         <InfoCard label="Email" value={client.email} />
-        <InfoCard label="GST" value={client.gst_number} />
+        
         <InfoCard label="Status" value={client.status.replace("_", " ")} />
         <InfoCard label="Address" value={client.address} className="md:col-span-2" />
         {client.notes && <InfoCard label="Notes" value={client.notes} className="md:col-span-3" />}

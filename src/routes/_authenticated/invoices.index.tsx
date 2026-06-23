@@ -57,9 +57,7 @@ function InvoicesPage() {
       date: i.invoice_date,
       client: cl?.business_name || cl?.client_name || "",
       company: companies.find((c) => c.id === i.company_id)?.name || "",
-      type: i.invoice_type,
       subtotal: i.subtotal,
-      gst: i.gst_amount,
       total: i.total,
       paid: i.amount_paid,
       status: i.status,
@@ -105,7 +103,6 @@ function InvoicesPage() {
                   <TableHead>Number</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Paid</TableHead>
                   <TableHead>Status</TableHead>
@@ -121,7 +118,6 @@ function InvoicesPage() {
                       </TableCell>
                       <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
                       <TableCell>{formatDate(i.invoice_date)}</TableCell>
-                      <TableCell><Badge variant="outline">{i.invoice_type === "gst" ? "GST" : "Proforma"}</Badge></TableCell>
                       <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
                       <TableCell className="text-right">{inr(Number(i.amount_paid))}</TableCell>
                       <TableCell><Badge className={STATUS_COLORS[i.status]} variant="outline">{i.status.replace("_", " ")}</Badge></TableCell>

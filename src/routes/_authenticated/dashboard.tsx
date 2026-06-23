@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { inr, formatDate, monthKey } from "@/lib/format";
 import {
   TrendingUp, TrendingDown, Users, UserCheck, Clock, IndianRupee,
-  Wallet, BarChart3,
+  Wallet, BarChart3, CalendarIcon,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -15,8 +16,22 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
+
+type RangeKey = "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
+const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
+  { key: "1m", label: "1M", months: 1 },
+  { key: "3m", label: "3M", months: 3 },
+  { key: "6m", label: "6M", months: 6 },
+  { key: "12m", label: "12M", months: 12 },
+  { key: "2y", label: "2Y", months: 24 },
+  { key: "3y", label: "3Y", months: 36 },
+];
 
 function useAll() {
   return useQuery({

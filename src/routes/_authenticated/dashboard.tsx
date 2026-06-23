@@ -142,6 +142,11 @@ function Dashboard() {
   const { from, to } = useMemo(() => {
     const end = new Date();
     if (rangeKey === "custom") return { from: customFrom, to: customTo ?? end };
+    if (rangeKey === "tm") {
+      const start = new Date(end.getFullYear(), end.getMonth(), 1);
+      const last = new Date(end.getFullYear(), end.getMonth() + 1, 0);
+      return { from: start, to: last };
+    }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey)!;
     const start = new Date(end.getFullYear(), end.getMonth() - (preset.months - 1), 1);
     return { from: start, to: end };

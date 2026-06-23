@@ -49,10 +49,8 @@ function NewInvoicePage() {
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    const gst = type === "gst" ? +(afterDisc * Number(gstRate || 0) / 100).toFixed(2) : 0;
-    const total = afterDisc + gst;
-    return { subtotal, gst, total };
-  }, [items, discount, gstRate, type]);
+    return { subtotal, total: afterDisc };
+  }, [items, discount]);
 
   const create = useMutation({
     mutationFn: async () => {

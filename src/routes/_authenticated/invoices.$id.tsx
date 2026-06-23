@@ -213,6 +213,29 @@ function InvoiceDetail() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="no-print">
+        <CardHeader><CardTitle>Reminder History</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          {data.reminders.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground text-sm">No reminders sent yet.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Sent</TableHead><TableHead>Template</TableHead><TableHead>Channel</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {data.reminders.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>#{r.reminder_no}</TableCell>
+                    <TableCell>{formatDate(r.sent_at)}</TableCell>
+                    <TableCell><Badge variant="outline">{r.template.replace("_", " ")}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground">{r.channel}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

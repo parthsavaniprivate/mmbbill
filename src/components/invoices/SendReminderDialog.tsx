@@ -78,8 +78,9 @@ export function SendReminderDialog({ open, onOpenChange, invoice, client, compan
 
   const send = () => {
     if (!link) { toast.error("Client has no WhatsApp / mobile number"); return; }
-    const w = window.open(link, "_blank", "noopener,noreferrer");
-    if (!w) (window.top ?? window).location.href = link;
+    const a = document.createElement("a");
+    a.href = link; a.target = "_blank"; a.rel = "noopener noreferrer";
+    document.body.appendChild(a); a.click(); a.remove();
     log.mutate();
   };
 

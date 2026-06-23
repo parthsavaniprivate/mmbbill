@@ -507,8 +507,8 @@ function Dashboard() {
             ) : (
               <div className="space-y-2">
                 {recentPayments.map((p) => {
-                  const cl = p.clients as { client_name: string; business_name: string | null } | null;
-                  return (
+                  const inv = p.invoices as { clients: { client_name: string; business_name: string | null } | null } | null;
+                  const cl = inv?.clients ?? null;
                     <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                       <div className="min-w-0">
                         <p className="font-medium truncate">{cl?.business_name || cl?.client_name || "—"}</p>

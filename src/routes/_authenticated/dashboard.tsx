@@ -340,14 +340,16 @@ function Dashboard() {
         const totalBalance = totalBill - totalExp;
         const positive = totalBalance >= 0;
         return (
-          <Card className={cn("shadow-card", positive ? "border-emerald-500/40" : "border-red-500/40")}>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Balance (Total Bill − Total Expense)</CardDescription>
-              <CardTitle className={cn("text-3xl", positive ? "text-emerald-500" : "text-red-500")}>
-                {inr(totalBalance)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className={cn("shadow-card md:col-start-2", positive ? "border-emerald-500/40" : "border-red-500/40")}>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Balance (Bill − Expense)</CardDescription>
+                <CardTitle className={cn("text-2xl", positive ? "text-emerald-500" : "text-red-500")}>
+                  {inr(totalBalance)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
         );
       })()}
 

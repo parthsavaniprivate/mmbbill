@@ -311,6 +311,28 @@ function Dashboard() {
         </Card>
       </div>
 
+      {/* Fixed / Variable / Total expense summary */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="shadow-card border-orange-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Fixed Expense</CardDescription>
+            <CardTitle className="text-2xl text-orange-500">{inr(monthFixed)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="shadow-card border-purple-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Extra Expense</CardDescription>
+            <CardTitle className="text-2xl text-purple-500">{inr(monthVariable)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="shadow-card border-red-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Total (Fixed + Extra)</CardDescription>
+            <CardTitle className="text-2xl text-red-500">{inr(monthFixed + monthVariable)}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
 
       {/* Analytics chart */}
       <Card className="shadow-card">

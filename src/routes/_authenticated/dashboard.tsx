@@ -34,17 +34,20 @@ const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
   { key: "3y", label: "3Y", months: 36 },
 ];
 
-const FIXED_CATS = new Set(["employee_salary", "office", "internet", "software_subscriptions"]);
+const FIXED_CATS = new Set(["employee_salary", "office", "office_rent", "internet", "electricity", "software_subscriptions"]);
 const CAT_LABEL: Record<string, string> = {
   employee_salary: "Salary",
-  office: "Rent / Office",
+  office: "Office",
+  office_rent: "Office Rent",
   internet: "Internet",
+  electricity: "Electricity",
   software_subscriptions: "Software",
   facebook_ads: "Facebook Ads",
   instagram_ads: "Instagram Ads",
   google_ads: "Google Ads",
   travel: "Travel",
-  other: "Miscellaneous",
+  miscellaneous: "Miscellaneous",
+  other: "Other",
 };
 
 function useAll() {

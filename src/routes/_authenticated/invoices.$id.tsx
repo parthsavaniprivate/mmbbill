@@ -19,7 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Printer, MessageCircle, Plus, Bell } from "lucide-react";
-import { inr, formatDate } from "@/lib/format";
+import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
 

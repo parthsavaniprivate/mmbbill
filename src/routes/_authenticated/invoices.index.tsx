@@ -138,8 +138,8 @@ function InvoicesPage() {
                       </TableCell>
                       <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
                       <TableCell className="text-sm">
-                        {i.due_date ? formatDate(i.due_date) : "—"}
-                        {overdueDays > 0 && (
+                        {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}
+                        {pending > 0 && overdueDays > 0 && (
                           <div className="text-xs text-destructive">{overdueDays}d overdue</div>
                         )}
                       </TableCell>

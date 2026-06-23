@@ -144,7 +144,7 @@ function InvoiceDetail() {
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{inr(Number(inv.subtotal))}</span></div>
               {Number(inv.discount) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span>- {inr(Number(inv.discount))}</span></div>}
-              {inv.invoice_type === "gst" && <div className="flex justify-between"><span className="text-muted-foreground">GST ({inv.gst_rate}%)</span><span>{inr(Number(inv.gst_amount))}</span></div>}
+              
               <div className="flex justify-between font-bold text-base border-t pt-2"><span>Total</span><span>{inr(Number(inv.total))}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Paid</span><span className="text-success">{inr(Number(inv.amount_paid))}</span></div>
               <div className="flex justify-between font-medium"><span>Balance</span><span className={pending > 0 ? "text-destructive" : ""}>{inr(pending)}</span></div>

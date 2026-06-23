@@ -153,11 +153,6 @@ function Dashboard() {
   const expenses = filtCompany(data.expenses);
   const clients = filtCompany(data.clients);
   const packages = data.packages.filter((p) => isAll ? true : (p.clients as { company_id: string } | null)?.company_id === selected);
-  const payments = data.payments.filter((p) => {
-    if (isAll) return true;
-    const inv = p.invoices as { company_id: string } | null;
-    return inv?.company_id === selected;
-  });
 
   const thisMonth = monthKey(new Date());
   const monthInvoices = invoices.filter((i) => monthKey(i.invoice_date) === thisMonth);

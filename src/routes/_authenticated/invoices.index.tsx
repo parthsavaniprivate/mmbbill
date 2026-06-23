@@ -30,6 +30,7 @@ function InvoicesPage() {
   const { selected, isAll, companies } = useCompany();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices"],
@@ -41,6 +42,7 @@ function InvoicesPage() {
 
   const filtered = invoices.filter((i) => {
     if (!isAll && i.company_id !== selected) return false;
+    if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
     if (status !== "all" && i.status !== status) return false;
     if (search) {
       const cl = i.clients as { client_name: string; business_name: string | null } | null;
@@ -88,6 +90,15 @@ function InvoicesPage() {
             <SelectItem value="paid">Paid</SelectItem>
             <SelectItem value="overdue">Overdue</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={companyFilter} onValueChange={setCompanyFilter}>
+          <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Companies</SelectItem>
+            {companies.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

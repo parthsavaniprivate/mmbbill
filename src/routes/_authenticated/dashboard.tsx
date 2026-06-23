@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,20 +34,17 @@ const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
   { key: "3y", label: "3Y", months: 36 },
 ];
 
-const FIXED_CATS = new Set(["employee_salary", "office", "office_rent", "internet", "electricity", "software_subscriptions"]);
+const FIXED_CATS = new Set(["employee_salary", "office", "internet", "software_subscriptions"]);
 const CAT_LABEL: Record<string, string> = {
   employee_salary: "Salary",
-  office: "Office",
-  office_rent: "Office Rent",
+  office: "Rent / Office",
   internet: "Internet",
-  electricity: "Electricity",
   software_subscriptions: "Software",
   facebook_ads: "Facebook Ads",
   instagram_ads: "Instagram Ads",
   google_ads: "Google Ads",
   travel: "Travel",
-  miscellaneous: "Miscellaneous",
-  other: "Other",
+  other: "Miscellaneous",
 };
 
 function useAll() {
@@ -133,15 +130,6 @@ function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
 function Dashboard() {
   const { selected, isAll, companies } = useCompany();
   const { data, isLoading } = useAll();
-  const qc = useQueryClient();
-
-  useEffect(() => {
-    supabase.rpc("generate_recurring_expenses").then(({ data: n }) => {
-      if (n && n > 0) qc.invalidateQueries({ queryKey: ["dashboard-data"] });
-    });
-  }, [qc]);
-
-
 
   const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();

@@ -333,6 +333,24 @@ function Dashboard() {
         </Card>
       </div>
 
+      {/* Total Balance = Total Bill - Total Expense */}
+      {(() => {
+        const totalBill = monthDue + monthCleared;
+        const totalExp = monthFixed + monthVariable;
+        const totalBalance = totalBill - totalExp;
+        const positive = totalBalance >= 0;
+        return (
+          <Card className={cn("shadow-card", positive ? "border-emerald-500/40" : "border-red-500/40")}>
+            <CardHeader className="pb-2">
+              <CardDescription>Total Balance (Total Bill − Total Expense)</CardDescription>
+              <CardTitle className={cn("text-3xl", positive ? "text-emerald-500" : "text-red-500")}>
+                {inr(totalBalance)}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        );
+      })()}
+
 
       {/* Analytics chart */}
       <Card className="shadow-card">

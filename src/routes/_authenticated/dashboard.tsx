@@ -254,7 +254,7 @@ function Dashboard() {
       {/* HERO: Collection · Expenses · Balance */}
       <div className="grid gap-4 md:grid-cols-3">
         <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Current month" accent="primary" icon={IndianRupee}>
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Cleared</p>
               <p className="font-semibold text-emerald-500">{inr(monthCleared)}</p>
@@ -262,10 +262,6 @@ function Dashboard() {
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Due</p>
               <p className="font-semibold text-amber-500">{inr(monthDue)}</p>
-            </div>
-            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
-              <p className="text-muted-foreground">Collected</p>
-              <p className="font-semibold">{collectionPct.toFixed(1)}%</p>
             </div>
           </div>
         </HeroKpi>

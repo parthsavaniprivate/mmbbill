@@ -149,7 +149,7 @@ function NewInvoicePage() {
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
           <Row label="Subtotal" value={inr(totals.subtotal)} />
           <Row label="Discount" value={`- ${inr(Number(discount || 0))}`} />
-          {type === "gst" && <Row label={`GST (${gstRate}%)`} value={inr(totals.gst)} />}
+          
           <div className="border-t pt-2"><Row label="Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>

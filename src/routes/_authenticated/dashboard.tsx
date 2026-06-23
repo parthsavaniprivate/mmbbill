@@ -305,12 +305,6 @@ function Dashboard() {
         </HeroKpi>
       </div>
 
-      {/* Secondary KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <MiniKpi title="Active Clients" value={String(activeClients)} icon={UserCheck} tone="ok" />
-        <MiniKpi title="Pending Renewals" value={String(upcoming.length)} icon={Bell} tone="warn" />
-        <MiniKpi title="Overdue Payments" value={inr(overdue)} icon={AlertCircle} tone="danger" />
-      </div>
 
       {/* Analytics chart */}
       <Card className="shadow-card">

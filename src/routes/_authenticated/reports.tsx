@@ -125,6 +125,17 @@ function ReportsPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1.5"><Label>Company</Label>
+          <Select value={companyFilter} onValueChange={setCompanyFilter}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Companies</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardContent></Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

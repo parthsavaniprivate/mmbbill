@@ -289,66 +289,77 @@ function Dashboard() {
         </HeroKpi>
       </div>
 
-      {/* Due / Clear / Total summary */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="shadow-card border-amber-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Due</CardDescription>
-            <CardTitle className="text-2xl text-amber-500">{inr(monthDue)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="shadow-card border-emerald-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Clear</CardDescription>
-            <CardTitle className="text-2xl text-emerald-500">{inr(monthCleared)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="shadow-card border-blue-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Total (Due + Clear)</CardDescription>
-            <CardTitle className="text-2xl text-blue-500">{inr(monthDue + monthCleared)}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Fixed / Variable / Total expense summary */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="shadow-card border-orange-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Fixed Expense</CardDescription>
-            <CardTitle className="text-2xl text-orange-500">{inr(monthFixed)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="shadow-card border-purple-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Extra Expense</CardDescription>
-            <CardTitle className="text-2xl text-purple-500">{inr(monthVariable)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="shadow-card border-red-500/30">
-          <CardHeader className="pb-2">
-            <CardDescription>Total (Fixed + Extra)</CardDescription>
-            <CardTitle className="text-2xl text-red-500">{inr(monthFixed + monthVariable)}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Total Balance = Total Bill - Total Expense */}
+      {/* Financial summary: 4 cards bracketed into Total Balance */}
       {(() => {
-        const totalBill = monthDue + monthCleared;
-        const totalExp = monthFixed + monthVariable;
-        const totalBalance = totalBill - totalExp;
+        const totalCollection = monthDue + monthCleared;
+        const totalExpenses = monthFixed + monthVariable;
+        const totalBalance = totalCollection - totalExpenses;
         const positive = totalBalance >= 0;
+
+        const miniCard = (label: string, value: string, color: string, borderColor: string) => (
+          <div className={cn(
+            "relative rounded-xl border bg-card/60 backdrop-blur p-4 shadow-card transition-all hover:scale-[1.02] hover:shadow-lg",
+            borderColor,
+          )}>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+            <p className={cn("text-xl md:text-2xl font-extrabold mt-1.5 tracking-tight", color)}>{value}</p>
+          </div>
+        );
+
         return (
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className={cn("shadow-card md:col-start-2", positive ? "border-emerald-500/40" : "border-red-500/40")}>
-              <CardHeader className="pb-2">
-                <CardDescription>Total Balance (Bill − Expense)</CardDescription>
-                <CardTitle className={cn("text-2xl", positive ? "text-emerald-500" : "text-red-500")}>
-                  {inr(totalBalance)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+          <div className="grid gap-4 md:grid-cols-[1fr_auto_1.1fr] md:items-stretch">
+            {/* Left: 4 cards in 2 rows */}
+            <div className="grid grid-cols-2 gap-3">
+              {miniCard("Due Amount", inr(monthDue), "text-amber-500", "border-amber-500/40")}
+              {miniCard("Cleared Amount", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
+              {miniCard("Fixed Expense", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
+              {miniCard("Variable Expense", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
+            </div>
+
+            {/* Bracket: SVG on md+, horizontal arrow on mobile */}
+            <div className="hidden md:flex items-center justify-center px-1">
+              <svg viewBox="0 0 40 200" preserveAspectRatio="none" className="h-full w-10 text-border" aria-hidden>
+                <path
+                  d="M 4 4 Q 28 4 28 50 Q 28 100 36 100 Q 28 100 28 150 Q 28 196 4 196"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <div className="flex md:hidden items-center justify-center py-1 text-muted-foreground text-2xl">↓</div>
+
+            {/* Right: Total Balance hero */}
+            <div className={cn(
+              "relative overflow-hidden rounded-2xl border-2 p-6 md:p-8 backdrop-blur-xl flex flex-col justify-center",
+              "bg-gradient-to-br shadow-xl transition-all animate-fade-in",
+              positive
+                ? "from-emerald-500/20 via-emerald-500/5 to-transparent border-emerald-500/50 shadow-emerald-500/20"
+                : "from-red-500/20 via-red-500/5 to-transparent border-red-500/50 shadow-red-500/20",
+            )}>
+              <div className={cn(
+                "absolute -inset-1 rounded-2xl blur-2xl opacity-30 -z-10",
+                positive ? "bg-emerald-500/40" : "bg-red-500/40",
+              )} />
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold">Total Balance</p>
+              <p className={cn(
+                "text-4xl md:text-5xl font-extrabold mt-2 tracking-tight",
+                positive ? "text-emerald-500" : "text-red-500",
+              )}>
+                {inr(totalBalance)}
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Collection</span>
+                <span className="font-semibold text-emerald-500">{inr(totalCollection)}</span>
+                <span className="text-muted-foreground">−</span>
+                <span className="text-muted-foreground">Expenses</span>
+                <span className="font-semibold text-orange-500">{inr(totalExpenses)}</span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {positive ? "Net Profit this month" : "Net Loss this month"}
+              </p>
+            </div>
           </div>
         );
       })()}

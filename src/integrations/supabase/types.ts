@@ -14,16 +14,580 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      client_files: {
+        Row: {
+          category: Database["public"]["Enums"]["file_category"]
+          client_id: string
+          file_name: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["file_category"]
+          client_id: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["file_category"]
+          client_id?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_files_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          client_name: string
+          company_id: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          gst_number: string | null
+          id: string
+          mobile: string | null
+          notes: string | null
+          status: Database["public"]["Enums"]["client_status"]
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name?: string | null
+          client_name: string
+          company_id: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          mobile?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["client_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string | null
+          client_name?: string
+          company_id?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          mobile?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["client_status"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          address: string | null
+          bank_account: string | null
+          bank_ifsc: string | null
+          bank_name: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          gst_number: string | null
+          id: string
+          invoice_prefix: string
+          invoice_terms: string | null
+          legal_name: string | null
+          logo_url: string | null
+          name: string
+          pan_number: string | null
+          phone: string | null
+          pincode: string | null
+          state: string | null
+          updated_at: string
+          website: string | null
+          whatsapp_template: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          invoice_prefix?: string
+          invoice_terms?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name: string
+          pan_number?: string | null
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp_template?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account?: string | null
+          bank_ifsc?: string | null
+          bank_name?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          invoice_prefix?: string
+          invoice_terms?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name?: string
+          pan_number?: string | null
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp_template?: string | null
+        }
+        Relationships: []
+      }
+      deliverables: {
+        Row: {
+          completed: number
+          created_at: string
+          id: string
+          month: string
+          monthly_target: number
+          name: string
+          package_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: number
+          created_at?: string
+          id?: string
+          month?: string
+          monthly_target?: number
+          name: string
+          package_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: number
+          created_at?: string
+          id?: string
+          month?: string
+          monthly_target?: number
+          name?: string
+          package_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverables_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          company_id: string
+          created_at: string
+          description: string | null
+          expense_date: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"] | null
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          company_id: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          position: number
+          quantity: number
+          rate: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          position?: number
+          quantity?: number
+          rate?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          position?: number
+          quantity?: number
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          client_id: string
+          company_id: string
+          created_at: string
+          discount: number
+          due_date: string | null
+          gst_amount: number
+          gst_rate: number
+          id: string
+          invoice_date: string
+          invoice_number: string
+          invoice_type: Database["public"]["Enums"]["invoice_type"]
+          notes: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal: number
+          terms: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          client_id: string
+          company_id: string
+          created_at?: string
+          discount?: number
+          due_date?: string | null
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          notes?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          terms?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          discount?: number
+          due_date?: string | null
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          notes?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          terms?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          client_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          monthly_amount: number
+          name: string
+          notes: string | null
+          renewal_date: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["package_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_amount?: number
+          name: string
+          notes?: string | null
+          renewal_date?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["package_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_amount?: number
+          name?: string
+          notes?: string | null
+          renewal_date?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["package_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          payment_date: string
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          payment_date?: string
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          payment_date?: string
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
+      next_invoice_number: {
+        Args: {
+          _company_id: string
+          _type: Database["public"]["Enums"]["invoice_type"]
+        }
+        Returns: string
+      }
+      recalc_invoice_status: {
+        Args: { _invoice_id: string }
+        Returns: undefined
+      }
+      recalc_invoice_totals: {
+        Args: { _invoice_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      client_status: "active" | "on_hold" | "completed" | "cancelled"
+      expense_category:
+        | "facebook_ads"
+        | "instagram_ads"
+        | "google_ads"
+        | "employee_salary"
+        | "software_subscriptions"
+        | "internet"
+        | "office"
+        | "travel"
+        | "other"
+      file_category: "agreement" | "invoice" | "branding" | "content" | "other"
+      invoice_status:
+        | "draft"
+        | "pending"
+        | "partially_paid"
+        | "paid"
+        | "overdue"
+        | "cancelled"
+      invoice_type: "gst" | "proforma"
+      package_status: "active" | "paused" | "expired" | "cancelled"
+      payment_method:
+        | "cash"
+        | "bank_transfer"
+        | "upi"
+        | "card"
+        | "cheque"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +714,39 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      client_status: ["active", "on_hold", "completed", "cancelled"],
+      expense_category: [
+        "facebook_ads",
+        "instagram_ads",
+        "google_ads",
+        "employee_salary",
+        "software_subscriptions",
+        "internet",
+        "office",
+        "travel",
+        "other",
+      ],
+      file_category: ["agreement", "invoice", "branding", "content", "other"],
+      invoice_status: [
+        "draft",
+        "pending",
+        "partially_paid",
+        "paid",
+        "overdue",
+        "cancelled",
+      ],
+      invoice_type: ["gst", "proforma"],
+      package_status: ["active", "paused", "expired", "cancelled"],
+      payment_method: [
+        "cash",
+        "bank_transfer",
+        "upi",
+        "card",
+        "cheque",
+        "other",
+      ],
+    },
   },
 } as const

@@ -86,6 +86,22 @@ function Dashboard() {
   const { selected, isAll, companies } = useCompany();
   const { data, isLoading } = useAll();
 
+  // Analytics chart filters
+  const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [chartCompany, setChartCompany] = useState<string>("all");
+
+  const { from, to } = useMemo(() => {
+    const end = new Date();
+    if (rangeKey === "custom") {
+      return { from: customFrom, to: customTo ?? end };
+    }
+    const preset = RANGE_PRESETS.find((p) => p.key === rangeKey)!;
+    const start = new Date(end.getFullYear(), end.getMonth() - (preset.months - 1), 1);
+    return { from: start, to: end };
+  }, [rangeKey, customFrom, customTo]);
+
   if (isLoading || !data) return <div className="text-muted-foreground">Loading dashboard…</div>;
 
   const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) =>
@@ -109,7 +125,48 @@ function Dashboard() {
   const monthExp = expenses.filter((e) => monthKey(e.expense_date) === thisMonth)
     .reduce((s, e) => s + Number(e.amount || 0), 0);
 
-  // Monthly aggregations (last 6 months)
+  // ----- Analytics chart data (respects rangeKey + chartCompany) -----
+  const chartInvoices = chartCompany === "all" ? data.invoices : data.invoices.filter((i) => i.company_id === chartCompany);
+  const chartExpenses = chartCompany === "all" ? data.expenses : data.expenses.filter((e) => e.company_id === chartCompany);
+
+  const inRange = (d: string | Date) => {
+    if (!from || !to) return true;
+    const dt = new Date(d);
+    return dt >= new Date(from.getFullYear(), from.getMonth(), from.getDate()) &&
+      dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59);
+  };
+
+  const rangedInvoices = chartInvoices.filter((i) => inRange(i.invoice_date));
+  const rangedExpenses = chartExpenses.filter((e) => inRange(e.expense_date));
+
+  const startMonth = from ?? new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1);
+  const endMonth = to ?? new Date();
+  const chartMonths: string[] = [];
+  const cursor = new Date(startMonth.getFullYear(), startMonth.getMonth(), 1);
+  const last = new Date(endMonth.getFullYear(), endMonth.getMonth(), 1);
+  while (cursor <= last) {
+    chartMonths.push(monthKey(cursor));
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  const chartData = chartMonths.map((m) => {
+    const rev = rangedInvoices.filter((i) => monthKey(i.invoice_date) === m)
+      .reduce((s, i) => s + Number(i.amount_paid || 0), 0);
+    const exp = rangedExpenses.filter((e) => monthKey(e.expense_date) === m)
+      .reduce((s, e) => s + Number(e.amount || 0), 0);
+    return { month: m.slice(5) + "/" + m.slice(2, 4), revenue: rev, expenses: exp, profit: rev - exp };
+  });
+
+  const chartTotals = chartData.reduce(
+    (acc, d) => ({ revenue: acc.revenue + d.revenue, expenses: acc.expenses + d.expenses, profit: acc.profit + d.profit }),
+    { revenue: 0, expenses: 0, profit: 0 },
+  );
+  const half = Math.floor(chartData.length / 2);
+  const firstHalfRev = chartData.slice(0, half).reduce((s, d) => s + d.revenue, 0);
+  const secondHalfRev = chartData.slice(half).reduce((s, d) => s + d.revenue, 0);
+  const growthPct = firstHalfRev > 0 ? ((secondHalfRev - firstHalfRev) / firstHalfRev) * 100 : (secondHalfRev > 0 ? 100 : 0);
+
+  // Monthly aggregations (last 6 months) for other charts
   const months: string[] = [];
   const now = new Date();
   for (let i = 5; i >= 0; i--) {
@@ -151,6 +208,9 @@ function Dashboard() {
     .slice(0, 5);
 
   const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+  const REV_COLOR = "#3b82f6";   // blue
+  const EXP_COLOR = "#f97316";   // orange/red
+  const PROFIT_COLOR = "#10b981"; // green
 
   return (
     <div className="space-y-6">
@@ -172,32 +232,118 @@ function Dashboard() {
         <Kpi title="This Month Profit" value={inr(monthRev - monthExp)} icon={BarChart3} trend={monthRev - monthExp >= 0 ? "up" : "down"} />
       </div>
 
+      {/* Analytics: Revenue vs Expenses vs Profit */}
+      <Card className="shadow-card">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle>Revenue, Expenses & Profit</CardTitle>
+              <CardDescription>Trend analysis with growth comparison</CardDescription>
+            </div>
+            <Select value={chartCompany} onValueChange={setChartCompany}>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {RANGE_PRESETS.map((p) => (
+              <Button
+                key={p.key}
+                variant={rangeKey === p.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setRangeKey(p.key)}
+              >
+                {p.label}
+              </Button>
+            ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={rangeKey === "custom" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                  {rangeKey === "custom" && customFrom
+                    ? `${formatDate(customFrom)} – ${customTo ? formatDate(customTo) : "…"}`
+                    : "Custom"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="end">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div>
+                    <p className="text-xs font-medium mb-1 text-muted-foreground">Start date</p>
+                    <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium mb-1 text-muted-foreground">End date</p>
+                    <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Total Revenue</p>
+              <p className="text-lg font-bold" style={{ color: REV_COLOR }}>{inr(chartTotals.revenue)}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Total Expenses</p>
+              <p className="text-lg font-bold" style={{ color: EXP_COLOR }}>{inr(chartTotals.expenses)}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Net Profit</p>
+              <p className="text-lg font-bold" style={{ color: PROFIT_COLOR }}>{inr(chartTotals.profit)}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Revenue Growth</p>
+              <p className={`text-lg font-bold ${growthPct >= 0 ? "text-success" : "text-destructive"}`}>
+                {growthPct >= 0 ? "▲" : "▼"} {Math.abs(growthPct).toFixed(1)}%
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="grad-rev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={REV_COLOR} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={REV_COLOR} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="grad-exp" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={EXP_COLOR} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={EXP_COLOR} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="grad-profit" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={PROFIT_COLOR} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={PROFIT_COLOR} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+              <Tooltip
+                contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
+                formatter={(v: number, name: string) => [inr(v), name.charAt(0).toUpperCase() + name.slice(1)]}
+              />
+              <Legend wrapperStyle={{ paddingTop: 8 }} />
+              <Area type="monotone" dataKey="revenue" name="Revenue" stroke={REV_COLOR} fill="url(#grad-rev)" strokeWidth={2.5} animationDuration={800} />
+              <Area type="monotone" dataKey="expenses" name="Expenses" stroke={EXP_COLOR} fill="url(#grad-exp)" strokeWidth={2.5} animationDuration={800} />
+              <Area type="monotone" dataKey="profit" name="Profit" stroke={PROFIT_COLOR} fill="url(#grad-profit)" strokeWidth={2.5} animationDuration={800} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="shadow-card">
-          <CardHeader><CardTitle>Revenue vs Expenses</CardTitle><CardDescription>Last 6 months</CardDescription></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthly}>
-                <defs>
-                  <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="exp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--chart-4)" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
-                  formatter={(v: number) => inr(v)} />
-                <Area type="monotone" dataKey="revenue" stroke="var(--chart-1)" fill="url(#rev)" strokeWidth={2} />
-                <Area type="monotone" dataKey="expenses" stroke="var(--chart-4)" fill="url(#exp)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
+
         </Card>
 
         <Card className="shadow-card">

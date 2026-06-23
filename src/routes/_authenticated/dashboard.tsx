@@ -343,24 +343,6 @@ function Dashboard() {
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-4">
-
-
-        <Card className="shadow-card">
-          <CardHeader><CardTitle>Monthly Profit</CardTitle><CardDescription>Net profit trend</CardDescription></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthly}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
-                  formatter={(v: number) => inr(v)} />
-                <Line type="monotone" dataKey="profit" stroke="var(--chart-2)" strokeWidth={3} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
         <Card className="shadow-card">
           <CardHeader><CardTitle>Revenue by Company</CardTitle></CardHeader>
           <CardContent className="h-72">
@@ -376,26 +358,8 @@ function Dashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        <Card className="shadow-card">
-          <CardHeader><CardTitle>Top Clients by Revenue</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            {topClients.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data yet</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={topClients} dataKey="rev" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
-                    {topClients.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => inr(v)} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
 
       <Card className="shadow-card">
         <CardHeader className="flex-row items-center justify-between">

@@ -22,6 +22,7 @@ import { ArrowLeft, Printer, MessageCircle, Plus, Bell } from "lucide-react";
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
+import { BillOfSupplyTemplate, ModernPurpleTemplate } from "@/components/invoices/InvoiceTemplates";
 
 const REMINDABLE = ["pending", "partially_paid", "overdue"];
 
@@ -114,106 +115,19 @@ function InvoiceDetail() {
         companyName={co?.name}
       />
 
-      <Card className="shadow-card print:shadow-none bg-white text-black">
-        <CardContent className="p-10 space-y-6">
-          {/* Top strip */}
-          <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
-            <span className="uppercase">{inv.invoice_type === "proforma" ? "Proforma Invoice" : "Bill of Supply"}</span>
-            <span className="border border-gray-300 text-gray-500 px-2 py-0.5 rounded uppercase">Original for Recipient</span>
-          </div>
-
-          {/* Company header */}
-          <div className="flex items-start gap-6 pt-2">
-            {co?.logo_url ? (
-              <img src={co.logo_url} alt={co.name} className="w-28 h-28 object-contain shrink-0" />
-            ) : (
-              <div className="w-28 h-28 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
-            )}
-            <div className="flex-1 text-center">
-              <h2 className="text-3xl font-extrabold uppercase tracking-wide">{co?.name}</h2>
-              {co?.address && <p className="text-sm mt-1 text-gray-700 whitespace-pre-line">{co.address}</p>}
-              {co?.phone && <p className="text-sm mt-1"><span className="font-semibold">Mobile:</span> {co.phone}</p>}
-            </div>
-          </div>
-
-          <div className="h-1 bg-black" />
-
-          {/* Invoice meta */}
-          <div className="bg-gray-100 grid grid-cols-3 gap-4 px-5 py-3 text-sm">
-            <div><span className="font-bold">Invoice No.:</span> {inv.invoice_number}</div>
-            <div><span className="font-bold">Invoice Date:</span> {formatDate(inv.invoice_date)}</div>
-            <div className="text-right"><span className="font-bold">Due Date:</span> {inv.due_date ? formatDate(inv.due_date) : "—"}</div>
-          </div>
-
-          {/* Bill to */}
-          <div>
-            <p className="text-sm font-bold uppercase mb-1">Bill To</p>
-            <p className="font-bold">{cl?.business_name || cl?.client_name}</p>
-            {cl?.business_name && <p className="text-sm">{cl.client_name}</p>}
-            {cl?.address && <p className="text-sm text-gray-700 whitespace-pre-line">{cl.address}</p>}
-          </div>
-
-          {/* Items */}
-          <div>
-            <div className="border-t-2 border-b border-black grid grid-cols-12 py-2 text-xs font-bold uppercase">
-              <div className="col-span-6">Services</div>
-              <div className="col-span-2 text-right">Qty.</div>
-              <div className="col-span-2 text-right">Rate</div>
-              <div className="col-span-2 text-right">Amount</div>
-            </div>
-            {data.items.map((it) => (
-              <div key={it.id} className="grid grid-cols-12 py-3 text-sm border-b border-gray-200">
-                <div className="col-span-6 uppercase">{it.description}</div>
-                <div className="col-span-2 text-right">{it.quantity} PCS</div>
-                <div className="col-span-2 text-right">{Number(it.rate).toLocaleString("en-IN")}</div>
-                <div className="col-span-2 text-right">{Number(it.amount).toLocaleString("en-IN")}</div>
-              </div>
-            ))}
-            <div className="grid grid-cols-12 py-2 text-sm font-bold border-b-2 border-black">
-              <div className="col-span-6 uppercase">Subtotal</div>
-              <div className="col-span-2 text-right">{data.items.reduce((s, i) => s + Number(i.quantity), 0)}</div>
-              <div className="col-span-2" />
-              <div className="col-span-2 text-right">₹ {Number(inv.subtotal).toLocaleString("en-IN")}</div>
-            </div>
-          </div>
-
-          {/* Totals */}
-          <div className="flex justify-end">
-            <div className="w-80 text-sm">
-              {Number(inv.discount) > 0 && (
-                <div className="flex justify-between py-1"><span>Discount</span><span>- ₹ {Number(inv.discount).toLocaleString("en-IN")}</span></div>
-              )}
-              <div className="flex justify-between py-2 border-t font-bold">
-                <span>Total Amount</span><span>₹ {Number(inv.total).toLocaleString("en-IN")}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span>Received Amount</span><span>₹ {Number(inv.amount_paid).toLocaleString("en-IN")}</span>
-              </div>
-              {pending > 0 && (
-                <div className="flex justify-between py-1 font-semibold">
-                  <span>Balance Due</span><span>₹ {pending.toLocaleString("en-IN")}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="text-right text-sm">
-            <p className="font-bold">Total Amount (in words)</p>
-            <p>{amountInWords(Math.round(Number(inv.total)))} Rupees Only</p>
-          </div>
-
-          {(inv.notes || inv.terms || co?.bank_name) && (
-            <div className="pt-4 border-t space-y-3 text-sm">
-              {inv.notes && <div><p className="font-bold">Notes</p><p className="whitespace-pre-line">{inv.notes}</p></div>}
-              {inv.terms && <div><p className="font-bold">Terms & Conditions</p><p className="whitespace-pre-line">{inv.terms}</p></div>}
-              {co?.bank_name && (
-                <div><p className="font-bold">Bank Details</p>
-                  <p>{co.bank_name} · A/c: {co.bank_account} · IFSC: {co.bank_ifsc}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
+      <Card className="shadow-card print:shadow-none overflow-hidden">
+        {(() => {
+          const tplData = {
+            invoice: inv,
+            items: data.items,
+            company: co,
+            client: cl,
+          } as Parameters<typeof BillOfSupplyTemplate>[0]["data"];
+          const useModern = (co?.name || "").toLowerCase().includes("janki");
+          return useModern
+            ? <ModernPurpleTemplate data={tplData} />
+            : <BillOfSupplyTemplate data={tplData} />;
+        })()}
       </Card>
 
       <Card className="no-print">

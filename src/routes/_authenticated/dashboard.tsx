@@ -344,7 +344,6 @@ function Dashboard() {
 
       <div className="grid lg:grid-cols-2 gap-4">
 
-        </Card>
 
         <Card className="shadow-card">
           <CardHeader><CardTitle>Monthly Profit</CardTitle><CardDescription>Net profit trend</CardDescription></CardHeader>

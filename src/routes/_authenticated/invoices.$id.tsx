@@ -50,7 +50,7 @@ function InvoiceDetail() {
   if (!data?.invoice) return <div className="text-muted-foreground">Loading…</div>;
   const inv = data.invoice;
   const cl = inv.clients as { client_name: string; business_name: string | null; gst_number: string | null; address: string | null; email: string | null; mobile: string | null; whatsapp: string | null } | null;
-  const co = inv.companies as { name: string; address: string | null; gst_number: string | null; phone: string | null; email: string | null; invoice_terms: string | null; bank_name: string | null; bank_account: string | null; bank_ifsc: string | null } | null;
+  const co = inv.companies as { name: string; address: string | null; gst_number: string | null; phone: string | null; email: string | null; invoice_terms: string | null; bank_name: string | null; bank_account: string | null; bank_ifsc: string | null; logo_url: string | null } | null;
   const pending = Number(inv.total) - Number(inv.amount_paid);
 
   const waLink = (() => {

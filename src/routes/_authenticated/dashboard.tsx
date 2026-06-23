@@ -252,14 +252,42 @@ function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Financial Overview</h1>
           <p className="text-muted-foreground">
-            {isAll ? "All companies" : companies.find((c) => c.id === selected)?.name} · {new Date().toLocaleString("en-IN", { month: "long", year: "numeric" })}
+            {isAll ? "All companies" : companies.find((c) => c.id === selected)?.name}
+            {from && to ? ` · ${formatDate(from)} – ${formatDate(to)}` : ""}
           </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {RANGE_PRESETS.map((p) => (
+            <Button key={p.key} variant={rangeKey === p.key ? "default" : "outline"} size="sm" onClick={() => setRangeKey(p.key)}>
+              {p.label}
+            </Button>
+          ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={rangeKey === "custom" ? "default" : "outline"} size="sm" className="gap-2">
+                <CalendarIcon className="w-4 h-4" />
+                {rangeKey === "custom" && customFrom ? `${formatDate(customFrom)} – ${customTo ? formatDate(customTo) : "…"}` : "Custom"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-3" align="end">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div>
+                  <p className="text-xs font-medium mb-1 text-muted-foreground">Start date</p>
+                  <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium mb-1 text-muted-foreground">End date</p>
+                  <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       {/* HERO: Collection · Expenses · Balance */}
       <div className="grid gap-4 md:grid-cols-3">
-        <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Current month" accent="primary" icon={IndianRupee}>
+        <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Selected range" accent="primary" icon={IndianRupee}>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Cleared</p>

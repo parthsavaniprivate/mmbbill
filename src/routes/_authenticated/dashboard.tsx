@@ -133,6 +133,15 @@ function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
 function Dashboard() {
   const { selected, isAll, companies } = useCompany();
   const { data, isLoading } = useAll();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    supabase.rpc("generate_recurring_expenses").then(({ data: n }) => {
+      if (n && n > 0) qc.invalidateQueries({ queryKey: ["dashboard-data"] });
+    });
+  }, [qc]);
+
+
 
   const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();

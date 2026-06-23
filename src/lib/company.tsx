@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export type Company = { id: string; name: string };
 export const ALL = "all";
@@ -16,6 +17,7 @@ interface Ctx {
 const CompanyCtx = createContext<Ctx | null>(null);
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
   const [selected, setSelectedState] = useState<string>(ALL);
 
   useEffect(() => {
@@ -29,7 +31,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   };
 
   const { data: companies = [] } = useQuery({
-    queryKey: ["companies"],
+    queryKey: ["companies", user?.id ?? null],
+    enabled: !loading && !!user,
     queryFn: async () => {
       const { data, error } = await supabase.from("companies").select("id, name").order("name");
       if (error) throw error;

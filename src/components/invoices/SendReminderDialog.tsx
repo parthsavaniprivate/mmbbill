@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -36,8 +36,7 @@ export function SendReminderDialog({ open, onOpenChange, invoice, client, compan
   const pending = Number(invoice.total) - Number(invoice.amount_paid);
   const nextNo = (invoice.reminders_sent ?? 0) + 1;
   const isOverdue = invoice.status === "overdue";
-  const defaultTone = pickReminderTone(nextNo, isOverdue);
-  const [tone, setTone] = useState<ReminderTone>(defaultTone);
+  const [tone, setTone] = useState<ReminderTone>(pickReminderTone(nextNo, isOverdue));
 
   const defaultMessage = useMemo(
     () => buildReminderMessage({
@@ -49,8 +48,7 @@ export function SendReminderDialog({ open, onOpenChange, invoice, client, compan
     [client, invoice, pending, companyName, tone],
   );
   const [message, setMessage] = useState(defaultMessage);
-  // resync when tone changes
-  useMemoSync(defaultMessage, setMessage, [tone]);
+  useEffect(() => { setMessage(defaultMessage); }, [defaultMessage]);
 
   const phone = client?.whatsapp || client?.mobile;
   const link = waLink(phone, message);
@@ -79,10 +77,7 @@ export function SendReminderDialog({ open, onOpenChange, invoice, client, compan
   });
 
   const send = () => {
-    if (!link) {
-      toast.error("Client has no WhatsApp / mobile number");
-      return;
-    }
+    if (!link) { toast.error("Client has no WhatsApp / mobile number"); return; }
     window.open(link, "_blank");
     log.mutate();
   };
@@ -123,12 +118,6 @@ export function SendReminderDialog({ open, onOpenChange, invoice, client, compan
       </AlertDialogContent>
     </AlertDialog>
   );
-}
-
-// Tiny helper: when deps change, reset the textarea to the regenerated default.
-import { useEffect } from "react";
-function useMemoSync(value: string, setter: (v: string) => void, deps: unknown[]) {
-  useEffect(() => { setter(value); /* eslint-disable-next-line */ }, deps);
 }
 
 export function MarkAsPaidButton({ invoiceId, pending, onDone }: {

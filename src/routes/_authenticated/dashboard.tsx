@@ -257,6 +257,13 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Select value={selected} onValueChange={setSelected}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Companies</SelectItem>
+              {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           {RANGE_PRESETS.map((p) => (
             <Button key={p.key} variant={rangeKey === p.key ? "default" : "outline"} size="sm" onClick={() => setRangeKey(p.key)}>
               {p.label}

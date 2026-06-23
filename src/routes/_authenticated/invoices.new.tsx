@@ -32,7 +32,7 @@ function NewInvoicePage() {
   const [dueDate, setDueDate] = useState(addMonth(new Date().toISOString().slice(0, 10)));
   const [discount, setDiscount] = useState("0");
   const [notes, setNotes] = useState("");
-  const [terms, setTerms] = useState("Payment due within 7 days.");
+  const [terms, setTerms] = useState("Payment due within 30 days.");
   const [items, setItems] = useState<Item[]>([{ description: "", quantity: 1, rate: 0 }]);
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);

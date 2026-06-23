@@ -154,9 +154,15 @@ function Dashboard() {
   const clients = filtCompany(data.clients);
   const packages = data.packages.filter((p) => isAll ? true : (p.clients as { company_id: string } | null)?.company_id === selected);
 
-  const thisMonth = monthKey(new Date());
-  const monthInvoices = invoices.filter((i) => monthKey(i.invoice_date) === thisMonth);
-  const monthExpRows = expenses.filter((e) => monthKey(e.expense_date) === thisMonth);
+  const inDateRange = (d: string | Date | null | undefined) => {
+    if (!d) return false;
+    if (!from || !to) return true;
+    const dt = new Date(d);
+    return dt >= new Date(from.getFullYear(), from.getMonth(), from.getDate()) &&
+      dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59);
+  };
+  const monthInvoices = invoices.filter((i) => inDateRange(i.invoice_date));
+  const monthExpRows = expenses.filter((e) => inDateRange(e.expense_date));
 
   // Collection (current month)
   const monthTotalBilled = monthInvoices.reduce((s, i) => s + Number(i.total || 0), 0);

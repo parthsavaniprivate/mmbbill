@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown } from "lucide-react";
+import { Plus, FileDown, Eye, MessageCircle, Bell } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
+import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
+import { daysBetween } from "@/lib/reminders";
 
 type Status = Database["public"]["Enums"]["invoice_status"];
+type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };
 
 export const Route = createFileRoute("/_authenticated/invoices/")({ component: InvoicesPage });
 
@@ -26,16 +29,21 @@ const STATUS_COLORS: Record<Status, string> = {
   cancelled: "bg-muted text-muted-foreground",
 };
 
+const REMINDABLE: Status[] = ["pending", "partially_paid", "overdue"];
+
 function InvoicesPage() {
   const { selected, isAll, companies } = useCompany();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
+  const [reminderFor, setReminderFor] = useState<string | null>(null);
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
-      const { data } = await supabase.from("invoices").select("*, clients(client_name, business_name)").order("invoice_date", { ascending: false });
+      const { data } = await supabase.from("invoices")
+        .select("*, clients(client_name, business_name, whatsapp, mobile)")
+        .order("invoice_date", { ascending: false });
       return data ?? [];
     },
   });
@@ -45,7 +53,7 @@ function InvoicesPage() {
     if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
     if (status !== "all" && i.status !== status) return false;
     if (search) {
-      const cl = i.clients as { client_name: string; business_name: string | null } | null;
+      const cl = i.clients as ClientLite | null;
       const s = search.toLowerCase();
       return (i.invoice_number + " " + (cl?.business_name || cl?.client_name || "")).toLowerCase().includes(s);
     }
@@ -53,18 +61,17 @@ function InvoicesPage() {
   });
 
   const exportCSV = () => downloadCSV("invoices.csv", filtered.map((i) => {
-    const cl = i.clients as { client_name: string; business_name: string | null } | null;
+    const cl = i.clients as ClientLite | null;
     return {
-      number: i.invoice_number,
-      date: i.invoice_date,
+      number: i.invoice_number, date: i.invoice_date,
       client: cl?.business_name || cl?.client_name || "",
       company: companies.find((c) => c.id === i.company_id)?.name || "",
-      subtotal: i.subtotal,
-      total: i.total,
-      paid: i.amount_paid,
-      status: i.status,
+      subtotal: i.subtotal, total: i.total, paid: i.amount_paid, status: i.status,
+      reminders_sent: i.reminders_sent ?? 0,
     };
   }));
+
+  const reminderInv = filtered.find((i) => i.id === reminderFor) ?? null;
 
   return (
     <div className="space-y-4">
@@ -96,9 +103,7 @@ function InvoicesPage() {
           <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Companies</SelectItem>
-            {companies.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-            ))}
+            {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -113,25 +118,62 @@ function InvoicesPage() {
                 <TableRow>
                   <TableHead>Number</TableHead>
                   <TableHead>Client</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Due</TableHead>
                   <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Pending</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((i) => {
-                  const cl = i.clients as { client_name: string; business_name: string | null } | null;
+                  const cl = i.clients as ClientLite | null;
+                  const pending = Number(i.total) - Number(i.amount_paid);
+                  const canRemind = REMINDABLE.includes(i.status);
+                  const overdueDays = i.due_date && pending > 0 ? daysBetween(i.due_date) : 0;
                   return (
                     <TableRow key={i.id}>
                       <TableCell>
                         <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
                       </TableCell>
                       <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
-                      <TableCell>{formatDate(i.invoice_date)}</TableCell>
+                      <TableCell className="text-sm">
+                        {i.due_date ? formatDate(i.due_date) : "—"}
+                        {overdueDays > 0 && (
+                          <div className="text-xs text-destructive">{overdueDays}d overdue</div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
-                      <TableCell className="text-right">{inr(Number(i.amount_paid))}</TableCell>
-                      <TableCell><Badge className={STATUS_COLORS[i.status]} variant="outline">{i.status.replace("_", " ")}</Badge></TableCell>
+                      <TableCell className="text-right">{inr(pending)}</TableCell>
+                      <TableCell>
+                        <Badge className={STATUS_COLORS[i.status]} variant="outline">{i.status.replace("_", " ")}</Badge>
+                        {(i.reminders_sent ?? 0) > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">{i.reminders_sent} reminder{i.reminders_sent === 1 ? "" : "s"}</div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button asChild size="sm" variant="ghost" title="View">
+                            <Link to="/invoices/$id" params={{ id: i.id }}><Eye className="w-4 h-4" /></Link>
+                          </Button>
+                          {canRemind && (
+                            <Button size="sm" variant="outline" onClick={() => setReminderFor(i.id)} title="Send Reminder">
+                              <Bell className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                            <Button size="sm" variant="ghost" asChild title="Open WhatsApp">
+                              <a
+                                href={`https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`}
+                                target="_blank" rel="noreferrer"
+                              ><MessageCircle className="w-4 h-4" /></a>
+                            </Button>
+                          )}
+                          {pending > 0 && i.status !== "cancelled" && (
+                            <MarkAsPaidButton invoiceId={i.id} pending={pending} />
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -140,6 +182,24 @@ function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+
+      {reminderInv && (
+        <SendReminderDialog
+          open={!!reminderFor}
+          onOpenChange={(v) => !v && setReminderFor(null)}
+          invoice={{
+            id: reminderInv.id,
+            invoice_number: reminderInv.invoice_number,
+            total: Number(reminderInv.total),
+            amount_paid: Number(reminderInv.amount_paid),
+            due_date: reminderInv.due_date,
+            status: reminderInv.status,
+            reminders_sent: reminderInv.reminders_sent,
+          }}
+          client={reminderInv.clients as ClientLite | null}
+          companyName={companies.find((c) => c.id === reminderInv.company_id)?.name}
+        />
+      )}
     </div>
   );
 }

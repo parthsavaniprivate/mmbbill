@@ -128,13 +128,12 @@ function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
 }
 
 function Dashboard() {
-  const { selected, isAll, companies } = useCompany();
+  const { selected, isAll, companies, setSelected } = useCompany();
   const { data, isLoading } = useAll();
 
   const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
-  const [chartCompany, setChartCompany] = useState<string>("all");
 
   const { from, to } = useMemo(() => {
     const end = new Date();
@@ -200,9 +199,10 @@ function Dashboard() {
   const fixedRows = [...catBreakdown.entries()].filter(([c]) => FIXED_CATS.has(c)).sort((a, b) => b[1] - a[1]);
   const variableRows = [...catBreakdown.entries()].filter(([c]) => !FIXED_CATS.has(c)).sort((a, b) => b[1] - a[1]);
 
-  // ----- Analytics chart -----
-  const chartInvoices = chartCompany === "all" ? data.invoices : data.invoices.filter((i) => i.company_id === chartCompany);
-  const chartExpenses = chartCompany === "all" ? data.expenses : data.expenses.filter((e) => e.company_id === chartCompany);
+  // ----- Analytics chart (uses global company filter) -----
+  const chartInvoices = invoices;
+  const chartExpenses = expenses;
+
 
   const inRange = (d: string | Date) => {
     if (!from || !to) return true;
@@ -257,6 +257,13 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Select value={selected} onValueChange={setSelected}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Companies</SelectItem>
+              {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           {RANGE_PRESETS.map((p) => (
             <Button key={p.key} variant={rangeKey === p.key ? "default" : "outline"} size="sm" onClick={() => setRangeKey(p.key)}>
               {p.label}
@@ -412,47 +419,11 @@ function Dashboard() {
       {/* Analytics chart */}
       <Card className="shadow-card">
         <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Revenue vs Expenses vs Balance</CardTitle>
-              <CardDescription>Trend analysis</CardDescription>
-            </div>
-            <Select value={chartCompany} onValueChange={setChartCompany}>
-              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div>
+            <CardTitle>Revenue vs Expenses vs Balance</CardTitle>
+            <CardDescription>Trend analysis</CardDescription>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {RANGE_PRESETS.map((p) => (
-              <Button key={p.key} variant={rangeKey === p.key ? "default" : "outline"} size="sm" onClick={() => setRangeKey(p.key)}>
-                {p.label}
-              </Button>
-            ))}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={rangeKey === "custom" ? "default" : "outline"} size="sm" className="gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  {rangeKey === "custom" && customFrom ? `${formatDate(customFrom)} – ${customTo ? formatDate(customTo) : "…"}` : "Custom"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" align="end">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div>
-                    <p className="text-xs font-medium mb-1 text-muted-foreground">Start date</p>
-                    <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium mb-1 text-muted-foreground">End date</p>
-                    <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
 
           <div className="grid grid-cols-3 gap-3 pt-2">
             <div className="rounded-lg border bg-card p-3">

@@ -255,15 +255,15 @@ function Dashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Current month" accent="primary" icon={IndianRupee}>
           <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Cleared</p>
               <p className="font-semibold text-emerald-500">{inr(monthCleared)}</p>
             </div>
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Due</p>
               <p className="font-semibold text-amber-500">{inr(monthDue)}</p>
             </div>
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Collected</p>
               <p className="font-semibold">{collectionPct.toFixed(1)}%</p>
             </div>
@@ -272,11 +272,11 @@ function Dashboard() {
 
         <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub="Current month" accent="expense" icon={TrendingDown}>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Fixed</p>
               <p className="font-semibold">{inr(monthFixed)}</p>
             </div>
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Variable</p>
               <p className="font-semibold">{inr(monthVariable)}</p>
             </div>
@@ -291,11 +291,11 @@ function Dashboard() {
           icon={balancePositive ? TrendingUp : AlertCircle}
         >
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Margin</p>
               <p className="font-semibold">{profitMargin.toFixed(1)}%</p>
             </div>
-            <div className="rounded-md bg-background/60 border p-2">
+            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Status</p>
               <p className={cn("font-semibold", balancePositive ? "text-emerald-500" : "text-red-500")}>
                 {balancePositive ? "Healthy" : "Negative"}

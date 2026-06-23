@@ -20,6 +20,7 @@ function ReportsPage() {
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
   const [reportType, setReportType] = useState<"revenue" | "expense" | "profit" | "client" | "payment">("revenue");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
 
   const { data } = useQuery({
     queryKey: ["report", from, to],

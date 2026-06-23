@@ -42,6 +42,7 @@ function InvoicesPage() {
 
   const filtered = invoices.filter((i) => {
     if (!isAll && i.company_id !== selected) return false;
+    if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
     if (status !== "all" && i.status !== status) return false;
     if (search) {
       const cl = i.clients as { client_name: string; business_name: string | null } | null;

@@ -51,14 +51,16 @@ const CAT_LABEL: Record<string, string> = {
 function useAll() {
   return useQuery({
     queryKey: ["dashboard-data"],
+    staleTime: 30_000,
     queryFn: async () => {
-      const [invoices, payments, expenses, clients, packages, companies] = await Promise.all([
+      const [invoices, payments, expenses, clients, packages, companies, recurring] = await Promise.all([
         supabase.from("invoices").select("*"),
         supabase.from("payments").select("*, invoices(company_id, client_id, total, clients(client_name, business_name))"),
         supabase.from("expenses").select("*"),
         supabase.from("clients").select("*"),
         supabase.from("packages").select("*, clients(company_id, client_name, business_name)"),
         supabase.from("companies").select("id, name"),
+        supabase.from("recurring_expenses").select("*"),
       ]);
       return {
         invoices: invoices.data ?? [],
@@ -67,6 +69,7 @@ function useAll() {
         clients: clients.data ?? [],
         packages: packages.data ?? [],
         companies: companies.data ?? [],
+        recurring: recurring.data ?? [],
       };
     },
   });

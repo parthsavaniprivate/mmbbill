@@ -109,18 +109,8 @@ function NewInvoicePage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5"><Label>Type</Label>
-          <Select value={type} onValueChange={(v) => setType(v as "gst" | "proforma")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gst">GST Invoice</SelectItem>
-              <SelectItem value="proforma">Proforma Invoice</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
-        {type === "gst" && <div className="space-y-1.5"><Label>GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>}
       </CardContent></Card>
 
       <Card><CardHeader><CardTitle>Items</CardTitle></CardHeader>

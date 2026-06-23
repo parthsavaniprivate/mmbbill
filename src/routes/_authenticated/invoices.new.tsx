@@ -27,8 +27,9 @@ function NewInvoicePage() {
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
   const [clientId, setClientId] = useState(presetClient);
+  const addMonth = (d: string) => { const dt = new Date(d); dt.setMonth(dt.getMonth() + 1); return dt.toISOString().slice(0, 10); };
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(addMonth(new Date().toISOString().slice(0, 10)));
   const [discount, setDiscount] = useState("0");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 7 days.");

@@ -289,6 +289,28 @@ function Dashboard() {
         </HeroKpi>
       </div>
 
+      {/* Due / Clear / Total summary */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="shadow-card border-amber-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Due</CardDescription>
+            <CardTitle className="text-2xl text-amber-500">{inr(monthDue)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="shadow-card border-emerald-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Clear</CardDescription>
+            <CardTitle className="text-2xl text-emerald-500">{inr(monthCleared)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card className="shadow-card border-blue-500/30">
+          <CardHeader className="pb-2">
+            <CardDescription>Total (Due + Clear)</CardDescription>
+            <CardTitle className="text-2xl text-blue-500">{inr(monthDue + monthCleared)}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
 
       {/* Analytics chart */}
       <Card className="shadow-card">

@@ -86,12 +86,33 @@ function InvoiceDetail() {
               </AlertDialogContent>
             </AlertDialog>
           )}
+          {REMINDABLE.includes(inv.status) && (
+            <Button variant="outline" onClick={() => setRemindOpen(true)}>
+              <Bell className="w-4 h-4" />Send Reminder
+            </Button>
+          )}
+          {pending > 0 && inv.status !== "cancelled" && (
+            <MarkAsPaidButton invoiceId={id} pending={pending} />
+          )}
           <Dialog open={payOpen} onOpenChange={setPayOpen}>
             <DialogTrigger asChild><Button><Plus className="w-4 h-4" />Record Payment</Button></DialogTrigger>
             <PaymentForm invoiceId={id} pending={pending} onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }} />
           </Dialog>
         </div>
       </div>
+
+      <SendReminderDialog
+        open={remindOpen}
+        onOpenChange={setRemindOpen}
+        invoice={{
+          id, invoice_number: inv.invoice_number,
+          total: Number(inv.total), amount_paid: Number(inv.amount_paid),
+          due_date: inv.due_date, status: inv.status,
+          reminders_sent: inv.reminders_sent,
+        }}
+        client={cl ? { client_name: cl.client_name, whatsapp: cl.whatsapp, mobile: cl.mobile } : null}
+        companyName={co?.name}
+      />
 
       <Card className="shadow-card print:shadow-none">
         <CardContent className="p-8 space-y-6">

@@ -128,13 +128,12 @@ function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
 }
 
 function Dashboard() {
-  const { selected, isAll, companies } = useCompany();
+  const { selected, isAll, companies, setSelected } = useCompany();
   const { data, isLoading } = useAll();
 
   const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
-  const [chartCompany, setChartCompany] = useState<string>("all");
 
   const { from, to } = useMemo(() => {
     const end = new Date();

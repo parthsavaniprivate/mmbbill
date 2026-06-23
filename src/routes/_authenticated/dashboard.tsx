@@ -153,11 +153,6 @@ function Dashboard() {
   const expenses = filtCompany(data.expenses);
   const clients = filtCompany(data.clients);
   const packages = data.packages.filter((p) => isAll ? true : (p.clients as { company_id: string } | null)?.company_id === selected);
-  const payments = data.payments.filter((p) => {
-    if (isAll) return true;
-    const inv = p.invoices as { company_id: string } | null;
-    return inv?.company_id === selected;
-  });
 
   const thisMonth = monthKey(new Date());
   const monthInvoices = invoices.filter((i) => monthKey(i.invoice_date) === thisMonth);
@@ -236,10 +231,6 @@ function Dashboard() {
     { revenue: 0, expenses: 0, balance: 0 },
   );
 
-  // Recent payments
-  const recentPayments = [...payments]
-    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
-    .slice(0, 6);
 
   // Financial health
   const profitMargin = monthCleared > 0 ? (companyBalance / monthCleared) * 100 : 0;
@@ -492,40 +483,8 @@ function Dashboard() {
       </div>
 
       {/* Recent Payments + Upcoming Renewals */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="shadow-card">
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Payments</CardTitle>
-              <CardDescription>Latest collected payments</CardDescription>
-            </div>
-            <Button asChild variant="outline" size="sm"><Link to="/payments">View all</Link></Button>
-          </CardHeader>
-          <CardContent>
-            {recentPayments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent payments.</p>
-            ) : (
-              <div className="space-y-2">
-                {recentPayments.map((p) => {
-                  const inv = p.invoices as { clients: { client_name: string; business_name: string | null } | null } | null;
-                  const cl = inv?.clients ?? null;
-                  return (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{cl?.business_name || cl?.client_name || "—"}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(p.payment_date)} · {p.method ?? "—"}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="outline" className="text-emerald-500 border-emerald-500/40">Cleared</Badge>
-                        <span className="font-semibold">{inr(Number(p.amount))}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-4">
+
 
         <Card className="shadow-card">
           <CardHeader className="flex-row items-center justify-between">

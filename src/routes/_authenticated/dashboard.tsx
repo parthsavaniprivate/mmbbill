@@ -424,7 +424,7 @@ function Dashboard() {
               )}>
                 {inr(totalBalance)}
               </p>
-              <div className="mt-3 flex items-center gap-2 text-sm">
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
                 <span className="text-muted-foreground">Collection</span>
                 <span className="font-semibold text-emerald-500">{inr(totalCollection)}</span>
                 <span className="text-muted-foreground">−</span>

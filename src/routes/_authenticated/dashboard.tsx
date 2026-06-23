@@ -53,7 +53,7 @@ function useAll() {
     queryFn: async () => {
       const [invoices, payments, expenses, clients, packages, companies] = await Promise.all([
         supabase.from("invoices").select("*"),
-        supabase.from("payments").select("*, invoices(company_id, client_id, total), clients(client_name, business_name)"),
+        supabase.from("payments").select("*, invoices(company_id, client_id, total, clients(client_name, business_name))"),
         supabase.from("expenses").select("*"),
         supabase.from("clients").select("*"),
         supabase.from("packages").select("*, clients(company_id, client_name, business_name)"),

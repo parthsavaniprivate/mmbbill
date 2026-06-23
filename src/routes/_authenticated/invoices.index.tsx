@@ -165,8 +165,9 @@ function InvoicesPage() {
                             <Button size="sm" variant="ghost" title="Open WhatsApp"
                               onClick={() => {
                                 const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
-                                const w = window.open(url, "_blank", "noopener,noreferrer");
-                                if (!w) (window.top ?? window).location.href = url;
+                                const a = document.createElement("a");
+                                a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+                                document.body.appendChild(a); a.click(); a.remove();
                               }}
                             ><MessageCircle className="w-4 h-4" /></Button>
                           )}

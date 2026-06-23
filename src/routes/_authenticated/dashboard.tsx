@@ -24,8 +24,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
-type RangeKey = "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
+type RangeKey = "tm" | "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
 const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
+  { key: "tm", label: "This Month", months: 0 },
   { key: "1m", label: "1M", months: 1 },
   { key: "3m", label: "3M", months: 3 },
   { key: "6m", label: "6M", months: 6 },
@@ -50,14 +51,16 @@ const CAT_LABEL: Record<string, string> = {
 function useAll() {
   return useQuery({
     queryKey: ["dashboard-data"],
+    staleTime: 30_000,
     queryFn: async () => {
-      const [invoices, payments, expenses, clients, packages, companies] = await Promise.all([
+      const [invoices, payments, expenses, clients, packages, companies, recurring] = await Promise.all([
         supabase.from("invoices").select("*"),
         supabase.from("payments").select("*, invoices(company_id, client_id, total, clients(client_name, business_name))"),
         supabase.from("expenses").select("*"),
         supabase.from("clients").select("*"),
         supabase.from("packages").select("*, clients(company_id, client_name, business_name)"),
         supabase.from("companies").select("id, name"),
+        supabase.from("recurring_expenses").select("*"),
       ]);
       return {
         invoices: invoices.data ?? [],
@@ -66,6 +69,7 @@ function useAll() {
         clients: clients.data ?? [],
         packages: packages.data ?? [],
         companies: companies.data ?? [],
+        recurring: recurring.data ?? [],
       };
     },
   });
@@ -138,6 +142,11 @@ function Dashboard() {
   const { from, to } = useMemo(() => {
     const end = new Date();
     if (rangeKey === "custom") return { from: customFrom, to: customTo ?? end };
+    if (rangeKey === "tm") {
+      const start = new Date(end.getFullYear(), end.getMonth(), 1);
+      const last = new Date(end.getFullYear(), end.getMonth() + 1, 0);
+      return { from: start, to: last };
+    }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey)!;
     const start = new Date(end.getFullYear(), end.getMonth() - (preset.months - 1), 1);
     return { from: start, to: end };
@@ -169,9 +178,24 @@ function Dashboard() {
   const monthDue = Math.max(0, monthTotalBilled - monthCleared);
   const collectionPct = monthTotalBilled > 0 ? (monthCleared / monthTotalBilled) * 100 : 0;
 
+  // Projected fixed expenses (active recurring whose next_due_date falls in the selected range,
+  // but no expense row was generated yet for that schedule in this range).
+  const recurring = (data.recurring ?? []).filter((r) => isAll ? true : r.company_id === selected);
+  const projectedFixed = recurring.reduce((sum, r) => {
+    if (!r.is_active) return sum;
+    if (!r.next_due_date) return sum;
+    if (!inDateRange(r.next_due_date)) return sum;
+    const alreadyBooked = monthExpRows.some(
+      (e) => e.recurring_id === r.id && inDateRange(e.expense_date),
+    );
+    return alreadyBooked ? sum : sum + Number(r.amount || 0);
+  }, 0);
+
   // Expenses (current month) split
-  const monthExpTotal = monthExpRows.reduce((s, e) => s + Number(e.amount || 0), 0);
-  const monthFixed = monthExpRows.filter((e) => FIXED_CATS.has(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
+  const bookedTotal = monthExpRows.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const bookedFixed = monthExpRows.filter((e) => FIXED_CATS.has(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
+  const monthFixed = bookedFixed + projectedFixed;
+  const monthExpTotal = bookedTotal + projectedFixed;
   const monthVariable = monthExpTotal - monthFixed;
 
   // Company balance (overall cleared - overall expenses, current month)
@@ -307,7 +331,7 @@ function Dashboard() {
           </div>
         </HeroKpi>
 
-        <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub="Current month" accent="expense" icon={TrendingDown}>
+        <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub={projectedFixed > 0 ? `Incl. ${inr(projectedFixed)} projected fixed` : "Selected range"} accent="expense" icon={TrendingDown}>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Fixed</p>
@@ -339,31 +363,31 @@ function Dashboard() {
 
         const miniCard = (label: string, value: string, color: string, borderColor: string) => (
           <div className={cn(
-            "relative rounded-xl border bg-card/60 backdrop-blur p-4 shadow-card transition-all hover:scale-[1.02] hover:shadow-lg",
+            "relative rounded-xl border bg-card/60 backdrop-blur p-2.5 sm:p-4 shadow-card transition-all hover:scale-[1.02] hover:shadow-lg min-w-0",
             borderColor,
           )}>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
-            <p className={cn("text-xl md:text-2xl font-extrabold mt-1.5 tracking-tight", color)}>{value}</p>
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold truncate">{label}</p>
+            <p className={cn("text-sm sm:text-xl md:text-2xl font-extrabold mt-1 sm:mt-1.5 tracking-tight truncate", color)}>{value}</p>
           </div>
         );
 
         return (
           <div className="grid gap-4 md:grid-cols-[1fr_auto_1.1fr] md:items-stretch">
             {/* Left: Row 1 = Due + Cleared = Total Amount, Row 2 = Fixed + Variable = Total Expense */}
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
-                {miniCard("Due Amount", inr(monthDue), "text-amber-500", "border-amber-500/40")}
-                <span className="text-muted-foreground font-bold text-lg">+</span>
-                {miniCard("Cleared Amount", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
-                <span className="text-muted-foreground font-bold text-lg">=</span>
-                {miniCard("Total Amount", inr(totalCollection), "text-blue-500", "border-blue-500/50 bg-blue-500/5")}
+            <div className="flex flex-col gap-3 min-w-0">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
+                {miniCard("Due", inr(monthDue), "text-amber-500", "border-amber-500/40")}
+                <span className="text-muted-foreground font-bold text-base sm:text-lg">+</span>
+                {miniCard("Cleared", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
+                <span className="text-muted-foreground font-bold text-base sm:text-lg">=</span>
+                {miniCard("Total", inr(totalCollection), "text-blue-500", "border-blue-500/50 bg-blue-500/5")}
               </div>
-              <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
-                {miniCard("Fixed Expense", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
-                <span className="text-muted-foreground font-bold text-lg">+</span>
-                {miniCard("Variable Expense", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
-                <span className="text-muted-foreground font-bold text-lg">=</span>
-                {miniCard("Total Expense", inr(totalExpenses), "text-red-500", "border-red-500/50 bg-red-500/5")}
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
+                {miniCard("Fixed", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
+                <span className="text-muted-foreground font-bold text-base sm:text-lg">+</span>
+                {miniCard("Variable", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
+                <span className="text-muted-foreground font-bold text-base sm:text-lg">=</span>
+                {miniCard("Total Exp", inr(totalExpenses), "text-red-500", "border-red-500/50 bg-red-500/5")}
               </div>
             </div>
 
@@ -400,7 +424,7 @@ function Dashboard() {
               )}>
                 {inr(totalBalance)}
               </p>
-              <div className="mt-3 flex items-center gap-2 text-sm">
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
                 <span className="text-muted-foreground">Collection</span>
                 <span className="font-semibold text-emerald-500">{inr(totalCollection)}</span>
                 <span className="text-muted-foreground">−</span>

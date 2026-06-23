@@ -109,7 +109,7 @@ function InvoiceDetail() {
               <p className="font-semibold">{cl?.business_name || cl?.client_name}</p>
               {cl?.business_name && <p className="text-sm">{cl.client_name}</p>}
               {cl?.address && <p className="text-sm text-muted-foreground whitespace-pre-line">{cl.address}</p>}
-              {cl?.gst_number && <p className="text-sm">GSTIN: {cl.gst_number}</p>}
+              
             </div>
             <div className="text-right">
               <p className="text-sm"><span className="text-muted-foreground">Date:</span> {formatDate(inv.invoice_date)}</p>

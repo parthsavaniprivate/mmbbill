@@ -156,7 +156,7 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
     mobile: initial?.mobile ?? "",
     whatsapp: initial?.whatsapp ?? "",
     email: initial?.email ?? "",
-    gst_number: initial?.gst_number ?? "",
+    
     address: initial?.address ?? "",
     notes: initial?.notes ?? "",
     status: (initial?.status ?? "active") as Status,

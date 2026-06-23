@@ -412,47 +412,11 @@ function Dashboard() {
       {/* Analytics chart */}
       <Card className="shadow-card">
         <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Revenue vs Expenses vs Balance</CardTitle>
-              <CardDescription>Trend analysis</CardDescription>
-            </div>
-            <Select value={chartCompany} onValueChange={setChartCompany}>
-              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div>
+            <CardTitle>Revenue vs Expenses vs Balance</CardTitle>
+            <CardDescription>Trend analysis</CardDescription>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {RANGE_PRESETS.map((p) => (
-              <Button key={p.key} variant={rangeKey === p.key ? "default" : "outline"} size="sm" onClick={() => setRangeKey(p.key)}>
-                {p.label}
-              </Button>
-            ))}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={rangeKey === "custom" ? "default" : "outline"} size="sm" className="gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  {rangeKey === "custom" && customFrom ? `${formatDate(customFrom)} – ${customTo ? formatDate(customTo) : "…"}` : "Custom"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" align="end">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div>
-                    <p className="text-xs font-medium mb-1 text-muted-foreground">Start date</p>
-                    <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium mb-1 text-muted-foreground">End date</p>
-                    <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setRangeKey("custom"); }} className={cn("p-0 pointer-events-auto")} />
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
 
           <div className="grid grid-cols-3 gap-3 pt-2">
             <div className="rounded-lg border bg-card p-3">

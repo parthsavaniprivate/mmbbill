@@ -27,10 +27,8 @@ function NewInvoicePage() {
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
   const [clientId, setClientId] = useState(presetClient);
-  const [type, setType] = useState<"gst" | "proforma">("gst");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState("");
-  const [gstRate, setGstRate] = useState("18");
   const [discount, setDiscount] = useState("0");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 7 days.");
@@ -51,10 +49,8 @@ function NewInvoicePage() {
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    const gst = type === "gst" ? +(afterDisc * Number(gstRate || 0) / 100).toFixed(2) : 0;
-    const total = afterDisc + gst;
-    return { subtotal, gst, total };
-  }, [items, discount, gstRate, type]);
+    return { subtotal, total: afterDisc };
+  }, [items, discount]);
 
   const create = useMutation({
     mutationFn: async () => {
@@ -62,16 +58,16 @@ function NewInvoicePage() {
       if (items.some((i) => !i.description)) throw new Error("All items need a description");
 
       const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", {
-        _company_id: companyId, _type: type,
+        _company_id: companyId, _type: "gst",
       });
       if (numErr) throw numErr;
 
       const { data: inv, error } = await supabase.from("invoices").insert({
         company_id: companyId, client_id: clientId,
         invoice_number: numData as string,
-        invoice_type: type, invoice_date: date,
+        invoice_type: "gst", invoice_date: date,
         due_date: dueDate || null,
-        gst_rate: type === "gst" ? Number(gstRate) : 0,
+        gst_rate: 0,
         discount: Number(discount || 0),
         notes, terms,
       }).select().single();
@@ -113,18 +109,8 @@ function NewInvoicePage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5"><Label>Type</Label>
-          <Select value={type} onValueChange={(v) => setType(v as "gst" | "proforma")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gst">GST Invoice</SelectItem>
-              <SelectItem value="proforma">Proforma Invoice</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
-        {type === "gst" && <div className="space-y-1.5"><Label>GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>}
       </CardContent></Card>
 
       <Card><CardHeader><CardTitle>Items</CardTitle></CardHeader>
@@ -163,7 +149,7 @@ function NewInvoicePage() {
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
           <Row label="Subtotal" value={inr(totals.subtotal)} />
           <Row label="Discount" value={`- ${inr(Number(discount || 0))}`} />
-          {type === "gst" && <Row label={`GST (${gstRate}%)`} value={inr(totals.gst)} />}
+          
           <div className="border-t pt-2"><Row label="Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>

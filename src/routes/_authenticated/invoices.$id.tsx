@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Printer, MessageCircle, Plus } from "lucide-react";
+import { ArrowLeft, Printer, MessageCircle, Plus, Bell } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
+import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
+
+const REMINDABLE = ["pending", "partially_paid", "overdue"];
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({ component: InvoiceDetail });
 
@@ -29,6 +32,7 @@ function InvoiceDetail() {
   const qc = useQueryClient();
   const [payOpen, setPayOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
+  const [remindOpen, setRemindOpen] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["invoice", id],
@@ -38,7 +42,8 @@ function InvoiceDetail() {
         .eq("id", id).maybeSingle();
       const { data: items } = await supabase.from("invoice_items").select("*").eq("invoice_id", id).order("position");
       const { data: payments } = await supabase.from("payments").select("*").eq("invoice_id", id).order("payment_date", { ascending: false });
-      return { invoice: inv, items: items ?? [], payments: payments ?? [] };
+      const { data: reminders } = await supabase.from("invoice_reminders").select("*").eq("invoice_id", id).order("sent_at", { ascending: false });
+      return { invoice: inv, items: items ?? [], payments: payments ?? [], reminders: reminders ?? [] };
     },
   });
 
@@ -81,12 +86,33 @@ function InvoiceDetail() {
               </AlertDialogContent>
             </AlertDialog>
           )}
+          {REMINDABLE.includes(inv.status) && (
+            <Button variant="outline" onClick={() => setRemindOpen(true)}>
+              <Bell className="w-4 h-4" />Send Reminder
+            </Button>
+          )}
+          {pending > 0 && inv.status !== "cancelled" && (
+            <MarkAsPaidButton invoiceId={id} pending={pending} />
+          )}
           <Dialog open={payOpen} onOpenChange={setPayOpen}>
             <DialogTrigger asChild><Button><Plus className="w-4 h-4" />Record Payment</Button></DialogTrigger>
             <PaymentForm invoiceId={id} pending={pending} onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }} />
           </Dialog>
         </div>
       </div>
+
+      <SendReminderDialog
+        open={remindOpen}
+        onOpenChange={setRemindOpen}
+        invoice={{
+          id, invoice_number: inv.invoice_number,
+          total: Number(inv.total), amount_paid: Number(inv.amount_paid),
+          due_date: inv.due_date, status: inv.status,
+          reminders_sent: inv.reminders_sent,
+        }}
+        client={cl ? { client_name: cl.client_name, whatsapp: cl.whatsapp, mobile: cl.mobile } : null}
+        companyName={co?.name}
+      />
 
       <Card className="shadow-card print:shadow-none">
         <CardContent className="p-8 space-y-6">
@@ -180,6 +206,29 @@ function InvoiceDetail() {
                     <TableCell className="font-medium">{inr(Number(p.amount))}</TableCell>
                     <TableCell><Badge variant="outline">{p.method.replace("_", " ")}</Badge></TableCell>
                     <TableCell className="text-muted-foreground">{p.reference || "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="no-print">
+        <CardHeader><CardTitle>Reminder History</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          {data.reminders.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground text-sm">No reminders sent yet.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Sent</TableHead><TableHead>Template</TableHead><TableHead>Channel</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {data.reminders.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>#{r.reminder_no}</TableCell>
+                    <TableCell>{formatDate(r.sent_at)}</TableCell>
+                    <TableCell><Badge variant="outline">{r.template.replace("_", " ")}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground">{r.channel}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

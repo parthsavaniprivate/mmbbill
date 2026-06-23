@@ -178,9 +178,24 @@ function Dashboard() {
   const monthDue = Math.max(0, monthTotalBilled - monthCleared);
   const collectionPct = monthTotalBilled > 0 ? (monthCleared / monthTotalBilled) * 100 : 0;
 
+  // Projected fixed expenses (active recurring whose next_due_date falls in the selected range,
+  // but no expense row was generated yet for that schedule in this range).
+  const recurring = (data.recurring ?? []).filter((r) => isAll ? true : r.company_id === selected);
+  const projectedFixed = recurring.reduce((sum, r) => {
+    if (!r.is_active) return sum;
+    if (!r.next_due_date) return sum;
+    if (!inDateRange(r.next_due_date)) return sum;
+    const alreadyBooked = monthExpRows.some(
+      (e) => e.recurring_id === r.id && inDateRange(e.expense_date),
+    );
+    return alreadyBooked ? sum : sum + Number(r.amount || 0);
+  }, 0);
+
   // Expenses (current month) split
-  const monthExpTotal = monthExpRows.reduce((s, e) => s + Number(e.amount || 0), 0);
-  const monthFixed = monthExpRows.filter((e) => FIXED_CATS.has(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
+  const bookedTotal = monthExpRows.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const bookedFixed = monthExpRows.filter((e) => FIXED_CATS.has(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
+  const monthFixed = bookedFixed + projectedFixed;
+  const monthExpTotal = bookedTotal + projectedFixed;
   const monthVariable = monthExpTotal - monthFixed;
 
   // Company balance (overall cleared - overall expenses, current month)

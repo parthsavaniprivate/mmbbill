@@ -331,6 +331,47 @@ export type Database = {
           },
         ]
       }
+      invoice_reminders: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          invoice_id: string
+          message: string | null
+          reminder_no: number
+          sent_at: string
+          template: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          message?: string | null
+          reminder_no: number
+          sent_at?: string
+          template: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          message?: string | null
+          reminder_no?: number
+          sent_at?: string
+          template?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount_paid: number
@@ -344,8 +385,12 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          invoice_sent_at: string | null
           invoice_type: Database["public"]["Enums"]["invoice_type"]
+          last_reminder_at: string | null
           notes: string | null
+          reminder_days: number | null
+          reminders_sent: number
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number
           terms: string | null
@@ -364,8 +409,12 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          last_reminder_at?: string | null
           notes?: string | null
+          reminder_days?: number | null
+          reminders_sent?: number
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
           terms?: string | null
@@ -384,8 +433,12 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          last_reminder_at?: string | null
           notes?: string | null
+          reminder_days?: number | null
+          reminders_sent?: number
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
           terms?: string | null

@@ -28,7 +28,7 @@ function SettingsPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Configure company info, GST details, invoice settings, and WhatsApp templates.</p>
+        <p className="text-muted-foreground">Configure company info, invoice settings, and WhatsApp templates.</p>
       </div>
 
       <Tabs defaultValue={companies[0]?.id ?? ""}>

@@ -286,18 +286,6 @@ function Dashboard() {
           accent={balancePositive ? "balance-pos" : "balance-neg"}
           icon={balancePositive ? TrendingUp : AlertCircle}
         >
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
-              <p className="text-muted-foreground">Margin</p>
-              <p className="font-semibold">{profitMargin.toFixed(1)}%</p>
-            </div>
-            <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
-              <p className="text-muted-foreground">Status</p>
-              <p className={cn("font-semibold", balancePositive ? "text-emerald-500" : "text-red-500")}>
-                {balancePositive ? "Healthy" : "Negative"}
-              </p>
-            </div>
-          </div>
         </HeroKpi>
       </div>
 

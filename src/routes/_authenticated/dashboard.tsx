@@ -231,10 +231,6 @@ function Dashboard() {
     { revenue: 0, expenses: 0, balance: 0 },
   );
 
-  // Recent payments
-  const recentPayments = [...payments]
-    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
-    .slice(0, 6);
 
   // Financial health
   const profitMargin = monthCleared > 0 ? (companyBalance / monthCleared) * 100 : 0;

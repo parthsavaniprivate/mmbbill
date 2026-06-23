@@ -235,8 +235,11 @@ export type Database = {
           created_at: string
           description: string | null
           expense_date: string
+          expense_kind: Database["public"]["Enums"]["expense_kind"]
           id: string
           method: Database["public"]["Enums"]["payment_method"] | null
+          recurring_id: string | null
+          title: string | null
           updated_at: string
           vendor: string | null
         }
@@ -247,8 +250,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           expense_date?: string
+          expense_kind?: Database["public"]["Enums"]["expense_kind"]
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
+          recurring_id?: string | null
+          title?: string | null
           updated_at?: string
           vendor?: string | null
         }
@@ -259,8 +265,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           expense_date?: string
+          expense_kind?: Database["public"]["Enums"]["expense_kind"]
           id?: string
           method?: Database["public"]["Enums"]["payment_method"] | null
+          recurring_id?: string | null
+          title?: string | null
           updated_at?: string
           vendor?: string | null
         }
@@ -270,6 +279,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_recurring_id_fkey"
+            columns: ["recurring_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_expenses"
             referencedColumns: ["id"]
           },
         ]
@@ -508,6 +524,65 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          company_id: string
+          created_at: string
+          day_of_month: number
+          end_date: string | null
+          id: string
+          is_active: boolean
+          last_generated_on: string | null
+          method: Database["public"]["Enums"]["payment_method"] | null
+          notes: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          company_id: string
+          created_at?: string
+          day_of_month?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          last_generated_on?: string | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          start_date?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          company_id?: string
+          created_at?: string
+          day_of_month?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          last_generated_on?: string | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          notes?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_expenses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -534,6 +609,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_recurring_expenses: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -571,6 +647,10 @@ export type Database = {
         | "office"
         | "travel"
         | "other"
+        | "office_rent"
+        | "electricity"
+        | "miscellaneous"
+      expense_kind: "fixed" | "variable"
       file_category: "agreement" | "invoice" | "branding" | "content" | "other"
       invoice_status:
         | "draft"
@@ -727,7 +807,11 @@ export const Constants = {
         "office",
         "travel",
         "other",
+        "office_rent",
+        "electricity",
+        "miscellaneous",
       ],
+      expense_kind: ["fixed", "variable"],
       file_category: ["agreement", "invoice", "branding", "content", "other"],
       invoice_status: [
         "draft",

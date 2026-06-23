@@ -331,7 +331,7 @@ function Dashboard() {
           </div>
         </HeroKpi>
 
-        <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub="Current month" accent="expense" icon={TrendingDown}>
+        <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub={projectedFixed > 0 ? `Incl. ${inr(projectedFixed)} projected fixed` : "Selected range"} accent="expense" icon={TrendingDown}>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Fixed</p>

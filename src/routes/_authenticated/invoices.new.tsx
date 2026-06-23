@@ -27,10 +27,8 @@ function NewInvoicePage() {
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
   const [clientId, setClientId] = useState(presetClient);
-  const [type, setType] = useState<"gst" | "proforma">("gst");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState("");
-  const [gstRate, setGstRate] = useState("18");
   const [discount, setDiscount] = useState("0");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 7 days.");

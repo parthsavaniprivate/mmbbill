@@ -308,12 +308,18 @@ function Dashboard() {
 
         return (
           <div className="grid gap-4 md:grid-cols-[1fr_auto_1.1fr] md:items-stretch">
-            {/* Left: 4 cards in 2 rows */}
-            <div className="grid grid-cols-2 gap-3">
-              {miniCard("Due Amount", inr(monthDue), "text-amber-500", "border-amber-500/40")}
-              {miniCard("Cleared Amount", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
-              {miniCard("Fixed Expense", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
-              {miniCard("Variable Expense", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
+            {/* Left: 4 source cards + 2 total cards */}
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                {miniCard("Due Amount", inr(monthDue), "text-amber-500", "border-amber-500/40")}
+                {miniCard("Cleared Amount", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
+                {miniCard("Fixed Expense", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
+                {miniCard("Variable Expense", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {miniCard("Total Amount", inr(totalCollection), "text-blue-500", "border-blue-500/50 bg-blue-500/5")}
+                {miniCard("Total Expense", inr(totalExpenses), "text-red-500", "border-red-500/50 bg-red-500/5")}
+              </div>
             </div>
 
             {/* Bracket: SVG on md+, horizontal arrow on mobile */}

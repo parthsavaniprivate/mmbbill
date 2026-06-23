@@ -14,7 +14,8 @@ import { inr } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
-  validateSearch: (s: Record<string, unknown>) => ({ client: typeof s.client === "string" ? s.client : "" }),
+  validateSearch: (s: Record<string, unknown>): { client?: string } =>
+    typeof s.client === "string" && s.client ? { client: s.client } : {},
   component: NewInvoicePage,
 });
 

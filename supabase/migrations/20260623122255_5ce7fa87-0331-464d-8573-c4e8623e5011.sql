@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS renewal_reminder_days integer NOT NULL DEFAULT 30;

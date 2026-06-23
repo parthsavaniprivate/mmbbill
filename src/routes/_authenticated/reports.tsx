@@ -20,6 +20,7 @@ function ReportsPage() {
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
   const [reportType, setReportType] = useState<"revenue" | "expense" | "profit" | "client" | "payment">("revenue");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
 
   const { data } = useQuery({
     queryKey: ["report", from, to],
@@ -36,14 +37,18 @@ function ReportsPage() {
 
   if (!data) return <div className="text-muted-foreground">Loading…</div>;
 
-  const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) =>
-    isAll ? rows : rows.filter((r) => r.company_id === selected);
+  const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) => {
+    const byGlobal = isAll ? rows : rows.filter((r) => r.company_id === selected);
+    return companyFilter === "all" ? byGlobal : byGlobal.filter((r) => r.company_id === companyFilter);
+  };
 
   const invoices = filtCompany(data.invoices);
   const expenses = filtCompany(data.expenses);
   const payments = data.payments.filter((p) => {
     const inv = p.invoices as { company_id: string } | null;
-    return isAll ? true : inv?.company_id === selected;
+    if (!isAll && inv?.company_id !== selected) return false;
+    if (companyFilter !== "all" && inv?.company_id !== companyFilter) return false;
+    return true;
   });
   const clients = filtCompany(data.clients);
 
@@ -117,6 +122,17 @@ function ReportsPage() {
               <SelectItem value="profit">Profit Report</SelectItem>
               <SelectItem value="client">Client Report</SelectItem>
               <SelectItem value="payment">Payment Report</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5"><Label>Company</Label>
+          <Select value={companyFilter} onValueChange={setCompanyFilter}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Companies</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

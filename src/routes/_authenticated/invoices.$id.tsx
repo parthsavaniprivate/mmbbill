@@ -94,13 +94,10 @@ function InvoiceDetail() {
             <div>
               <h2 className="text-2xl font-bold">{co?.name}</h2>
               {co?.address && <p className="text-sm text-muted-foreground whitespace-pre-line">{co.address}</p>}
-              {co?.gst_number && <p className="text-sm">GSTIN: {co.gst_number}</p>}
               {co?.phone && <p className="text-sm">{co.phone} {co.email && `· ${co.email}`}</p>}
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                {inv.invoice_type === "gst" ? "Tax Invoice" : "Proforma Invoice"}
-              </p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Invoice</p>
               <p className="text-2xl font-bold mt-1">{inv.invoice_number}</p>
               <Badge variant="outline" className="mt-2">{inv.status.replace("_", " ")}</Badge>
             </div>

@@ -46,7 +46,9 @@ function ReportsPage() {
   const expenses = filtCompany(data.expenses);
   const payments = data.payments.filter((p) => {
     const inv = p.invoices as { company_id: string } | null;
-    return isAll ? true : inv?.company_id === selected;
+    if (!isAll && inv?.company_id !== selected) return false;
+    if (companyFilter !== "all" && inv?.company_id !== companyFilter) return false;
+    return true;
   });
   const clients = filtCompany(data.clients);
 

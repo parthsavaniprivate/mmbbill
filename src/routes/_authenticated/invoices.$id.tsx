@@ -32,6 +32,7 @@ function InvoiceDetail() {
   const qc = useQueryClient();
   const [payOpen, setPayOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
+  const [remindOpen, setRemindOpen] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["invoice", id],
@@ -41,7 +42,8 @@ function InvoiceDetail() {
         .eq("id", id).maybeSingle();
       const { data: items } = await supabase.from("invoice_items").select("*").eq("invoice_id", id).order("position");
       const { data: payments } = await supabase.from("payments").select("*").eq("invoice_id", id).order("payment_date", { ascending: false });
-      return { invoice: inv, items: items ?? [], payments: payments ?? [] };
+      const { data: reminders } = await supabase.from("invoice_reminders").select("*").eq("invoice_id", id).order("sent_at", { ascending: false });
+      return { invoice: inv, items: items ?? [], payments: payments ?? [], reminders: reminders ?? [] };
     },
   });
 

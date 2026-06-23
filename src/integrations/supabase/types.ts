@@ -133,6 +133,7 @@ export type Database = {
           pan_number: string | null
           phone: string | null
           pincode: string | null
+          renewal_reminder_days: number
           state: string | null
           updated_at: string
           website: string | null
@@ -156,6 +157,7 @@ export type Database = {
           pan_number?: string | null
           phone?: string | null
           pincode?: string | null
+          renewal_reminder_days?: number
           state?: string | null
           updated_at?: string
           website?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           pan_number?: string | null
           phone?: string | null
           pincode?: string | null
+          renewal_reminder_days?: number
           state?: string | null
           updated_at?: string
           website?: string | null

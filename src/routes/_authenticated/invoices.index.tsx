@@ -162,12 +162,13 @@ function InvoicesPage() {
                             </Button>
                           )}
                           {canRemind && (cl?.whatsapp || cl?.mobile) && (
-                            <Button size="sm" variant="ghost" asChild title="Open WhatsApp">
-                              <a
-                                href={`https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`}
-                                target="_blank" rel="noreferrer"
-                              ><MessageCircle className="w-4 h-4" /></a>
-                            </Button>
+                            <Button size="sm" variant="ghost" title="Open WhatsApp"
+                              onClick={() => {
+                                const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
+                                const w = window.open(url, "_blank", "noopener,noreferrer");
+                                if (!w) (window.top ?? window).location.href = url;
+                              }}
+                            ><MessageCircle className="w-4 h-4" /></Button>
                           )}
                           {pending > 0 && i.status !== "cancelled" && (
                             <MarkAsPaidButton invoiceId={i.id} pending={pending} />

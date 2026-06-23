@@ -200,9 +200,10 @@ function Dashboard() {
   const fixedRows = [...catBreakdown.entries()].filter(([c]) => FIXED_CATS.has(c)).sort((a, b) => b[1] - a[1]);
   const variableRows = [...catBreakdown.entries()].filter(([c]) => !FIXED_CATS.has(c)).sort((a, b) => b[1] - a[1]);
 
-  // ----- Analytics chart -----
-  const chartInvoices = chartCompany === "all" ? data.invoices : data.invoices.filter((i) => i.company_id === chartCompany);
-  const chartExpenses = chartCompany === "all" ? data.expenses : data.expenses.filter((e) => e.company_id === chartCompany);
+  // ----- Analytics chart (uses global company filter) -----
+  const chartInvoices = invoices;
+  const chartExpenses = expenses;
+
 
   const inRange = (d: string | Date) => {
     if (!from || !to) return true;

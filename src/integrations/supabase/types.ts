@@ -530,12 +530,14 @@ export type Database = {
           category: Database["public"]["Enums"]["expense_category"]
           company_id: string
           created_at: string
+          cycle: Database["public"]["Enums"]["recurring_cycle"]
           day_of_month: number
           end_date: string | null
           id: string
           is_active: boolean
           last_generated_on: string | null
           method: Database["public"]["Enums"]["payment_method"] | null
+          next_due_date: string | null
           notes: string | null
           start_date: string
           title: string
@@ -546,12 +548,14 @@ export type Database = {
           category?: Database["public"]["Enums"]["expense_category"]
           company_id: string
           created_at?: string
+          cycle?: Database["public"]["Enums"]["recurring_cycle"]
           day_of_month?: number
           end_date?: string | null
           id?: string
           is_active?: boolean
           last_generated_on?: string | null
           method?: Database["public"]["Enums"]["payment_method"] | null
+          next_due_date?: string | null
           notes?: string | null
           start_date?: string
           title: string
@@ -562,12 +566,14 @@ export type Database = {
           category?: Database["public"]["Enums"]["expense_category"]
           company_id?: string
           created_at?: string
+          cycle?: Database["public"]["Enums"]["recurring_cycle"]
           day_of_month?: number
           end_date?: string | null
           id?: string
           is_active?: boolean
           last_generated_on?: string | null
           method?: Database["public"]["Enums"]["payment_method"] | null
+          next_due_date?: string | null
           notes?: string | null
           start_date?: string
           title?: string
@@ -668,6 +674,7 @@ export type Database = {
         | "card"
         | "cheque"
         | "other"
+      recurring_cycle: "monthly" | "quarterly" | "half_yearly" | "yearly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -831,6 +838,7 @@ export const Constants = {
         "cheque",
         "other",
       ],
+      recurring_cycle: ["monthly", "quarterly", "half_yearly", "yearly"],
     },
   },
 } as const

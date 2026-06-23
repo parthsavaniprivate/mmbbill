@@ -58,16 +58,16 @@ function NewInvoicePage() {
       if (items.some((i) => !i.description)) throw new Error("All items need a description");
 
       const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", {
-        _company_id: companyId, _type: type,
+        _company_id: companyId, _type: "gst",
       });
       if (numErr) throw numErr;
 
       const { data: inv, error } = await supabase.from("invoices").insert({
         company_id: companyId, client_id: clientId,
         invoice_number: numData as string,
-        invoice_type: type, invoice_date: date,
+        invoice_type: "gst", invoice_date: date,
         due_date: dueDate || null,
-        gst_rate: type === "gst" ? Number(gstRate) : 0,
+        gst_rate: 0,
         discount: Number(discount || 0),
         notes, terms,
       }).select().single();

@@ -16,6 +16,7 @@ import {
   BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search, FileText, BadgeIndianRupee, UserCog,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,

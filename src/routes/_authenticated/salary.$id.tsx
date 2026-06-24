@@ -62,7 +62,7 @@ function SalarySlipDetail() {
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
-      <style>{`@media print { .no-print { display: none !important; } @page { size: A4; margin: 14mm; } }`}</style>
+      <style>{`@media print { .no-print { display: none !important; } @page { size: A4; margin: 10mm; } .slip { page-break-inside: avoid; } .slip + .slip { margin-top: 6mm; border-top: 1px dashed #999; padding-top: 6mm; } }`}</style>
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <Link to="/salary" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back

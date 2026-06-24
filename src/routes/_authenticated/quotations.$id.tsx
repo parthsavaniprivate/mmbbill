@@ -82,8 +82,9 @@ function QuotationDetail() {
   const cl = q.clients as { client_name: string; business_name: string | null; gst_number: string | null; address: string | null; email: string | null; mobile: string | null; whatsapp: string | null } | null;
   const co = q.companies as { name: string; address: string | null; gst_number: string | null; phone: string | null; email: string | null; logo_url: string | null; signature_url: string | null } | null;
 
+  const clientDisplay = cl?.business_name || cl?.client_name || (q as { custom_client_name?: string | null }).custom_client_name || "—";
   const waNum = (cl?.whatsapp || cl?.mobile || "").replace(/\D/g, "");
-  const waMsg = `Hi ${cl?.client_name ?? ""},\n\nPlease find quotation *${q.quotation_number}* for ${inr(Number(q.total))}.\nValid until: ${q.valid_until ? formatDate(q.valid_until) : "—"}\n\nThanks,\n${co?.name ?? ""}`;
+  const waMsg = `Hi ${cl?.client_name ?? clientDisplay},\n\nPlease find quotation *${q.quotation_number}* for ${inr(Number(q.total))}.\n\nThanks,\n${co?.name ?? ""}`;
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
   const mailLink = cl?.email ? `mailto:${cl.email}?subject=${encodeURIComponent(`Quotation ${q.quotation_number}`)}&body=${encodeURIComponent(waMsg)}` : null;
 

@@ -117,88 +117,148 @@ function QuotationDetail() {
         </div>
       </div>
 
-      <style>{`@media print { @page { size: A4 landscape; margin: 0; } body { background: white; } .no-print { display: none !important; } } .q-h { position: relative; display: inline-block; padding-bottom: 6px; } .q-h::after { content: ""; position: absolute; left: 0; bottom: 0; width: 90px; height: 3px; background: #f5b921; border-radius: 2px; }`}</style>
+      <style>{`@media print { @page { size: A4 portrait; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } } .q-accent { color: #c8962d; } .q-bar { background: #c8962d; } .q-h { position: relative; display: inline-block; padding-bottom: 4px; } .q-h::after { content: ""; position: absolute; left: 0; bottom: 0; width: 42px; height: 2px; background: #c8962d; border-radius: 2px; }`}</style>
 
-      <Card className="shadow-card print:shadow-none overflow-hidden">
-        <div className="bg-white text-black p-10 md:p-14" style={{ fontFamily: "Georgia, 'Times New Roman', serif", minHeight: "560px" }}>
-          {/* Header */}
-          <div className="flex items-start justify-between mb-10">
-            <div className="text-xs text-gray-500">
-              <div>{q.quotation_number}</div>
-              <div>{formatDate(q.quotation_date)}</div>
+      <Card className="shadow-card print:shadow-none overflow-hidden q-doc">
+        <div className="bg-white text-black px-10 py-8 mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "210mm", minHeight: "297mm", fontSize: "11px", lineHeight: 1.45 }}>
+          {/* HEADER */}
+          <div className="flex items-start justify-between pb-4 border-b-2" style={{ borderColor: "#c8962d" }}>
+            <div className="flex items-start gap-3">
+              {co?.logo_url && <img src={co.logo_url} alt="" className="h-14 w-14 object-contain" />}
+              <div>
+                <div className="text-xl font-bold tracking-tight">{co?.name}</div>
+                <div className="text-[10px] text-gray-600 mt-0.5 space-y-0.5">
+                  {co?.address && <div>{co.address}</div>}
+                  <div className="flex flex-wrap gap-x-3">
+                    {co?.phone && <span>📱 {co.phone}</span>}
+                    {co?.email && <span>✉ {co.email}</span>}
+                  </div>
+                  {co?.gst_number && <div>GSTIN: {co.gst_number}</div>}
+                </div>
+              </div>
             </div>
             <div className="text-right">
-              {co?.logo_url ? (
-                <img src={co.logo_url} alt="" className="h-10 object-contain ml-auto" />
-              ) : (
-                <div className="text-2xl tracking-tight" style={{ fontFamily: "Georgia, serif" }}>{co?.name}</div>
-              )}
-            </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-3xl font-semibold mb-10 leading-snug">
-            Quote for {q.notes?.split("\n")[0] || "Services"} for<br />
-            {clientDisplay}
-          </h2>
-
-          {/* Items table — 3 columns like reference */}
-          <div className="grid grid-cols-12 gap-6 mb-10">
-            <div className="col-span-6"><div className="q-h text-lg font-semibold">No of Options</div></div>
-            <div className="col-span-3"><div className="q-h text-lg font-semibold">Our Fees</div></div>
-            <div className="col-span-3"><div className="q-h text-lg font-semibold">Photo/Videography</div></div>
-
-            {data.items.map((it) => (
-              <div key={it.id} className="contents">
-                <div className="col-span-6">
-                  <div className="font-semibold text-base">{it.item_name}</div>
-                  {it.description && (
-                    <div className="text-sm text-gray-700 whitespace-pre-line mt-1">{it.description}</div>
-                  )}
-                </div>
-                <div className="col-span-3 text-base">{inr(Number(it.unit_price))}</div>
-                <div className="col-span-3 text-base">{Number(it.quantity) > 1 ? inr(Number(it.amount) - Number(it.unit_price)) : "—"}</div>
+              <div className="text-2xl font-bold q-accent tracking-wider">QUOTATION</div>
+              <div className="text-[10px] text-gray-700 mt-1 space-y-0.5">
+                <div><span className="text-gray-500">Quote #:</span> <span className="font-semibold">{q.quotation_number}</span></div>
+                <div><span className="text-gray-500">Date:</span> {formatDate(q.quotation_date)}</div>
+                {q.valid_until && <div><span className="text-gray-500">Valid Until:</span> {formatDate(q.valid_until)}</div>}
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Services bullets — use terms field, one bullet per line */}
-          {q.terms && (
-            <div className="mb-8">
-              <div className="q-h text-base font-semibold mb-4">Our services will include following things:</div>
-              <ul className="space-y-2 text-base">
-                {q.terms.split("\n").filter(Boolean).map((line, i) => (
-                  <li key={i} className="flex gap-2"><span style={{ color: "#f5b921" }}>▪</span><span>{line.replace(/^[-•*]\s*/, "")}</span></li>
-                ))}
-              </ul>
+          {/* CLIENT */}
+          <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1">Quotation For</div>
+              <div className="font-bold text-sm">{clientDisplay}</div>
+              {cl?.business_name && cl?.client_name && cl.business_name !== cl.client_name && (
+                <div className="text-[11px] text-gray-700">{cl.client_name}</div>
+              )}
+              {cl?.address && <div className="text-[10px] text-gray-600 mt-0.5">{cl.address}</div>}
+              {cl?.gst_number && <div className="text-[10px] text-gray-600">GSTIN: {cl.gst_number}</div>}
             </div>
-          )}
+          </div>
 
-          {/* Totals + Note */}
-          <div className="flex justify-between items-end gap-6 mt-10">
-            <div className="text-xs text-gray-700 max-w-md">
-              {q.notes && q.notes.includes("\n") && (
-                <div>
-                  <div className="font-semibold mb-1">Note:</div>
-                  <div className="whitespace-pre-line">{q.notes.split("\n").slice(1).join("\n")}</div>
-                </div>
+          {/* TITLE */}
+          <div className="mb-3">
+            <h2 className="text-base font-bold leading-snug">
+              Quote for <span className="q-accent">{q.notes?.split("\n")[0] || "Social Media Marketing Services"}</span> for {clientDisplay}
+            </h2>
+          </div>
+
+          {/* SERVICES TABLE */}
+          <table className="w-full border-collapse mb-4" style={{ fontSize: "10.5px" }}>
+            <thead>
+              <tr className="q-bar text-white">
+                <th className="text-left p-2 font-semibold w-10">#</th>
+                <th className="text-left p-2 font-semibold">Package / Deliverables</th>
+                <th className="text-right p-2 font-semibold w-24">Fees</th>
+                <th className="text-right p-2 font-semibold w-24">Ad Spend</th>
+                <th className="text-right p-2 font-semibold w-24">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((it, idx) => {
+                const fee = Number(it.unit_price);
+                const adSpend = Number(it.quantity) > 1 ? Number(it.amount) - fee : 0;
+                return (
+                  <tr key={it.id} className="border-b border-gray-200 align-top">
+                    <td className="p-2 text-gray-600">{idx + 1}</td>
+                    <td className="p-2">
+                      <div className="font-semibold">{it.item_name}</div>
+                      {it.description && (
+                        <div className="text-[10px] text-gray-600 whitespace-pre-line mt-0.5">{it.description}</div>
+                      )}
+                    </td>
+                    <td className="p-2 text-right">{inr(fee)}</td>
+                    <td className="p-2 text-right">{adSpend > 0 ? inr(adSpend) : "—"}</td>
+                    <td className="p-2 text-right font-semibold">{inr(Number(it.amount))}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* SUMMARY + SERVICES INCLUDED */}
+          <div className="grid grid-cols-5 gap-4 mb-4">
+            <div className="col-span-3">
+              <div className="q-h text-[11px] font-bold uppercase tracking-wider mb-2">Services Included</div>
+              {q.terms ? (
+                <ul className="space-y-1 text-[10.5px]">
+                  {q.terms.split("\n").filter(Boolean).map((line, i) => (
+                    <li key={i} className="flex gap-1.5">
+                      <span className="q-accent">▪</span>
+                      <span>{line.replace(/^[-•*]\s*/, "")}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="space-y-1 text-[10.5px] text-gray-700">
+                  {["Content Design", "Content Publishing", "Profile Management", "Instagram Management", "Facebook Management", "Google Business Profile Management", "WhatsApp Marketing Support"].map((s) => (
+                    <li key={s} className="flex gap-1.5"><span className="q-accent">▪</span><span>{s}</span></li>
+                  ))}
+                </ul>
               )}
             </div>
-            <div className="text-sm space-y-1 min-w-[260px]">
-              <Row label="Subtotal" value={inr(Number(q.subtotal))} />
-              {Number(q.discount) > 0 && <Row label="Discount" value={`- ${inr(Number(q.discount))}`} />}
-              {Number(q.gst_rate) > 0 && <Row label={`GST (${q.gst_rate}%)`} value={inr(Number(q.gst_amount))} />}
-              <div className="border-t border-gray-400 pt-2 mt-1"><Row label="Grand Total" value={inr(Number(q.total))} bold /></div>
-              <div className="text-xs text-gray-600 italic pt-1">{amountInWords(Math.round(Number(q.total)))} Rupees Only</div>
+            <div className="col-span-2">
+              <div className="border border-gray-300 rounded">
+                <div className="p-3 space-y-1.5 text-[11px]">
+                  <Row label="Subtotal" value={inr(Number(q.subtotal))} />
+                  {Number(q.gst_rate) > 0 && <Row label={`GST (${q.gst_rate}%)`} value={inr(Number(q.gst_amount))} />}
+                  {Number(q.discount) > 0 && <Row label="Discount" value={`- ${inr(Number(q.discount))}`} />}
+                </div>
+                <div className="q-bar text-white p-3 flex justify-between font-bold text-sm">
+                  <span>Grand Total</span><span>{inr(Number(q.total))}</span>
+                </div>
+                <div className="px-3 py-1.5 text-[9.5px] italic text-gray-600 border-t border-gray-200">
+                  {amountInWords(Math.round(Number(q.total)))} Rupees Only
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Signature */}
-          <div className="flex justify-end mt-12">
+          {/* NOTES */}
+          {(q.notes && q.notes.includes("\n")) || true ? (
+            <div className="mb-4 p-2.5 bg-gray-50 border-l-2" style={{ borderColor: "#c8962d" }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1">Note</div>
+              <div className="text-[10px] text-gray-700 whitespace-pre-line">
+                {q.notes && q.notes.includes("\n")
+                  ? q.notes.split("\n").slice(1).join("\n")
+                  : "Advertising expenses above suggested budget will be billed separately."}
+              </div>
+            </div>
+          ) : null}
+
+          {/* FOOTER */}
+          <div className="flex items-end justify-between mt-6 pt-4 border-t border-gray-300">
+            <div className="text-[9px] text-gray-500">
+              Generated by <span className="font-semibold q-accent">Make Me Brand</span>
+            </div>
             <div className="text-center">
-              {co?.signature_url && <img src={co.signature_url} alt="" className="h-12 mx-auto object-contain" />}
-              <div className="border-t border-gray-400 pt-1 mt-1 text-xs">Authorized Signatory</div>
-              <div className="text-xs text-gray-600">{co?.name}</div>
+              {co?.signature_url && <img src={co.signature_url} alt="" className="h-10 mx-auto object-contain" />}
+              <div className="border-t border-gray-400 pt-0.5 mt-0.5 text-[10px] font-semibold min-w-[140px]">Authorized Signatory</div>
+              <div className="text-[9px] text-gray-600">{co?.name}</div>
             </div>
           </div>
         </div>

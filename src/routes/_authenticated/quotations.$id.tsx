@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2, Download } from "lucide-react";
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";

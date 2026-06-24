@@ -84,21 +84,23 @@ function SalarySlipDetail() {
 
       <Card className="shadow-card print:shadow-none overflow-hidden">
         <div className="p-8 bg-white text-black text-[13px]">
-          {/* Title */}
-          <div className="text-center text-2xl font-semibold tracking-wide mb-5">Salary Slip</div>
-
-          {/* Pay meta + Company block */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="space-y-1">
-              <Row k="Pay Period" v={period} />
-              <Row k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
-              <Row k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
-            </div>
-            <div className="text-right">
-              {co?.logo_url && <img src={co.logo_url} alt="" className="h-10 ml-auto mb-1 object-contain" />}
-              <div className="font-bold">{co?.name}</div>
+          {/* Company header */}
+          <div className="flex items-center gap-4 pb-4 mb-4 border-b-2 border-gray-800">
+            {co?.logo_url && <img src={co.logo_url} alt="" className="h-16 w-16 object-contain shrink-0" />}
+            <div className="flex-1">
+              <div className="text-2xl font-bold leading-tight">{co?.name}</div>
               <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>
             </div>
+          </div>
+
+          {/* Title */}
+          <div className="text-center text-xl font-semibold tracking-wide mb-4">Salary Slip</div>
+
+          {/* Pay meta */}
+          <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
+            <Row k="Pay Period" v={period} />
+            <Row k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
+            <Row k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
           </div>
 
           {/* Employee block */}

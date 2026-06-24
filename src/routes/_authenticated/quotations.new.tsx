@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({ component: NewQuotationPage });
 
-type Item = { item_name: string; description: string; quantity: number; unit_price: number };
+type Item = { item_name: string; description: string; amount: number };
 
 function NewQuotationPage() {
   const navigate = useNavigate();

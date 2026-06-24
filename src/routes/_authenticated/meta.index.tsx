@@ -63,8 +63,50 @@ function MetaIndex() {
 
   const startConnect = () => {
     if (isAll) { toast.error("Pick a company first"); return; }
-    const url = `/api/public/meta/oauth/start?company_id=${selected}&return_to=/meta`;
-    window.location.href = url;
+    const origin = window.location.origin;
+    const url = `${origin}/api/public/meta/oauth/start?company_id=${selected}&return_to=/meta`;
+
+    // Open in a popup to escape the Lovable preview iframe (Facebook blocks iframe embedding)
+    const w = 600, h = 750;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(
+      url,
+      "meta_oauth",
+      `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`,
+    );
+
+    if (!popup) {
+      // Popup blocked — break out of iframe with a top-level redirect
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = url;
+          return;
+        }
+      } catch {
+        // cross-origin top access blocked — fall through
+      }
+      toast.error("Popup blocked. Please allow popups for this site.");
+      return;
+    }
+
+    // Listen for the popup to post back when OAuth completes
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== origin) return;
+      if (e.data?.type === "meta_oauth_done") {
+        window.removeEventListener("message", onMessage);
+        try { popup.close(); } catch { /* noop */ }
+        if (e.data.ok) {
+          toast.success("Meta account connected");
+          qc.invalidateQueries({ queryKey: ["meta-accounts"] });
+          // trigger pending picker via search param
+          nav({ to: "/meta", search: { connected: "1" }, replace: true });
+        } else {
+          toast.error(e.data.message || "Meta connection failed");
+        }
+      }
+    };
+    window.addEventListener("message", onMessage);
   };
 
   return (

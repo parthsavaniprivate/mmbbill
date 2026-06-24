@@ -29,9 +29,11 @@ function NewQuotationPage() {
   const [terms, setTerms] = useState("Quotation valid for 15 days. Prices subject to change.");
   const [items, setItems] = useState<Item[]>([{ item_name: "", description: "", quantity: 1, unit_price: 0 }]);
 
-  useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
+  useEffect(() => {
+    if (!isAll && selected) { setCompanyId(selected); return; }
+    if (!companyId && companies[0]) setCompanyId(companies[0].id);
+  }, [companies, companyId, isAll, selected]);
 
-  useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
 
   const totals = useMemo(() => {

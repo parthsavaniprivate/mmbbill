@@ -9,6 +9,7 @@ import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2 } from "lucid
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 type Status = Database["public"]["Enums"]["quotation_status"];
 
@@ -124,7 +125,7 @@ function QuotationDetail() {
           {/* HEADER */}
           <div className="flex items-start justify-between pb-4 border-b-2" style={{ borderColor: "#c8962d" }}>
             <div className="flex items-start gap-3">
-              {co?.logo_url && <img src={co.logo_url} alt="" className="h-14 w-14 object-contain" />}
+              <img src={co?.logo_url || mmbLogo.url} alt="" className="h-14 w-14 object-contain" />
               <div>
                 <div className="text-xl font-bold tracking-tight">{co?.name}</div>
                 <div className="text-[10px] text-gray-600 mt-0.5 space-y-0.5">

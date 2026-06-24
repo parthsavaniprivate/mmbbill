@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
@@ -53,10 +53,10 @@ function AuthPage() {
       </div>
       <Card className="w-full max-w-md glass shadow-card border-border/50">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="mx-auto w-16 h-16 rounded-xl bg-white p-1 shadow-glow flex items-center justify-center">
+            <img src={mmbLogo.url} alt="Make Me Brand" className="w-full h-full object-contain" />
           </div>
-          <CardTitle className="text-2xl">Agency OS</CardTitle>
+          <CardTitle className="text-2xl">Make Me Brand</CardTitle>
           <CardDescription>Sign in to manage your agency</CardDescription>
         </CardHeader>
         <CardContent>

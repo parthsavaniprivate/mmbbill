@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -22,8 +22,6 @@ function NewQuotationPage() {
   const { companies, selected, isAll } = useCompany();
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
-  const [clientMode, setClientMode] = useState<"existing" | "custom">("existing");
-  const [clientId, setClientId] = useState<string>("");
   const [customClientName, setCustomClientName] = useState("");
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);
@@ -33,15 +31,8 @@ function NewQuotationPage() {
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ["all-clients"],
-    queryFn: async () => {
-      const { data } = await supabase.from("clients").select("id, client_name, business_name, company_id");
-      return data ?? [];
-    },
-  });
+  useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
-  const filteredClients = clients.filter((c) => c.company_id === companyId);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
@@ -51,8 +42,7 @@ function NewQuotationPage() {
   const create = useMutation({
     mutationFn: async () => {
       if (!companyId) throw new Error("Select company");
-      if (clientMode === "existing" && !clientId) throw new Error("Select a client or switch to custom");
-      if (clientMode === "custom" && !customClientName.trim()) throw new Error("Enter client name");
+      if (!customClientName.trim()) throw new Error("Enter client name");
       if (items.some((i) => !i.item_name)) throw new Error("All items need a name");
 
       const { data: num, error: numErr } = await supabase.rpc("next_quotation_number", { _company_id: companyId });
@@ -60,8 +50,8 @@ function NewQuotationPage() {
 
       const { data: q, error } = await supabase.from("quotations").insert({
         company_id: companyId,
-        client_id: clientMode === "existing" ? clientId : null,
-        custom_client_name: clientMode === "custom" ? customClientName.trim() : null,
+        client_id: null,
+        custom_client_name: customClientName.trim(),
         quotation_number: num as string,
         quotation_date: date,
         valid_until: null,
@@ -100,26 +90,8 @@ function NewQuotationPage() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Client</Label>
-          <div className="flex gap-2">
-            <Select value={clientMode} onValueChange={(v) => setClientMode(v as "existing" | "custom")}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="existing">Saved</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-            {clientMode === "existing" ? (
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="Select client" /></SelectTrigger>
-                <SelectContent>
-                  {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input className="flex-1" placeholder="Client / Brand name" value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} />
-            )}
-          </div>
+          <Label>Client / Brand Name</Label>
+          <Input placeholder="Type client or brand name" value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} />
         </div>
         <div className="space-y-1.5"><Label>Quotation Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
       </CardContent></Card>

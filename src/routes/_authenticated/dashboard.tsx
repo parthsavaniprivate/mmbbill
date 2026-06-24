@@ -52,7 +52,7 @@ function useAll() {
     queryKey: ["dashboard-data"],
     staleTime: 30_000,
     queryFn: async () => {
-      const [invoices, payments, expenses, clients, packages, companies, recurring] = await Promise.all([
+      const [invoices, payments, expenses, clients, packages, companies, recurring, quotations, salarySlips] = await Promise.all([
         supabase.from("invoices").select("*"),
         supabase.from("payments").select("*, invoices(company_id, client_id, total, clients(client_name, business_name))"),
         supabase.from("expenses").select("*"),
@@ -60,6 +60,8 @@ function useAll() {
         supabase.from("packages").select("*, clients(company_id, client_name, business_name)"),
         supabase.from("companies").select("id, name"),
         supabase.from("recurring_expenses").select("*"),
+        supabase.from("quotations").select("id, company_id, quotation_date, status, total"),
+        supabase.from("salary_slips").select("id, company_id, month, year, net"),
       ]);
       return {
         invoices: invoices.data ?? [],
@@ -69,7 +71,10 @@ function useAll() {
         packages: packages.data ?? [],
         companies: companies.data ?? [],
         recurring: recurring.data ?? [],
+        quotations: quotations.data ?? [],
+        salarySlips: salarySlips.data ?? [],
       };
+
     },
   });
 }
@@ -213,6 +218,18 @@ function Dashboard() {
     .sort((a, b) => (a.renewal_date! < b.renewal_date! ? -1 : 1));
 
   const activeClients = clients.filter((c) => c.status === "active").length;
+
+  const quotations = filtCompany(data.quotations).filter((q) => inDateRange(q.quotation_date));
+  const salarySlips = filtCompany(data.salarySlips).filter((s) => {
+    if (!from || !to) return true;
+    const d = new Date(s.year, (s.month ?? 1) - 1, 1);
+    return d >= new Date(from.getFullYear(), from.getMonth(), 1) && d <= new Date(to.getFullYear(), to.getMonth() + 1, 0);
+  });
+  const quotationsCount = quotations.length;
+  const quotationsValue = quotations.reduce((s, q) => s + Number(q.total || 0), 0);
+  const salaryCount = salarySlips.length;
+  const salaryValue = salarySlips.reduce((s, x) => s + Number(x.net || 0), 0);
+
 
   // Category breakdown (current month)
   const catBreakdown = new Map<string, number>();
@@ -439,8 +456,18 @@ function Dashboard() {
       })()}
 
 
+
+      {/* Quotations & Salary Slips counts */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <MiniKpi title="Quotations" value={String(quotationsCount)} icon={CheckCircle2} />
+        <MiniKpi title="Quotation Value" value={inr(quotationsValue)} icon={IndianRupee} tone="ok" />
+        <MiniKpi title="Salary Slips" value={String(salaryCount)} icon={UserCheck} />
+        <MiniKpi title="Salary Paid" value={inr(salaryValue)} icon={Wallet} tone="warn" />
+      </div>
+
       {/* Analytics chart */}
       <Card className="shadow-card">
+
         <CardHeader className="space-y-4">
           <div>
             <CardTitle>Revenue vs Expenses vs Balance</CardTitle>

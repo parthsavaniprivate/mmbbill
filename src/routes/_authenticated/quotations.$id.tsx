@@ -282,7 +282,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   );
 }
 
-function HeadCell({ children }: { children: React.ReactNode }) {
+function HeadCell({ children }: { children: ReactNode }) {
   return (
     <span className="inline-block font-bold text-black" style={{ borderBottom: "2px solid #F26A2E", paddingBottom: "2px" }}>
       {children}
@@ -290,7 +290,7 @@ function HeadCell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SectionHead({ children }: { children: React.ReactNode }) {
+function SectionHead({ children }: { children: ReactNode }) {
   return (
     <span className="inline-block font-bold text-black" style={{ borderBottom: "2px solid #F26A2E", paddingBottom: "2px" }}>
       {children}
@@ -298,7 +298,7 @@ function SectionHead({ children }: { children: React.ReactNode }) {
   );
 }
 
-function BulletItem({ children }: { children: React.ReactNode }) {
+function BulletItem({ children }: { children: ReactNode }) {
   return (
     <li className="flex items-start gap-2">
       <span className="inline-block shrink-0" style={{ width: "5px", height: "5px", background: "#F26A2E", marginTop: "5px" }} />

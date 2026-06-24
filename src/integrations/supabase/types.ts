@@ -861,12 +861,16 @@ export type Database = {
           company_id: string
           conveyance: number
           created_at: string
-          employee_id: string
+          department: string | null
+          designation: string | null
+          employee_id: string | null
+          employee_name: string | null
           esi: number
           gross: number
           hra: number
           id: string
           incentives: number
+          loan: number
           medical: number
           month: number
           net: number
@@ -874,12 +878,14 @@ export type Database = {
           other_deductions: number
           overtime: number
           paid_on: string | null
+          pay_date: string | null
           pf: number
           prof_tax: number
           status: Database["public"]["Enums"]["salary_status"]
           tds: number
           total_deductions: number
           updated_at: string
+          worked_days: number | null
           year: number
         }
         Insert: {
@@ -888,12 +894,16 @@ export type Database = {
           company_id: string
           conveyance?: number
           created_at?: string
-          employee_id: string
+          department?: string | null
+          designation?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
           esi?: number
           gross?: number
           hra?: number
           id?: string
           incentives?: number
+          loan?: number
           medical?: number
           month: number
           net?: number
@@ -901,12 +911,14 @@ export type Database = {
           other_deductions?: number
           overtime?: number
           paid_on?: string | null
+          pay_date?: string | null
           pf?: number
           prof_tax?: number
           status?: Database["public"]["Enums"]["salary_status"]
           tds?: number
           total_deductions?: number
           updated_at?: string
+          worked_days?: number | null
           year: number
         }
         Update: {
@@ -915,12 +927,16 @@ export type Database = {
           company_id?: string
           conveyance?: number
           created_at?: string
-          employee_id?: string
+          department?: string | null
+          designation?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
           esi?: number
           gross?: number
           hra?: number
           id?: string
           incentives?: number
+          loan?: number
           medical?: number
           month?: number
           net?: number
@@ -928,12 +944,14 @@ export type Database = {
           other_deductions?: number
           overtime?: number
           paid_on?: string | null
+          pay_date?: string | null
           pf?: number
           prof_tax?: number
           status?: Database["public"]["Enums"]["salary_status"]
           tds?: number
           total_deductions?: number
           updated_at?: string
+          worked_days?: number | null
           year?: number
         }
         Relationships: [

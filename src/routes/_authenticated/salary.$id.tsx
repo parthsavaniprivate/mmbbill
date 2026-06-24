@@ -3,10 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Printer, MessageCircle, Mail, Trash2 } from "lucide-react";
-import { inr, formatDate, amountInWords } from "@/lib/format";
+import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -46,24 +45,23 @@ function SalarySlipDetail() {
 
   if (!data) return <div className="text-muted-foreground">Loading…</div>;
   const s = data;
-  const emp = s.employees as { name: string; employee_code: string | null; designation: string | null; department: string | null; mobile: string | null; email: string | null; pan: string | null; bank_account: string | null; uan: string | null; joining_date: string | null } | null;
-  const co = s.companies as { name: string; address: string | null; logo_url: string | null; signature_url: string | null; phone: string | null; email: string | null } | null;
+  const emp = s.employees as { name: string; mobile: string | null; email: string | null } | null;
+  const co = s.companies as { name: string; address: string | null; logo_url: string | null } | null;
 
-  const earnings = [
-    ["Basic", s.basic], ["HRA", s.hra], ["Conveyance", s.conveyance], ["Medical", s.medical],
-    ["Bonus", s.bonus], ["Incentives", s.incentives], ["Overtime", s.overtime],
-  ] as const;
-  const deductions = [
-    ["PF", s.pf], ["ESI", s.esi], ["Professional Tax", s.prof_tax], ["TDS", s.tds], ["Other", s.other_deductions],
-  ] as const;
+  const empName = s.employee_name || emp?.name || "—";
+  const period = `${MONTHS[s.month - 1]} ${s.year}`;
+  const totalEarnings = Number(s.basic) + Number(s.incentives);
+  const totalDed = Number(s.pf) + Number(s.prof_tax) + Number(s.loan);
+  const net = totalEarnings - totalDed;
 
-  const waMsg = `Hi ${emp?.name ?? ""},\n\nYour salary slip for ${MONTHS[s.month - 1]} ${s.year}:\nGross: ${inr(Number(s.gross))}\nDeductions: ${inr(Number(s.total_deductions))}\n*Net: ${inr(Number(s.net))}*\n\n${co?.name ?? ""}`;
+  const waMsg = `Hi ${empName},\n\nYour salary slip for ${period}:\nTotal Earnings: ${inr(totalEarnings)}\nDeductions: ${inr(totalDed)}\n*Net Pay: ${inr(net)}*\n\n${co?.name ?? ""}`;
   const waNum = (emp?.mobile || "").replace(/\D/g, "");
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
-  const mailLink = emp?.email ? `mailto:${emp.email}?subject=${encodeURIComponent(`Salary Slip - ${MONTHS[s.month - 1]} ${s.year}`)}&body=${encodeURIComponent(waMsg)}` : null;
+  const mailLink = emp?.email ? `mailto:${emp.email}?subject=${encodeURIComponent(`Salary Slip - ${period}`)}&body=${encodeURIComponent(waMsg)}` : null;
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <style>{`@media print { .no-print { display: none !important; } @page { size: A4; margin: 14mm; } }`}</style>
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <Link to="/salary" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -84,82 +82,63 @@ function SalarySlipDetail() {
       </div>
 
       <Card className="shadow-card print:shadow-none overflow-hidden">
-        <div className="p-10 bg-white text-black space-y-5">
-          <div className="flex justify-between items-start gap-4 border-b pb-4">
-            <div>
-              {co?.logo_url && <img src={co.logo_url} alt="" className="h-14 mb-2 object-contain" />}
-              <div className="font-bold text-lg">{co?.name}</div>
-              <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>
-              <div className="text-xs text-gray-600">{co?.phone} • {co?.email}</div>
+        <div className="p-8 bg-white text-black text-[13px]">
+          {/* Title */}
+          <div className="text-center text-2xl font-semibold tracking-wide mb-5">Salary Slip</div>
+
+          {/* Pay meta + Company block */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="space-y-1">
+              <Row k="Pay Period" v={period} />
+              <Row k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
+              <Row k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
             </div>
             <div className="text-right">
-              <div className="text-xl font-bold tracking-tight">SALARY SLIP</div>
-              <div className="text-sm mt-1">{MONTHS[s.month - 1]} {s.year}</div>
-              <Badge className="mt-2" variant="outline">{s.status}</Badge>
+              {co?.logo_url && <img src={co.logo_url} alt="" className="h-10 ml-auto mb-1 object-contain" />}
+              <div className="font-bold">{co?.name}</div>
+              <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm border p-3 rounded">
-            <Info label="Employee Name" value={emp?.name ?? "—"} />
-            <Info label="Employee ID" value={emp?.employee_code ?? "—"} />
-            <Info label="Designation" value={emp?.designation ?? "—"} />
-            <Info label="Department" value={emp?.department ?? "—"} />
-            <Info label="Joining Date" value={emp?.joining_date ? formatDate(emp.joining_date) : "—"} />
-            <Info label="UAN" value={emp?.uan ?? "—"} />
-            <Info label="PAN" value={emp?.pan ?? "—"} />
-            <Info label="Bank A/C" value={emp?.bank_account ?? "—"} />
+          {/* Employee block */}
+          <div className="grid grid-cols-[140px_1fr] gap-y-1 mb-4 text-sm">
+            <div className="text-gray-600">Employee Name</div><div className="font-medium">{empName}</div>
+            <div className="text-gray-600">Designation</div><div>{s.designation || "—"}</div>
+            <div className="text-gray-600">Department</div><div>{s.department || "—"}</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="bg-gray-100 px-3 py-1.5 font-semibold text-sm border">Earnings</div>
-              <table className="w-full text-sm border-collapse">
-                <tbody>
-                  {earnings.map(([label, val]) => (
-                    <tr key={label} className="border-b">
-                      <td className="p-2">{label}</td>
-                      <td className="p-2 text-right">{inr(Number(val))}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-bold bg-gray-50">
-                    <td className="p-2">Gross Salary</td>
-                    <td className="p-2 text-right">{inr(Number(s.gross))}</td>
-                  </tr>
-                </tbody>
-              </table>
+          {/* Earnings + Deductions tables */}
+          <div className="grid grid-cols-2 gap-0 border border-gray-800">
+            <div className="border-r border-gray-800">
+              <HeaderRow left="Earnings" right="Amount" />
+              <LineRow left="Basic Pay" right={inr(Number(s.basic))} />
+              <LineRow left="Incentive Pay" right={inr(Number(s.incentives))} />
+              <LineRow left="" right="" />
+              <LineRow left="" right="" />
+              <TotalRow left="Total Earnings" right={inr(totalEarnings)} />
             </div>
             <div>
-              <div className="bg-gray-100 px-3 py-1.5 font-semibold text-sm border">Deductions</div>
-              <table className="w-full text-sm border-collapse">
-                <tbody>
-                  {deductions.map(([label, val]) => (
-                    <tr key={label} className="border-b">
-                      <td className="p-2">{label}</td>
-                      <td className="p-2 text-right">{inr(Number(val))}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-bold bg-gray-50">
-                    <td className="p-2">Total Deductions</td>
-                    <td className="p-2 text-right">{inr(Number(s.total_deductions))}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <HeaderRow left="Deductions" right="Amount" />
+              <LineRow left="Provident Fund" right={inr(Number(s.pf))} />
+              <LineRow left="Professional Tax" right={inr(Number(s.prof_tax))} />
+              <LineRow left="Loan" right={inr(Number(s.loan))} />
+              <LineRow left="" right="" />
+              <TotalRow left="Total Deductions" right={inr(totalDed)} />
             </div>
           </div>
 
-          <div className="border-2 border-gray-800 p-3 flex justify-between items-center">
-            <div>
-              <div className="text-xs text-gray-600">NET SALARY</div>
-              <div className="text-xs italic">{amountInWords(Math.round(Number(s.net)))} Rupees Only</div>
-            </div>
-            <div className="text-2xl font-bold">{inr(Number(s.net))}</div>
+          {/* Net Pay */}
+          <div className="border border-t-0 border-gray-800 bg-gray-100 flex justify-between px-3 py-2 font-bold">
+            <span>Net Pay</span><span>{inr(net)}</span>
           </div>
 
-          <div className="flex justify-between pt-8">
-            <div className="text-xs text-gray-500">This is a computer-generated salary slip and does not require a physical signature.</div>
-            <div className="text-center">
-              {co?.signature_url && <img src={co.signature_url} alt="" className="h-12 mx-auto object-contain" />}
-              <div className="border-t border-gray-400 pt-1 mt-1 text-xs">Authorized Signatory</div>
+          {/* Signatures */}
+          <div className="grid grid-cols-2 gap-8 pt-14">
+            <div className="text-center text-xs">
+              <div className="border-t border-gray-500 pt-1">Employer Signature</div>
+            </div>
+            <div className="text-center text-xs">
+              <div className="border-t border-gray-500 pt-1">Employee Signature</div>
             </div>
           </div>
         </div>
@@ -168,6 +147,15 @@ function SalarySlipDetail() {
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
-  return <div><span className="text-gray-500 text-xs">{label}: </span><span className="font-medium">{value}</span></div>;
+function Row({ k, v }: { k: string; v: string }) {
+  return <div className="flex gap-2 text-sm"><span className="text-gray-600 w-24">{k}</span><span className="font-medium">{v}</span></div>;
+}
+function HeaderRow({ left, right }: { left: string; right: string }) {
+  return <div className="flex justify-between bg-gray-200 px-3 py-1.5 font-semibold border-b border-gray-800"><span>{left}</span><span>{right}</span></div>;
+}
+function LineRow({ left, right }: { left: string; right: string }) {
+  return <div className="flex justify-between px-3 py-1.5 border-b border-gray-300 min-h-[30px]"><span>{left}</span><span>{right}</span></div>;
+}
+function TotalRow({ left, right }: { left: string; right: string }) {
+  return <div className="flex justify-between px-3 py-1.5 font-semibold bg-gray-50"><span>{left}</span><span>{right}</span></div>;
 }

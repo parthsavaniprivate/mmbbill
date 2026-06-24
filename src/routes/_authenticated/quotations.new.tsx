@@ -30,9 +30,10 @@ function NewQuotationPage() {
   const [items, setItems] = useState<Item[]>([{ item_name: "", description: "", quantity: 1, unit_price: 0 }]);
 
   useEffect(() => {
-    if (!isAll && selected) { setCompanyId(selected); return; }
+    const makeMe = companies.find((c) => c.name.toLowerCase().includes("make me"));
+    if (makeMe) { setCompanyId(makeMe.id); return; }
     if (!companyId && companies[0]) setCompanyId(companies[0].id);
-  }, [companies, companyId, isAll, selected]);
+  }, [companies, companyId]);
 
 
 

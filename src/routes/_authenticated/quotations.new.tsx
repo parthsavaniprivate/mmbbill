@@ -108,13 +108,9 @@ function NewQuotationPage() {
               <div className="col-span-12 md:col-span-3 space-y-1"><Label className="text-xs">Description</Label>
                 <Input value={it.description} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
               </div>
-              <div className="col-span-4 md:col-span-1 space-y-1"><Label className="text-xs">Qty</Label>
-                <Input type="number" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))} />
+              <div className="col-span-8 md:col-span-4 space-y-1"><Label className="text-xs">Total Amount</Label>
+                <Input type="number" value={it.amount} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, amount: Number(e.target.value) } : x))} />
               </div>
-              <div className="col-span-4 md:col-span-2 space-y-1"><Label className="text-xs">Unit Price</Label>
-                <Input type="number" value={it.unit_price} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, unit_price: Number(e.target.value) } : x))} />
-              </div>
-              <div className="col-span-3 md:col-span-1 text-right text-sm font-medium pb-2">{inr(it.quantity * it.unit_price)}</div>
               <div className="col-span-1">
                 <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                   <Trash2 className="w-4 h-4" />
@@ -122,7 +118,8 @@ function NewQuotationPage() {
               </div>
             </div>
           ))}
-          <Button variant="outline" size="sm" onClick={() => setItems([...items, { item_name: "", description: "", quantity: 1, unit_price: 0 }])}>
+          <Button variant="outline" size="sm" onClick={() => setItems([...items, { item_name: "", description: "", amount: 0 }])}>
+
             <Plus className="w-4 h-4" />Add Item
           </Button>
         </CardContent>

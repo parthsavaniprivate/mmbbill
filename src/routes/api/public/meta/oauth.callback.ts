@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/meta/oauth/callback")({
             _meta_user_id: me.id,
             _meta_user_name: me.name,
             _access_token: long.access_token,
-            _token_expires_at: expiresAt,
+            _token_expires_at: expiresAt as string,
           });
           if (error) return htmlClose(false, error.message);
 

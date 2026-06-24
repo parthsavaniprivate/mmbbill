@@ -839,6 +839,44 @@ export type Database = {
           },
         ]
       }
+      meta_oauth_states: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          return_to: string
+          used_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          return_to?: string
+          used_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          return_to?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_oauth_states_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meta_sync_log: {
         Row: {
           error: string | null
@@ -1332,6 +1370,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_meta_oauth: {
+        Args: {
+          _access_token: string
+          _meta_user_id: string
+          _meta_user_name: string
+          _state_id: string
+          _token_expires_at: string
+        }
+        Returns: string
+      }
       generate_recurring_expenses: { Args: never; Returns: number }
       has_role: {
         Args: {

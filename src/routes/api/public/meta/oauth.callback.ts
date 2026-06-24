@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/api/public/meta/oauth/callback")({
   server: {
@@ -6,25 +8,24 @@ export const Route = createFileRoute("/api/public/meta/oauth/callback")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const code = url.searchParams.get("code");
-        const stateRaw = url.searchParams.get("state");
+        const stateId = url.searchParams.get("state");
         const err = url.searchParams.get("error_description") || url.searchParams.get("error");
         if (err) return htmlClose(false, `Meta returned an error: ${err}`);
-        if (!code || !stateRaw) return htmlClose(false, "Missing code or state");
+        if (!code || !stateId) return htmlClose(false, "Missing code or state");
+        if (!/^[0-9a-f-]{36}$/i.test(stateId)) return htmlClose(false, "Invalid state");
 
-        let state: { company_id: string; return_to?: string };
-        try {
-          state = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
-        } catch {
-          return htmlClose(false, "Invalid state");
-        }
-
-        const appId = process.env.META_APP_ID!;
-        const appSecret = process.env.META_APP_SECRET!;
+        const appId = process.env.META_APP_ID;
+        const appSecret = process.env.META_APP_SECRET;
         if (!appId || !appSecret) return htmlClose(false, "Meta app credentials not configured");
+
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabasePublishable = process.env.SUPABASE_PUBLISHABLE_KEY;
+        if (!supabaseUrl || !supabasePublishable) {
+          return htmlClose(false, "Supabase not configured");
+        }
 
         const redirectUri = `${url.origin}/api/public/meta/oauth/callback`;
         const meta = await import("@/lib/meta-api.server");
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         try {
           const short = await meta.exchangeCodeForToken({ code, redirectUri, appId, appSecret });
@@ -33,17 +34,23 @@ export const Route = createFileRoute("/api/public/meta/oauth/callback")({
           const expiresAt = long.expires_in
             ? new Date(Date.now() + long.expires_in * 1000).toISOString() : null;
 
-          await supabaseAdmin.from("meta_accounts").insert({
-            company_id: state.company_id,
-            meta_user_id: me.id,
-            meta_user_name: me.name,
-            access_token: long.access_token,
-            token_expires_at: expiresAt,
-            status: "pending_account_select",
+          // No service-role key needed — the SECURITY DEFINER RPC validates the
+          // single-use state row created by the signed-in admin and inserts the
+          // pending meta_accounts record on their behalf.
+          const sb = createClient<Database>(supabaseUrl, supabasePublishable, {
+            auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
           });
 
-          const back = state.return_to || "/meta";
-          return htmlClose(true, "Connected", back);
+          const { error } = await sb.rpc("complete_meta_oauth", {
+            _state_id: stateId,
+            _meta_user_id: me.id,
+            _meta_user_name: me.name,
+            _access_token: long.access_token,
+            _token_expires_at: expiresAt as string,
+          });
+          if (error) return htmlClose(false, error.message);
+
+          return htmlClose(true, "Connected", "/meta");
         } catch (e) {
           return htmlClose(false, e instanceof Error ? e.message : "Connection failed");
         }
@@ -70,7 +77,6 @@ function htmlClose(ok: boolean, msg: string, back = "/meta") {
             return;
           }
         } catch(e){}
-        // No opener — full-page redirect back to the app
         try {
           if (window.top && window.top !== window.self) {
             window.top.location.replace(${JSON.stringify(fallback)});
@@ -87,7 +93,6 @@ function htmlClose(ok: boolean, msg: string, back = "/meta") {
     status: ok ? 200 : 400,
     headers: {
       "content-type": "text/html; charset=utf-8",
-      // Allow the page to run standalone (popup or top window), no iframe embedding needed
       "x-frame-options": "DENY",
     },
   });

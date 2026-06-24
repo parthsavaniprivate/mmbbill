@@ -96,7 +96,7 @@ function QuotationDetail() {
     try {
       toast.loading("Generating PDF…", { id: "pdf" });
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas"),
+        import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });

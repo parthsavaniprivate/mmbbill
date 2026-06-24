@@ -68,7 +68,7 @@ function AuthedLayout() {
         <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link to="/dashboard" className="flex items-center gap-2 px-2 py-1.5">
-              <img src={mmbLogo.url} alt="Make Me Brand" className="w-9 h-9 rounded-lg object-contain shrink-0 bg-white p-0.5 shadow-glow" />
+              <img src={mmbLogo.url} alt="Make Me Brand" className="w-12 h-12 rounded-lg object-contain shrink-0 bg-white p-1 shadow-glow" />
               <span className="font-semibold tracking-tight truncate">Make Me Brand</span>
             </Link>
           </SidebarHeader>

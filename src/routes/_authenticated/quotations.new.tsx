@@ -86,10 +86,7 @@ function NewQuotationPage() {
 
       <Card><CardContent className="p-5 grid md:grid-cols-3 gap-3">
         <div className="space-y-1.5"><Label>Company</Label>
-          <Select value={companyId} onValueChange={setCompanyId}>
-            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-          </Select>
+          <Input value={companies.find((c) => c.id === companyId)?.name ?? ""} readOnly disabled />
         </div>
         <div className="space-y-1.5">
           <Label>Client / Brand Name</Label>

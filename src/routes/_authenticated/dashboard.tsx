@@ -27,7 +27,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({ component: D
 type RangeKey = "tm" | "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
 const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
   { key: "tm", label: "This Month", months: 0 },
-  { key: "1m", label: "1M", months: 1 },
   { key: "3m", label: "3M", months: 3 },
   { key: "6m", label: "6M", months: 6 },
   { key: "12m", label: "12M", months: 12 },

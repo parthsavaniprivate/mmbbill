@@ -126,7 +126,7 @@ function SalarySlipDetail() {
                 <Td>Loan</Td><Td className="text-right">{Number(s.loan) ? inr(Number(s.loan)) : "—"}</Td>
               </tr>
               <tr>
-                <Td>&nbsp;</Td><Td><Td></Td>nbsp;</Td>
+                <Td>&nbsp;</Td><Td>&nbsp;</Td>
                 <Td className="font-semibold">Total Deductions</Td><Td className="text-right font-semibold">{totalDed ? inr(totalDed) : "—"}</Td>
               </tr>
               <tr className="bg-gray-50">

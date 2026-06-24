@@ -10,7 +10,7 @@ import {
   Wallet, CalendarIcon, AlertCircle, CheckCircle2, Bell,
 } from "lucide-react";
 import {
-  ResponsiveContainer, AreaChart, Area,
+  ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
@@ -466,33 +466,20 @@ function Dashboard() {
         </CardHeader>
         <CardContent className="h-96">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="grad-rev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={REV_COLOR} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={REV_COLOR} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="grad-exp" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={EXP_COLOR} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={EXP_COLOR} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="grad-bal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BAL_COLOR} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={BAL_COLOR} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} barCategoryGap="20%">
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
               <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
               <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
                 contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
                 formatter={(v: number, name: string) => [inr(v), name]}
               />
               <Legend wrapperStyle={{ paddingTop: 8 }} />
-              <Area type="monotone" dataKey="revenue" name="Revenue" stroke={REV_COLOR} fill="url(#grad-rev)" strokeWidth={2.5} />
-              <Area type="monotone" dataKey="expenses" name="Expenses" stroke={EXP_COLOR} fill="url(#grad-exp)" strokeWidth={2.5} />
-              <Area type="monotone" dataKey="balance" name="Balance" stroke={BAL_COLOR} fill="url(#grad-bal)" strokeWidth={2.5} />
-            </AreaChart>
+              <Bar dataKey="revenue" name="Revenue" fill={REV_COLOR} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="expenses" name="Expenses" fill={EXP_COLOR} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="balance" name="Balance" fill={BAL_COLOR} radius={[6, 6, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

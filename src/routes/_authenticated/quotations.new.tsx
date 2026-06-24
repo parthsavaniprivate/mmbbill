@@ -27,7 +27,7 @@ function NewQuotationPage() {
   const [date, setDate] = useState(today);
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Quotation valid for 15 days. Prices subject to change.");
-  const [items, setItems] = useState<Item[]>([{ item_name: "", description: "", quantity: 1, unit_price: 0 }]);
+  const [items, setItems] = useState<Item[]>([{ item_name: "", description: "", amount: 0 }]);
 
   useEffect(() => {
     const makeMe = companies.find((c) => c.name.toLowerCase().includes("make me"));

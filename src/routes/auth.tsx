@@ -53,10 +53,10 @@ function AuthPage() {
       </div>
       <Card className="w-full max-w-md glass shadow-card border-border/50">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="mx-auto w-16 h-16 rounded-xl bg-white p-1 shadow-glow flex items-center justify-center">
+            <img src={mmbLogo.url} alt="Make Me Brand" className="w-full h-full object-contain" />
           </div>
-          <CardTitle className="text-2xl">Agency OS</CardTitle>
+          <CardTitle className="text-2xl">Make Me Brand</CardTitle>
           <CardDescription>Sign in to manage your agency</CardDescription>
         </CardHeader>
         <CardContent>

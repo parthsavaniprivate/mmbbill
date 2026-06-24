@@ -22,15 +22,19 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedSalaryIndexRouteImport } from './routes/_authenticated/salary.index'
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations.index'
+import { Route as AuthenticatedMetaIndexRouteImport } from './routes/_authenticated/meta.index'
 import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
 import { Route as AuthenticatedSalaryNewRouteImport } from './routes/_authenticated/salary.new'
 import { Route as AuthenticatedSalaryIdRouteImport } from './routes/_authenticated/salary.$id'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations.new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations.$id'
+import { Route as AuthenticatedMetaAccountIdRouteImport } from './routes/_authenticated/meta.$accountId'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
 import { Route as AuthenticatedSalaryIdEditRouteImport } from './routes/_authenticated/salary.$id_.edit'
+import { Route as ApiPublicMetaOauthStartRouteImport } from './routes/api/public/meta/oauth.start'
+import { Route as ApiPublicMetaOauthCallbackRouteImport } from './routes/api/public/meta/oauth.callback'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -98,6 +102,11 @@ const AuthenticatedQuotationsIndexRoute =
     path: '/quotations/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMetaIndexRoute = AuthenticatedMetaIndexRouteImport.update({
+  id: '/meta/',
+  path: '/meta/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInvoicesIndexRoute =
   AuthenticatedInvoicesIndexRouteImport.update({
     id: '/invoices/',
@@ -126,6 +135,12 @@ const AuthenticatedQuotationsIdRoute =
     path: '/quotations/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMetaAccountIdRoute =
+  AuthenticatedMetaAccountIdRouteImport.update({
+    id: '/meta/$accountId',
+    path: '/meta/$accountId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInvoicesNewRoute =
   AuthenticatedInvoicesNewRouteImport.update({
     id: '/invoices/new',
@@ -148,6 +163,17 @@ const AuthenticatedSalaryIdEditRoute =
     path: '/salary/$id/edit',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicMetaOauthStartRoute = ApiPublicMetaOauthStartRouteImport.update({
+  id: '/api/public/meta/oauth/start',
+  path: '/api/public/meta/oauth/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMetaOauthCallbackRoute =
+  ApiPublicMetaOauthCallbackRouteImport.update({
+    id: '/api/public/meta/oauth/callback',
+    path: '/api/public/meta/oauth/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -163,14 +189,18 @@ export interface FileRoutesByFullPath {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/meta/$accountId': typeof AuthenticatedMetaAccountIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/meta/': typeof AuthenticatedMetaIndexRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/salary/': typeof AuthenticatedSalaryIndexRoute
   '/salary/$id/edit': typeof AuthenticatedSalaryIdEditRoute
+  '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
+  '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -186,14 +216,18 @@ export interface FileRoutesByTo {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/meta/$accountId': typeof AuthenticatedMetaAccountIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices': typeof AuthenticatedInvoicesIndexRoute
+  '/meta': typeof AuthenticatedMetaIndexRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
   '/salary': typeof AuthenticatedSalaryIndexRoute
   '/salary/$id/edit': typeof AuthenticatedSalaryIdEditRoute
+  '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
+  '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,14 +245,18 @@ export interface FileRoutesById {
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/_authenticated/meta/$accountId': typeof AuthenticatedMetaAccountIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/_authenticated/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/_authenticated/salary/new': typeof AuthenticatedSalaryNewRoute
   '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/_authenticated/meta/': typeof AuthenticatedMetaIndexRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/salary/': typeof AuthenticatedSalaryIndexRoute
   '/_authenticated/salary/$id_/edit': typeof AuthenticatedSalaryIdEditRoute
+  '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
+  '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -236,14 +274,18 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/meta/$accountId'
     | '/quotations/$id'
     | '/quotations/new'
     | '/salary/$id'
     | '/salary/new'
     | '/invoices/'
+    | '/meta/'
     | '/quotations/'
     | '/salary/'
     | '/salary/$id/edit'
+    | '/api/public/meta/oauth/callback'
+    | '/api/public/meta/oauth/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -259,14 +301,18 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/meta/$accountId'
     | '/quotations/$id'
     | '/quotations/new'
     | '/salary/$id'
     | '/salary/new'
     | '/invoices'
+    | '/meta'
     | '/quotations'
     | '/salary'
     | '/salary/$id/edit'
+    | '/api/public/meta/oauth/callback'
+    | '/api/public/meta/oauth/start'
   id:
     | '__root__'
     | '/'
@@ -283,14 +329,18 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/$id'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
+    | '/_authenticated/meta/$accountId'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
     | '/_authenticated/salary/$id'
     | '/_authenticated/salary/new'
     | '/_authenticated/invoices/'
+    | '/_authenticated/meta/'
     | '/_authenticated/quotations/'
     | '/_authenticated/salary/'
     | '/_authenticated/salary/$id_/edit'
+    | '/api/public/meta/oauth/callback'
+    | '/api/public/meta/oauth/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,6 +348,8 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicMetaOauthCallbackRoute: typeof ApiPublicMetaOauthCallbackRoute
+  ApiPublicMetaOauthStartRoute: typeof ApiPublicMetaOauthStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -393,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuotationsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/meta/': {
+      id: '/_authenticated/meta/'
+      path: '/meta'
+      fullPath: '/meta/'
+      preLoaderRoute: typeof AuthenticatedMetaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invoices/': {
       id: '/_authenticated/invoices/'
       path: '/invoices'
@@ -428,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuotationsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/meta/$accountId': {
+      id: '/_authenticated/meta/$accountId'
+      path: '/meta/$accountId'
+      fullPath: '/meta/$accountId'
+      preLoaderRoute: typeof AuthenticatedMetaAccountIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invoices/new': {
       id: '/_authenticated/invoices/new'
       path: '/invoices/new'
@@ -456,6 +522,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalaryIdEditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/meta/oauth/start': {
+      id: '/api/public/meta/oauth/start'
+      path: '/api/public/meta/oauth/start'
+      fullPath: '/api/public/meta/oauth/start'
+      preLoaderRoute: typeof ApiPublicMetaOauthStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/meta/oauth/callback': {
+      id: '/api/public/meta/oauth/callback'
+      path: '/api/public/meta/oauth/callback'
+      fullPath: '/api/public/meta/oauth/callback'
+      preLoaderRoute: typeof ApiPublicMetaOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -480,11 +560,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedInvoicesIdRoute: typeof AuthenticatedInvoicesIdRoute
   AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
+  AuthenticatedMetaAccountIdRoute: typeof AuthenticatedMetaAccountIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
   AuthenticatedSalaryIdRoute: typeof AuthenticatedSalaryIdRoute
   AuthenticatedSalaryNewRoute: typeof AuthenticatedSalaryNewRoute
   AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
+  AuthenticatedMetaIndexRoute: typeof AuthenticatedMetaIndexRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
   AuthenticatedSalaryIndexRoute: typeof AuthenticatedSalaryIndexRoute
   AuthenticatedSalaryIdEditRoute: typeof AuthenticatedSalaryIdEditRoute
@@ -500,11 +582,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedInvoicesIdRoute: AuthenticatedInvoicesIdRoute,
   AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
+  AuthenticatedMetaAccountIdRoute: AuthenticatedMetaAccountIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
   AuthenticatedSalaryIdRoute: AuthenticatedSalaryIdRoute,
   AuthenticatedSalaryNewRoute: AuthenticatedSalaryNewRoute,
   AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
+  AuthenticatedMetaIndexRoute: AuthenticatedMetaIndexRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
   AuthenticatedSalaryIndexRoute: AuthenticatedSalaryIndexRoute,
   AuthenticatedSalaryIdEditRoute: AuthenticatedSalaryIdEditRoute,
@@ -518,6 +602,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicMetaOauthCallbackRoute: ApiPublicMetaOauthCallbackRoute,
+  ApiPublicMetaOauthStartRoute: ApiPublicMetaOauthStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

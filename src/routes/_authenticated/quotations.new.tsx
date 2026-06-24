@@ -42,8 +42,7 @@ function NewQuotationPage() {
   const create = useMutation({
     mutationFn: async () => {
       if (!companyId) throw new Error("Select company");
-      if (clientMode === "existing" && !clientId) throw new Error("Select a client or switch to custom");
-      if (clientMode === "custom" && !customClientName.trim()) throw new Error("Enter client name");
+      if (!customClientName.trim()) throw new Error("Enter client name");
       if (items.some((i) => !i.item_name)) throw new Error("All items need a name");
 
       const { data: num, error: numErr } = await supabase.rpc("next_quotation_number", { _company_id: companyId });
@@ -51,8 +50,8 @@ function NewQuotationPage() {
 
       const { data: q, error } = await supabase.from("quotations").insert({
         company_id: companyId,
-        client_id: clientMode === "existing" ? clientId : null,
-        custom_client_name: clientMode === "custom" ? customClientName.trim() : null,
+        client_id: null,
+        custom_client_name: customClientName.trim(),
         quotation_number: num as string,
         quotation_date: date,
         valid_until: null,

@@ -102,7 +102,7 @@ function QuotationDetail() {
   const titleSec = section("title");
   const handles = section("handles") || "Facebook, Instagram, Youtube, Google Maps";
   const noteText = section("note") || (notesRaw && !/title:|handles:|note:/i.test(notesRaw) ? notesRaw.trim() : "Advertising expenses above suggested amounts will be billed separately.");
-  const serviceTitle = titleSec || "Social Media Marketing for";
+  const serviceTitle = (titleSec || "Social Media Marketing").replace(/\s+for\s*$/i, "");
   const servicesList = (q.terms || "").split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
   const hasAdSpend = data.items.some((it) => Number(it.amount) > Number(it.unit_price) + 0.5);
 

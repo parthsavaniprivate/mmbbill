@@ -8,19 +8,19 @@ export const Route = createFileRoute("/api/public/meta/oauth/callback")({
         const code = url.searchParams.get("code");
         const stateRaw = url.searchParams.get("state");
         const err = url.searchParams.get("error_description") || url.searchParams.get("error");
-        if (err) return htmlClose(`Meta returned an error: ${err}`);
-        if (!code || !stateRaw) return htmlClose("Missing code or state");
+        if (err) return htmlClose(false, `Meta returned an error: ${err}`);
+        if (!code || !stateRaw) return htmlClose(false, "Missing code or state");
 
         let state: { company_id: string; return_to?: string };
         try {
           state = JSON.parse(Buffer.from(stateRaw, "base64url").toString("utf8"));
         } catch {
-          return htmlClose("Invalid state");
+          return htmlClose(false, "Invalid state");
         }
 
         const appId = process.env.META_APP_ID!;
         const appSecret = process.env.META_APP_SECRET!;
-        if (!appId || !appSecret) return htmlClose("Meta app credentials not configured");
+        if (!appId || !appSecret) return htmlClose(false, "Meta app credentials not configured");
 
         const redirectUri = `${url.origin}/api/public/meta/oauth/callback`;
         const meta = await import("@/lib/meta-api.server");
@@ -43,27 +43,52 @@ export const Route = createFileRoute("/api/public/meta/oauth/callback")({
           });
 
           const back = state.return_to || "/meta";
-          return new Response(
-            `<html><body style="background:#0a0a0a;color:#eee;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh">
-              <div>Meta account connected. Redirecting…</div>
-              <script>window.location.replace(${JSON.stringify(back + "?connected=1")})</script>
-            </body></html>`,
-            { headers: { "content-type": "text/html; charset=utf-8" } },
-          );
+          return htmlClose(true, "Connected", back);
         } catch (e) {
-          return htmlClose(e instanceof Error ? e.message : "Connection failed");
+          return htmlClose(false, e instanceof Error ? e.message : "Connection failed");
         }
       },
     },
   },
 });
 
-function htmlClose(msg: string) {
-  return new Response(
-    `<html><body style="background:#0a0a0a;color:#eee;font-family:system-ui;padding:24px">
-      <h2>Meta connection failed</h2><p>${msg.replace(/</g, "&lt;")}</p>
-      <p><a style="color:#60a5fa" href="/meta">Back to Meta Ads</a></p>
-    </body></html>`,
-    { status: 400, headers: { "content-type": "text/html; charset=utf-8" } },
-  );
+function htmlClose(ok: boolean, msg: string, back = "/meta") {
+  const payload = JSON.stringify({ type: "meta_oauth_done", ok, message: msg });
+  const fallback = ok ? `${back}?connected=1` : back;
+  const body = `<!doctype html><html><body style="background:#0a0a0a;color:#eee;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+    <div style="text-align:center;max-width:480px;padding:24px">
+      <h2 style="margin:0 0 8px">${ok ? "Meta connected" : "Meta connection failed"}</h2>
+      <p style="opacity:.8">${msg.replace(/</g, "&lt;")}</p>
+      <p style="opacity:.6;font-size:13px">You can close this window.</p>
+    </div>
+    <script>
+      (function(){
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(${payload}, "*");
+            setTimeout(function(){ window.close(); }, 400);
+            return;
+          }
+        } catch(e){}
+        // No opener — full-page redirect back to the app
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.replace(${JSON.stringify(fallback)});
+          } else {
+            window.location.replace(${JSON.stringify(fallback)});
+          }
+        } catch(e) {
+          window.location.replace(${JSON.stringify(fallback)});
+        }
+      })();
+    </script>
+  </body></html>`;
+  return new Response(body, {
+    status: ok ? 200 : 400,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      // Allow the page to run standalone (popup or top window), no iframe embedding needed
+      "x-frame-options": "DENY",
+    },
+  });
 }

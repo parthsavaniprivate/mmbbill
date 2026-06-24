@@ -456,7 +456,6 @@ function Dashboard() {
       })()}
 
 
-      })()}
 
       {/* Quotations & Salary Slips counts */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">

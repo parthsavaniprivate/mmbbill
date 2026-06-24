@@ -259,7 +259,9 @@ function QuotationDetail() {
             )}
           </div>
         </div>
+        </div>
       </Card>
+
 
 
     </div>

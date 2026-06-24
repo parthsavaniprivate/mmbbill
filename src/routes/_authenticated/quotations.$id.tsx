@@ -167,17 +167,10 @@ function QuotationDetail() {
               <h1 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px", color: "#111" }}>
                 Quote for {serviceTitle} for
               </h1>
-              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px" }}>
-                {(() => {
-                  const parts = clientDisplay.split(",");
-                  return (
-                    <>
-                      <span style={{ color: "#F26A2E" }}>{parts[0]}</span>
-                      {parts.length > 1 && <span style={{ color: "#6C42E0" }}>{"," + parts.slice(1).join(",")}</span>}
-                    </>
-                  );
-                })()}
+              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px", color: "#111" }}>
+                {clientDisplay}
               </h2>
+
             </div>
             <img src={co?.logo_url || mmbLogo.url} alt="" className="object-contain shrink-0" style={{ height: "14mm" }} />
           </div>
@@ -254,11 +247,8 @@ function QuotationDetail() {
           )}
 
           {/* Meta footer */}
-          <div className="mt-4 pt-2 flex items-end justify-between text-[9px] text-gray-600">
-            <div>
-              <div><span className="text-gray-500">Quote #:</span> <span className="font-semibold text-gray-800">{q.quotation_number}</span></div>
-              <div><span className="text-gray-500">Date:</span> {formatDate(q.quotation_date)}</div>
-            </div>
+          <div className="mt-4 pt-2 flex items-end justify-end text-[9px] text-gray-600">
+
             {co?.signature_url && (
               <div className="text-center">
                 <img src={co.signature_url} alt="" className="h-8 mx-auto object-contain" />

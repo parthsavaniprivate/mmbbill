@@ -25,6 +25,7 @@ import { Route as AuthenticatedSalaryIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations.index'
 import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
 import { Route as AuthenticatedSalaryNewRouteImport } from './routes/_authenticated/salary.new'
+import { Route as AuthenticatedSalaryIdRouteImport } from './routes/_authenticated/salary.$id'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations.new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations.$id'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
@@ -113,6 +114,11 @@ const AuthenticatedSalaryNewRoute = AuthenticatedSalaryNewRouteImport.update({
   path: '/salary/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalaryIdRoute = AuthenticatedSalaryIdRouteImport.update({
+  id: '/salary/$id',
+  path: '/salary/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuotationsNewRoute =
   AuthenticatedQuotationsNewRouteImport.update({
     id: '/quotations/new',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices': typeof AuthenticatedInvoicesIndexRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/_authenticated/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/_authenticated/salary/new': typeof AuthenticatedSalaryNewRoute
   '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/quotations/$id'
     | '/quotations/new'
+    | '/salary/$id'
     | '/salary/new'
     | '/invoices/'
     | '/quotations/'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/quotations/$id'
     | '/quotations/new'
+    | '/salary/$id'
     | '/salary/new'
     | '/invoices'
     | '/quotations'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/new'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
+    | '/_authenticated/salary/$id'
     | '/_authenticated/salary/new'
     | '/_authenticated/invoices/'
     | '/_authenticated/quotations/'
@@ -401,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalaryNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/salary/$id': {
+      id: '/_authenticated/salary/$id'
+      path: '/salary/$id'
+      fullPath: '/salary/$id'
+      preLoaderRoute: typeof AuthenticatedSalaryIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/quotations/new': {
       id: '/_authenticated/quotations/new'
       path: '/quotations/new'
@@ -463,6 +482,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
+  AuthenticatedSalaryIdRoute: typeof AuthenticatedSalaryIdRoute
   AuthenticatedSalaryNewRoute: typeof AuthenticatedSalaryNewRoute
   AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
@@ -482,6 +502,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
+  AuthenticatedSalaryIdRoute: AuthenticatedSalaryIdRoute,
   AuthenticatedSalaryNewRoute: AuthenticatedSalaryNewRoute,
   AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,

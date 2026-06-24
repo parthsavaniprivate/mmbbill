@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Printer, MessageCircle, Mail, Trash2 } from "lucide-react";
+import { ArrowLeft, Printer, MessageCircle, Mail, Trash2, Pencil } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";

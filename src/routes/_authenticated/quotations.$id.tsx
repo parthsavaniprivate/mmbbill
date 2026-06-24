@@ -157,10 +157,12 @@ function QuotationDetail() {
         </div>
       </div>
 
-      <style>{`@media print { @page { size: 162mm 104mm; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } }`}</style>
+      <style>{`@media print { @page { size: 162mm 104mm; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } .q-scale { transform: none !important; height: auto !important; } } .q-scale { transform: scale(1.7); transform-origin: top center; height: calc(104mm * 1.7); }`}</style>
 
-      <Card className="shadow-card print:shadow-none overflow-hidden q-doc rounded-2xl">
+      <Card className="shadow-card print:shadow-none overflow-visible q-doc rounded-2xl bg-transparent border-0 shadow-none">
+        <div className="q-scale mx-auto" style={{ width: "162mm" }}>
         <div id="quote-doc" className="mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "9mm 11mm", fontSize: "10px", lineHeight: 1.4, color: "#111", background: "#f5f4f1", borderRadius: "10mm" }}>
+
           {/* Header: title + logo */}
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
@@ -257,7 +259,9 @@ function QuotationDetail() {
             )}
           </div>
         </div>
+        </div>
       </Card>
+
 
 
     </div>

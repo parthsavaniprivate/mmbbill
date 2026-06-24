@@ -38,9 +38,10 @@ function NewQuotationPage() {
 
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
+    const subtotal = items.reduce((s, it) => s + (it.amount || 0), 0);
     return { subtotal, total: subtotal };
   }, [items]);
+
 
   const create = useMutation({
     mutationFn: async () => {

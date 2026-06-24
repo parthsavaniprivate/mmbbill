@@ -9,6 +9,7 @@ import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2 } from "lucid
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 type Status = Database["public"]["Enums"]["quotation_status"];
 

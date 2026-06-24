@@ -89,6 +89,23 @@ function QuotationDetail() {
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
   const mailLink = cl?.email ? `mailto:${cl.email}?subject=${encodeURIComponent(`Quotation ${q.quotation_number}`)}&body=${encodeURIComponent(waMsg)}` : null;
 
+  // Parse notes for structured sections. Convention (any order, case-insensitive headings):
+  //   Title: Social Media Marketing
+  //   Handles: Facebook, Instagram, Youtube, Google Maps
+  //   Note: Advertising expenses ...
+  const notesRaw = q.notes || "";
+  const section = (key: string) => {
+    const re = new RegExp(`^\\s*${key}\\s*:\\s*(.*?)(?=\\n\\s*(?:title|handles|note)\\s*:|$)`, "ims");
+    const m = notesRaw.match(re);
+    return m ? m[1].trim() : "";
+  };
+  const titleSec = section("title");
+  const handles = section("handles") || "Facebook, Instagram, Youtube, Google Maps";
+  const noteText = section("note") || (notesRaw && !/title:|handles:|note:/i.test(notesRaw) ? notesRaw.trim() : "Advertising expenses above suggested amounts will be billed separately.");
+  const serviceTitle = titleSec || "Social Media Marketing for";
+  const servicesList = (q.terms || "").split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
+  const hasAdSpend = data.items.some((it) => Number(it.amount) > Number(it.unit_price) + 0.5);
+
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">

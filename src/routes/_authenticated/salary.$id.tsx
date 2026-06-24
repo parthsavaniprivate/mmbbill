@@ -84,66 +84,64 @@ function SalarySlipDetail() {
       </div>
 
       <Card className="shadow-card print:shadow-none overflow-hidden">
-        <div className="p-8 bg-white text-black text-[13px]">
-          {/* Company header */}
-          <div className="flex items-center gap-4 pb-4 mb-4 border-b-2 border-gray-800">
-            <img src={co?.logo_url || mmbLogo.url} alt="" className="h-16 w-16 object-contain shrink-0" />
-            <div className="flex-1">
-              <div className="text-2xl font-bold leading-tight">{co?.name}</div>
-              <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>
+        <div className="p-10 bg-white text-black text-[13px]">
+          {/* Top: title left, logo + address right */}
+          <div className="flex items-start justify-between mb-8">
+            <h2 className="text-3xl font-bold">Salary Slip</h2>
+            <div className="text-right">
+              <img src={co?.logo_url || mmbLogo.url} alt="" className="h-14 ml-auto object-contain mb-1" />
+              <div className="text-xs text-gray-700 whitespace-pre-line max-w-[260px]">{co?.address}</div>
             </div>
           </div>
 
-          {/* Title */}
-          <div className="text-center text-xl font-semibold tracking-wide mb-4">Salary Slip</div>
-
-          {/* Pay meta */}
-          <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
-            <Row k="Pay Period" v={period} />
-            <Row k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
-            <Row k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
+          {/* Two-column meta */}
+          <div className="grid grid-cols-2 gap-x-10 gap-y-1.5 mb-6 text-sm">
+            <MetaRow k="Pay Period" v={period} />
+            <MetaRow k="Employee Name" v={empName} />
+            <MetaRow k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
+            <MetaRow k="Designation" v={s.designation || "—"} />
+            <MetaRow k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
+            <MetaRow k="Department" v={s.department || "—"} />
           </div>
 
-          {/* Employee block */}
-          <div className="grid grid-cols-[140px_1fr] gap-y-1 mb-4 text-sm">
-            <div className="text-gray-600">Employee Name</div><div className="font-medium">{empName}</div>
-            <div className="text-gray-600">Designation</div><div>{s.designation || "—"}</div>
-            <div className="text-gray-600">Department</div><div>{s.department || "—"}</div>
-          </div>
-
-          {/* Earnings + Deductions tables */}
-          <div className="grid grid-cols-2 gap-0 border border-gray-800">
-            <div className="border-r border-gray-800">
-              <HeaderRow left="Earnings" right="Amount" />
-              <LineRow left="Basic Pay" right={inr(Number(s.basic))} />
-              <LineRow left="Incentive Pay" right={inr(Number(s.incentives))} />
-              <LineRow left="" right="" />
-              <LineRow left="" right="" />
-              <TotalRow left="Total Earnings" right={inr(totalEarnings)} />
-            </div>
-            <div>
-              <HeaderRow left="Deductions" right="Amount" />
-              <LineRow left="Provident Fund" right={inr(Number(s.pf))} />
-              <LineRow left="Professional Tax" right={inr(Number(s.prof_tax))} />
-              <LineRow left="Loan" right={inr(Number(s.loan))} />
-              <LineRow left="" right="" />
-              <TotalRow left="Total Deductions" right={inr(totalDed)} />
-            </div>
-          </div>
-
-          {/* Net Pay */}
-          <div className="border border-t-0 border-gray-800 bg-gray-100 flex justify-between px-3 py-2 font-bold">
-            <span>Net Pay</span><span>{inr(net)}</span>
-          </div>
+          {/* Single combined table: Earnings | Amount | Deductions | Amount */}
+          <table className="w-full border border-gray-800 border-collapse text-sm">
+            <thead>
+              <tr className="bg-gray-200">
+                <Th>Earnings</Th><Th className="text-right">Amount</Th>
+                <Th>Deductions</Th><Th className="text-right">Amount</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <Td>Basic Pay</Td><Td className="text-right">{inr(Number(s.basic))}</Td>
+                <Td>Provident Fund</Td><Td className="text-right">{Number(s.pf) ? inr(Number(s.pf)) : "—"}</Td>
+              </tr>
+              <tr>
+                <Td>Incentive Pay</Td><Td className="text-right">{Number(s.incentives) ? inr(Number(s.incentives)) : "—"}</Td>
+                <Td>Professional Tax</Td><Td className="text-right">{Number(s.prof_tax) ? inr(Number(s.prof_tax)) : "—"}</Td>
+              </tr>
+              <tr>
+                <Td>&nbsp;</Td><Td></Td>
+                <Td>Loan</Td><Td className="text-right">{Number(s.loan) ? inr(Number(s.loan)) : "—"}</Td>
+              </tr>
+              <tr>
+                <Td>&nbsp;</Td><Td></Td>
+                <Td className="font-semibold">Total Deductions</Td><Td className="text-right font-semibold">{totalDed ? inr(totalDed) : "—"}</Td>
+              </tr>
+              <tr className="bg-gray-50">
+                <Td className="font-semibold">Total Earnings</Td>
+                <Td className="text-right font-semibold">{inr(totalEarnings)}</Td>
+                <Td className="font-semibold">Net Pay</Td>
+                <Td className="text-right font-bold">{inr(net)}</Td>
+              </tr>
+            </tbody>
+          </table>
 
           {/* Signatures */}
-          <div className="grid grid-cols-2 gap-8 pt-14">
-            <div className="text-center text-xs">
-              <div className="border-t border-gray-500 pt-1">Employer Signature</div>
-            </div>
-            <div className="text-center text-xs">
-              <div className="border-t border-gray-500 pt-1">Employee Signature</div>
-            </div>
+          <div className="grid grid-cols-2 gap-10 pt-20">
+            <div className="text-sm"><div className="border-t border-gray-800 pt-1">Employer Signature</div></div>
+            <div className="text-sm text-right"><div className="border-t border-gray-800 pt-1">Employee Signature</div></div>
           </div>
         </div>
       </Card>
@@ -151,15 +149,19 @@ function SalarySlipDetail() {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return <div className="flex gap-2 text-sm"><span className="text-gray-600 w-24">{k}</span><span className="font-medium">{v}</span></div>;
+function MetaRow({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex">
+      <span className="w-36 text-gray-700">{k}</span>
+      <span className="mr-2">:</span>
+      <span className="font-medium">{v}</span>
+    </div>
+  );
 }
-function HeaderRow({ left, right }: { left: string; right: string }) {
-  return <div className="flex justify-between bg-gray-200 px-3 py-1.5 font-semibold border-b border-gray-800"><span>{left}</span><span>{right}</span></div>;
+function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <th className={`border border-gray-800 px-3 py-2 font-semibold text-left ${className}`}>{children}</th>;
 }
-function LineRow({ left, right }: { left: string; right: string }) {
-  return <div className="flex justify-between px-3 py-1.5 border-b border-gray-300 min-h-[30px]"><span>{left}</span><span>{right}</span></div>;
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`border border-gray-800 px-3 py-2 align-top ${className}`}>{children}</td>;
 }
-function TotalRow({ left, right }: { left: string; right: string }) {
-  return <div className="flex justify-between px-3 py-1.5 font-semibold bg-gray-50"><span>{left}</span><span>{right}</span></div>;
-}
+

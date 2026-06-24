@@ -17,7 +17,7 @@ import { Facebook, RefreshCw, Plug, Unplug, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/meta")({
+export const Route = createFileRoute("/_authenticated/meta/")({
   validateSearch: (s: Record<string, unknown>): { connected?: string } =>
     typeof s.connected === "string" ? { connected: s.connected } : {},
   component: MetaIndex,

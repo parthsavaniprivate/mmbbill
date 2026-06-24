@@ -134,6 +134,7 @@ export type Database = {
           phone: string | null
           pincode: string | null
           renewal_reminder_days: number
+          signature_url: string | null
           state: string | null
           updated_at: string
           website: string | null
@@ -158,6 +159,7 @@ export type Database = {
           phone?: string | null
           pincode?: string | null
           renewal_reminder_days?: number
+          signature_url?: string | null
           state?: string | null
           updated_at?: string
           website?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           phone?: string | null
           pincode?: string | null
           renewal_reminder_days?: number
+          signature_url?: string | null
           state?: string | null
           updated_at?: string
           website?: string | null
@@ -226,6 +229,80 @@ export type Database = {
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          bank_account: string | null
+          basic: number
+          company_id: string
+          conveyance: number
+          created_at: string
+          department: string | null
+          designation: string | null
+          email: string | null
+          employee_code: string | null
+          hra: number
+          id: string
+          is_active: boolean
+          joining_date: string | null
+          medical: number
+          mobile: string | null
+          name: string
+          pan: string | null
+          uan: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_account?: string | null
+          basic?: number
+          company_id: string
+          conveyance?: number
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          employee_code?: string | null
+          hra?: number
+          id?: string
+          is_active?: boolean
+          joining_date?: string | null
+          medical?: number
+          mobile?: string | null
+          name: string
+          pan?: string | null
+          uan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_account?: string | null
+          basic?: number
+          company_id?: string
+          conveyance?: number
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          email?: string | null
+          employee_code?: string | null
+          hra?: number
+          id?: string
+          is_active?: boolean
+          joining_date?: string | null
+          medical?: number
+          mobile?: string | null
+          name?: string
+          pan?: string | null
+          uan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -580,6 +657,135 @@ export type Database = {
         }
         Relationships: []
       }
+      quotation_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          gst_rate: number
+          id: string
+          item_name: string
+          position: number
+          quantity: number
+          quotation_id: string
+          unit_price: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          gst_rate?: number
+          id?: string
+          item_name: string
+          position?: number
+          quantity?: number
+          quotation_id: string
+          unit_price?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          gst_rate?: number
+          id?: string
+          item_name?: string
+          position?: number
+          quantity?: number
+          quotation_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotations: {
+        Row: {
+          client_id: string | null
+          company_id: string
+          converted_invoice_id: string | null
+          created_at: string
+          discount: number
+          gst_amount: number
+          gst_rate: number
+          id: string
+          notes: string | null
+          quotation_date: string
+          quotation_number: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          subtotal: number
+          terms: string | null
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          company_id: string
+          converted_invoice_id?: string | null
+          created_at?: string
+          discount?: number
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          subtotal?: number
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          company_id?: string
+          converted_invoice_id?: string | null
+          created_at?: string
+          discount?: number
+          gst_amount?: number
+          gst_rate?: number
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          subtotal?: number
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_converted_invoice_id_fkey"
+            columns: ["converted_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_expenses: {
         Row: {
           amount: number
@@ -645,6 +851,105 @@ export type Database = {
           },
         ]
       }
+      salary_slips: {
+        Row: {
+          basic: number
+          bonus: number
+          company_id: string
+          conveyance: number
+          created_at: string
+          employee_id: string
+          esi: number
+          gross: number
+          hra: number
+          id: string
+          incentives: number
+          medical: number
+          month: number
+          net: number
+          notes: string | null
+          other_deductions: number
+          overtime: number
+          paid_on: string | null
+          pf: number
+          prof_tax: number
+          status: Database["public"]["Enums"]["salary_status"]
+          tds: number
+          total_deductions: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          basic?: number
+          bonus?: number
+          company_id: string
+          conveyance?: number
+          created_at?: string
+          employee_id: string
+          esi?: number
+          gross?: number
+          hra?: number
+          id?: string
+          incentives?: number
+          medical?: number
+          month: number
+          net?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime?: number
+          paid_on?: string | null
+          pf?: number
+          prof_tax?: number
+          status?: Database["public"]["Enums"]["salary_status"]
+          tds?: number
+          total_deductions?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          basic?: number
+          bonus?: number
+          company_id?: string
+          conveyance?: number
+          created_at?: string
+          employee_id?: string
+          esi?: number
+          gross?: number
+          hra?: number
+          id?: string
+          incentives?: number
+          medical?: number
+          month?: number
+          net?: number
+          notes?: string | null
+          other_deductions?: number
+          overtime?: number
+          paid_on?: string | null
+          pf?: number
+          prof_tax?: number
+          status?: Database["public"]["Enums"]["salary_status"]
+          tds?: number
+          total_deductions?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_slips_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salary_slips_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -687,6 +992,7 @@ export type Database = {
         }
         Returns: string
       }
+      next_quotation_number: { Args: { _company_id: string }; Returns: string }
       recalc_invoice_status: {
         Args: { _invoice_id: string }
         Returns: undefined
@@ -695,6 +1001,7 @@ export type Database = {
         Args: { _invoice_id: string }
         Returns: undefined
       }
+      recalc_quotation_totals: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
@@ -730,7 +1037,9 @@ export type Database = {
         | "card"
         | "cheque"
         | "other"
+      quotation_status: "draft" | "sent" | "accepted" | "rejected"
       recurring_cycle: "monthly" | "quarterly" | "half_yearly" | "yearly"
+      salary_status: "draft" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -894,7 +1203,9 @@ export const Constants = {
         "cheque",
         "other",
       ],
+      quotation_status: ["draft", "sent", "accepted", "rejected"],
       recurring_cycle: ["monthly", "quarterly", "half_yearly", "yearly"],
+      salary_status: ["draft", "paid"],
     },
   },
 } as const

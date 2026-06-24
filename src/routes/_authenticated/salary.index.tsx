@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, Eye, Users, Wallet, Calendar, Clock } from "lucide-react";
+import { Plus, FileDown, Eye, Users, Wallet, Calendar, Clock, Trash2 } from "lucide-react";
 import { inr, downloadCSV } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/salary/")({ component: SalaryPage });
@@ -22,6 +23,16 @@ function SalaryPage() {
   const [status, setStatus] = useState("all");
   const now = new Date();
   const [year, setYear] = useState(String(now.getFullYear()));
+  const qc = useQueryClient();
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("salary_slips").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries({ queryKey: ["salary-slips"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: slips = [] } = useQuery({
     queryKey: ["salary-slips"],
@@ -144,6 +155,7 @@ function SalaryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="ghost"><Link to="/salary/$id" params={{ id: s.id }}><Eye className="w-4 h-4" /></Link></Button>
+                        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete this slip?")) del.mutate(s.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                       </TableCell>
                     </TableRow>
                   );

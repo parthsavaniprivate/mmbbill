@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, Eye, Users, Wallet, Calendar, Clock } from "lucide-react";
+import { Plus, FileDown, Eye, Users, Wallet, Calendar, Clock, Trash2 } from "lucide-react";
 import { inr, downloadCSV } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/salary/")({ component: SalaryPage });

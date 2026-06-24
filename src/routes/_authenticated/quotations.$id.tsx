@@ -247,11 +247,8 @@ function QuotationDetail() {
           )}
 
           {/* Meta footer */}
-          <div className="mt-4 pt-2 flex items-end justify-between text-[9px] text-gray-600">
-            <div>
-              <div><span className="text-gray-500">Quote #:</span> <span className="font-semibold text-gray-800">{q.quotation_number}</span></div>
-              <div><span className="text-gray-500">Date:</span> {formatDate(q.quotation_date)}</div>
-            </div>
+          <div className="mt-4 pt-2 flex items-end justify-end text-[9px] text-gray-600">
+
             {co?.signature_url && (
               <div className="text-center">
                 <img src={co.signature_url} alt="" className="h-8 mx-auto object-contain" />

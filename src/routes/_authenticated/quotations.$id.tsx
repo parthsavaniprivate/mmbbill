@@ -122,7 +122,8 @@ function QuotationDetail() {
               <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print / PDF</Button>
+          <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print</Button>
+          <Button variant="outline" onClick={downloadPdf}><Download className="w-4 h-4" />Download PDF</Button>
           {waLink && <Button variant="outline" onClick={() => window.open(waLink, "_blank")}><MessageCircle className="w-4 h-4" />WhatsApp</Button>}
           {mailLink && <Button variant="outline" onClick={() => { window.location.href = mailLink; }}><Mail className="w-4 h-4" />Email</Button>}
           {!q.converted_invoice_id && (

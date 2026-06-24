@@ -61,10 +61,24 @@ function MetaIndex() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const startConnect = () => {
+  const startConnect = async () => {
     if (isAll) { toast.error("Pick a company first"); return; }
     const origin = window.location.origin;
-    const url = `${origin}/api/public/meta/oauth/start?company_id=${selected}&return_to=/meta`;
+
+    // Create a single-use OAuth state row as the signed-in admin.
+    // The callback uses a SECURITY DEFINER RPC keyed off this id —
+    // no Supabase service role key is needed on the server.
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: userRes } = await supabase.auth.getUser();
+    if (!userRes.user) { toast.error("You must be signed in"); return; }
+    const { data: state, error: stateErr } = await supabase
+      .from("meta_oauth_states")
+      .insert({ company_id: selected!, created_by: userRes.user.id, return_to: "/meta" })
+      .select("id")
+      .single();
+    if (stateErr || !state) { toast.error(stateErr?.message ?? "Could not start connection"); return; }
+
+    const url = `${origin}/api/public/meta/oauth/start?state=${state.id}`;
 
     // Open in a popup to escape the Lovable preview iframe (Facebook blocks iframe embedding)
     const w = 600, h = 750;
@@ -77,7 +91,6 @@ function MetaIndex() {
     );
 
     if (!popup) {
-      // Popup blocked — break out of iframe with a top-level redirect
       try {
         if (window.top && window.top !== window.self) {
           window.top.location.href = url;
@@ -90,7 +103,6 @@ function MetaIndex() {
       return;
     }
 
-    // Listen for the popup to post back when OAuth completes
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== origin) return;
       if (e.data?.type === "meta_oauth_done") {
@@ -99,7 +111,6 @@ function MetaIndex() {
         if (e.data.ok) {
           toast.success("Meta account connected");
           qc.invalidateQueries({ queryKey: ["meta-accounts"] });
-          // trigger pending picker via search param
           nav({ to: "/meta", search: { connected: "1" }, replace: true });
         } else {
           toast.error(e.data.message || "Meta connection failed");

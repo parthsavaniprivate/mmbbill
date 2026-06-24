@@ -116,85 +116,93 @@ function QuotationDetail() {
         </div>
       </div>
 
+      <style>{`@media print { @page { size: A4 landscape; margin: 0; } body { background: white; } .no-print { display: none !important; } } .q-h { position: relative; display: inline-block; padding-bottom: 6px; } .q-h::after { content: ""; position: absolute; left: 0; bottom: 0; width: 90px; height: 3px; background: #f5b921; border-radius: 2px; }`}</style>
+
       <Card className="shadow-card print:shadow-none overflow-hidden">
-        <div className="p-10 bg-white text-black space-y-6">
-          <div className="flex justify-between items-start gap-4">
-            <div>
-              {co?.logo_url && <img src={co.logo_url} alt="" className="h-14 mb-2 object-contain" />}
-              <div className="font-bold text-lg">{co?.name}</div>
-              <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>
-              <div className="text-xs text-gray-600">{co?.phone} • {co?.email}</div>
-              {co?.gst_number && <div className="text-xs text-gray-600">GSTIN: {co.gst_number}</div>}
+        <div className="bg-white text-black p-10 md:p-14" style={{ fontFamily: "Georgia, 'Times New Roman', serif", minHeight: "560px" }}>
+          {/* Header */}
+          <div className="flex items-start justify-between mb-10">
+            <div className="text-xs text-gray-500">
+              <div>{q.quotation_number}</div>
+              <div>{formatDate(q.quotation_date)}</div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold tracking-tight">QUOTATION</div>
-              <div className="text-sm font-semibold mt-1">{q.quotation_number}</div>
-              <div className="text-xs text-gray-600 mt-1">Date: {formatDate(q.quotation_date)}</div>
-              {q.valid_until && <div className="text-xs text-gray-600">Valid Until: {formatDate(q.valid_until)}</div>}
-              <Badge className="mt-2" variant="outline">{q.status}</Badge>
+              {co?.logo_url ? (
+                <img src={co.logo_url} alt="" className="h-10 object-contain ml-auto" />
+              ) : (
+                <div className="text-2xl tracking-tight" style={{ fontFamily: "Georgia, serif" }}>{co?.name}</div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="p-3 border rounded">
-              <div className="text-xs uppercase text-gray-500 mb-1">Quote For</div>
-              <div className="font-semibold">{cl?.business_name || cl?.client_name || "—"}</div>
-              {cl?.business_name && cl?.client_name && <div>{cl.client_name}</div>}
-              <div className="text-xs text-gray-600 whitespace-pre-line">{cl?.address}</div>
-              <div className="text-xs text-gray-600">{cl?.mobile} {cl?.email && `• ${cl.email}`}</div>
-              {cl?.gst_number && <div className="text-xs text-gray-600">GSTIN: {cl.gst_number}</div>}
-            </div>
+          {/* Title */}
+          <h2 className="text-3xl font-semibold mb-10 leading-snug">
+            Quote for {q.notes?.split("\n")[0] || "Services"} for<br />
+            {cl?.business_name || cl?.client_name || "—"}
+          </h2>
+
+          {/* Items table — 3 columns like reference */}
+          <div className="grid grid-cols-12 gap-6 mb-10">
+            <div className="col-span-6"><div className="q-h text-lg font-semibold">No of Options</div></div>
+            <div className="col-span-3"><div className="q-h text-lg font-semibold">Our Fees</div></div>
+            <div className="col-span-3"><div className="q-h text-lg font-semibold">Photo/Videography</div></div>
+
+            {data.items.map((it) => (
+              <div key={it.id} className="contents">
+                <div className="col-span-6">
+                  <div className="font-semibold text-base">{it.item_name}</div>
+                  {it.description && (
+                    <div className="text-sm text-gray-700 whitespace-pre-line mt-1">{it.description}</div>
+                  )}
+                </div>
+                <div className="col-span-3 text-base">{inr(Number(it.unit_price))}</div>
+                <div className="col-span-3 text-base">{Number(it.quantity) > 1 ? inr(Number(it.amount) - Number(it.unit_price)) : "—"}</div>
+              </div>
+            ))}
           </div>
 
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-2 border">#</th>
-                <th className="p-2 border">Item</th>
-                <th className="p-2 border text-right">Qty</th>
-                <th className="p-2 border text-right">Unit Price</th>
-                <th className="p-2 border text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((it, i) => (
-                <tr key={it.id}>
-                  <td className="p-2 border">{i + 1}</td>
-                  <td className="p-2 border">
-                    <div className="font-medium">{it.item_name}</div>
-                    {it.description && <div className="text-xs text-gray-600">{it.description}</div>}
-                  </td>
-                  <td className="p-2 border text-right">{Number(it.quantity)}</td>
-                  <td className="p-2 border text-right">{inr(Number(it.unit_price))}</td>
-                  <td className="p-2 border text-right">{inr(Number(it.amount))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="flex justify-between gap-6">
-            <div className="text-xs text-gray-700 max-w-sm space-y-2">
-              {q.notes && <div><div className="font-semibold">Notes</div><div className="whitespace-pre-line">{q.notes}</div></div>}
-              {q.terms && <div><div className="font-semibold">Terms & Conditions</div><div className="whitespace-pre-line">{q.terms}</div></div>}
+          {/* Services bullets — use terms field, one bullet per line */}
+          {q.terms && (
+            <div className="mb-8">
+              <div className="q-h text-base font-semibold mb-4">Our services will include following things:</div>
+              <ul className="space-y-2 text-base">
+                {q.terms.split("\n").filter(Boolean).map((line, i) => (
+                  <li key={i} className="flex gap-2"><span style={{ color: "#f5b921" }}>▪</span><span>{line.replace(/^[-•*]\s*/, "")}</span></li>
+                ))}
+              </ul>
             </div>
-            <div className="text-sm space-y-1 min-w-[240px]">
+          )}
+
+          {/* Totals + Note */}
+          <div className="flex justify-between items-end gap-6 mt-10">
+            <div className="text-xs text-gray-700 max-w-md">
+              {q.notes && q.notes.includes("\n") && (
+                <div>
+                  <div className="font-semibold mb-1">Note:</div>
+                  <div className="whitespace-pre-line">{q.notes.split("\n").slice(1).join("\n")}</div>
+                </div>
+              )}
+            </div>
+            <div className="text-sm space-y-1 min-w-[260px]">
               <Row label="Subtotal" value={inr(Number(q.subtotal))} />
-              <Row label="Discount" value={`- ${inr(Number(q.discount))}`} />
-              <Row label={`GST (${q.gst_rate}%)`} value={inr(Number(q.gst_amount))} />
-              <div className="border-t pt-1"><Row label="Grand Total" value={inr(Number(q.total))} bold /></div>
+              {Number(q.discount) > 0 && <Row label="Discount" value={`- ${inr(Number(q.discount))}`} />}
+              {Number(q.gst_rate) > 0 && <Row label={`GST (${q.gst_rate}%)`} value={inr(Number(q.gst_amount))} />}
+              <div className="border-t border-gray-400 pt-2 mt-1"><Row label="Grand Total" value={inr(Number(q.total))} bold /></div>
               <div className="text-xs text-gray-600 italic pt-1">{amountInWords(Math.round(Number(q.total)))} Rupees Only</div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-8">
+          {/* Signature */}
+          <div className="flex justify-end mt-12">
             <div className="text-center">
-              {co?.signature_url && <img src={co.signature_url} alt="" className="h-14 mx-auto object-contain" />}
+              {co?.signature_url && <img src={co.signature_url} alt="" className="h-12 mx-auto object-contain" />}
               <div className="border-t border-gray-400 pt-1 mt-1 text-xs">Authorized Signatory</div>
               <div className="text-xs text-gray-600">{co?.name}</div>
             </div>
           </div>
         </div>
       </Card>
+
     </div>
   );
 }

@@ -149,7 +149,7 @@ function QuotationDetail() {
 
           {/* Title */}
           <h1 className="text-[20px] font-bold leading-tight mb-1">
-            Quote for {serviceTitle}
+            Quote for {serviceTitle} for
           </h1>
           <h2 className="text-[20px] font-bold leading-tight mb-6">{clientDisplay}</h2>
 

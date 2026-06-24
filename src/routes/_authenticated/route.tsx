@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   LayoutDashboard, Users, Package2, Receipt, Wallet, TrendingDown, RefreshCw,
-  BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search, FileText, BadgeIndianRupee, UserCog,
+  BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search, FileText, BadgeIndianRupee,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";

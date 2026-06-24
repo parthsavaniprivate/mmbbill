@@ -219,16 +219,8 @@ function Dashboard() {
 
   const activeClients = clients.filter((c) => c.status === "active").length;
 
-  const quotations = filtCompany(data.quotations).filter((q) => inDateRange(q.quotation_date));
-  const salarySlips = filtCompany(data.salarySlips).filter((s) => {
-    if (!from || !to) return true;
-    const d = new Date(s.year, (s.month ?? 1) - 1, 1);
-    return d >= new Date(from.getFullYear(), from.getMonth(), 1) && d <= new Date(to.getFullYear(), to.getMonth() + 1, 0);
-  });
-  const quotationsCount = quotations.length;
-  const quotationsValue = quotations.reduce((s, q) => s + Number(q.total || 0), 0);
-  const salaryCount = salarySlips.length;
-  const salaryValue = salarySlips.reduce((s, x) => s + Number(x.net || 0), 0);
+
+
 
 
   // Category breakdown (current month)
@@ -457,13 +449,8 @@ function Dashboard() {
 
 
 
-      {/* Quotations & Salary Slips counts */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <MiniKpi title="Quotations" value={String(quotationsCount)} icon={CheckCircle2} />
-        <MiniKpi title="Quotation Value" value={inr(quotationsValue)} icon={IndianRupee} tone="ok" />
-        <MiniKpi title="Salary Slips" value={String(salaryCount)} icon={UserCheck} />
-        <MiniKpi title="Salary Paid" value={inr(salaryValue)} icon={Wallet} tone="warn" />
-      </div>
+
+
 
       {/* Analytics chart */}
       <Card className="shadow-card">

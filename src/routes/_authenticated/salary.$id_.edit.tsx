@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { inr } from "@/lib/format";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/salary/$id/edit")({ component: EditSalarySlip });
+export const Route = createFileRoute("/_authenticated/salary/$id_/edit")({ component: EditSalarySlip });
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 

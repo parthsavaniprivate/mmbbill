@@ -52,7 +52,7 @@ function useAll() {
     queryKey: ["dashboard-data"],
     staleTime: 30_000,
     queryFn: async () => {
-      const [invoices, payments, expenses, clients, packages, companies, recurring] = await Promise.all([
+      const [invoices, payments, expenses, clients, packages, companies, recurring, quotations, salarySlips] = await Promise.all([
         supabase.from("invoices").select("*"),
         supabase.from("payments").select("*, invoices(company_id, client_id, total, clients(client_name, business_name))"),
         supabase.from("expenses").select("*"),
@@ -60,6 +60,8 @@ function useAll() {
         supabase.from("packages").select("*, clients(company_id, client_name, business_name)"),
         supabase.from("companies").select("id, name"),
         supabase.from("recurring_expenses").select("*"),
+        supabase.from("quotations").select("id, company_id, quotation_date, status, total"),
+        supabase.from("salary_slips").select("id, company_id, month, year, net"),
       ]);
       return {
         invoices: invoices.data ?? [],
@@ -69,7 +71,10 @@ function useAll() {
         packages: packages.data ?? [],
         companies: companies.data ?? [],
         recurring: recurring.data ?? [],
+        quotations: quotations.data ?? [],
+        salarySlips: salarySlips.data ?? [],
       };
+
     },
   });
 }

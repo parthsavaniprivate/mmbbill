@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, Printer, MessageCircle, Mail, FileText, Trash2, Download } from "lucide-react";
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -89,6 +89,26 @@ function QuotationDetail() {
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
   const mailLink = cl?.email ? `mailto:${cl.email}?subject=${encodeURIComponent(`Quotation ${q.quotation_number}`)}&body=${encodeURIComponent(waMsg)}` : null;
 
+  async function downloadPdf() {
+    const el = document.getElementById("quote-doc");
+    if (!el) return;
+    try {
+      toast.loading("Generating PDF…", { id: "pdf" });
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [162, 104] });
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 162, 104);
+      pdf.save(`Quote-${clientDisplay.replace(/[^\w-]+/g, "_")}-${q.quotation_number}.pdf`);
+      toast.success("PDF downloaded", { id: "pdf" });
+    } catch (e) {
+      toast.error((e as Error).message, { id: "pdf" });
+    }
+  }
+
+
   // Parse notes for structured sections. Convention (any order, case-insensitive headings):
   //   Title: Social Media Marketing
   //   Handles: Facebook, Instagram, Youtube, Google Maps
@@ -122,7 +142,8 @@ function QuotationDetail() {
               <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print / PDF</Button>
+          <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print</Button>
+          <Button variant="outline" onClick={downloadPdf}><Download className="w-4 h-4" />Download PDF</Button>
           {waLink && <Button variant="outline" onClick={() => window.open(waLink, "_blank")}><MessageCircle className="w-4 h-4" />WhatsApp</Button>}
           {mailLink && <Button variant="outline" onClick={() => { window.location.href = mailLink; }}><Mail className="w-4 h-4" />Email</Button>}
           {!q.converted_invoice_id && (
@@ -138,7 +159,7 @@ function QuotationDetail() {
       <style>{`@media print { @page { size: 162mm 104mm; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } }`}</style>
 
       <Card className="shadow-card print:shadow-none overflow-hidden q-doc">
-        <div className="bg-white text-black mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "8mm 10mm", fontSize: "9px", lineHeight: 1.35, color: "#111" }}>
+        <div id="quote-doc" className="bg-white text-black mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "8mm 10mm", fontSize: "9px", lineHeight: 1.35, color: "#111" }}>
           {/* Top brand — minimal, right aligned */}
           <div className="flex items-start justify-end mb-10">
             <div className="flex items-center gap-2">

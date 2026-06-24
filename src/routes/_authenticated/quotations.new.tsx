@@ -90,26 +90,8 @@ function NewQuotationPage() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Client</Label>
-          <div className="flex gap-2">
-            <Select value={clientMode} onValueChange={(v) => setClientMode(v as "existing" | "custom")}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="existing">Saved</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-            {clientMode === "existing" ? (
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="Select client" /></SelectTrigger>
-                <SelectContent>
-                  {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input className="flex-1" placeholder="Client / Brand name" value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} />
-            )}
-          </div>
+          <Label>Client / Brand Name</Label>
+          <Input placeholder="Type client or brand name" value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} />
         </div>
         <div className="space-y-1.5"><Label>Quotation Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
       </CardContent></Card>

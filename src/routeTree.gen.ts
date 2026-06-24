@@ -18,9 +18,16 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRenewalsRouteImport } from './routes/_authenticated/renewals'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
+import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedSalaryIndexRouteImport } from './routes/_authenticated/salary.index'
+import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations.index'
 import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
+import { Route as AuthenticatedSalaryNewRouteImport } from './routes/_authenticated/salary.new'
+import { Route as AuthenticatedSalaryIdRouteImport } from './routes/_authenticated/salary.$id'
+import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations.new'
+import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations.$id'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
@@ -69,6 +76,11 @@ const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   path: '/expenses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -79,10 +91,44 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalaryIndexRoute =
+  AuthenticatedSalaryIndexRouteImport.update({
+    id: '/salary/',
+    path: '/salary/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedQuotationsIndexRoute =
+  AuthenticatedQuotationsIndexRouteImport.update({
+    id: '/quotations/',
+    path: '/quotations/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInvoicesIndexRoute =
   AuthenticatedInvoicesIndexRouteImport.update({
     id: '/invoices/',
     path: '/invoices/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalaryNewRoute = AuthenticatedSalaryNewRouteImport.update({
+  id: '/salary/new',
+  path: '/salary/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalaryIdRoute = AuthenticatedSalaryIdRouteImport.update({
+  id: '/salary/$id',
+  path: '/salary/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQuotationsNewRoute =
+  AuthenticatedQuotationsNewRouteImport.update({
+    id: '/quotations/new',
+    path: '/quotations/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedQuotationsIdRoute =
+  AuthenticatedQuotationsIdRouteImport.update({
+    id: '/quotations/$id',
+    path: '/quotations/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedInvoicesNewRoute =
@@ -108,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/employees': typeof AuthenticatedEmployeesRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/renewals': typeof AuthenticatedRenewalsRoute
@@ -116,7 +163,13 @@ export interface FileRoutesByFullPath {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
+  '/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
+  '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/salary/': typeof AuthenticatedSalaryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,6 +177,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/clients': typeof AuthenticatedClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/employees': typeof AuthenticatedEmployeesRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/renewals': typeof AuthenticatedRenewalsRoute
@@ -132,7 +186,13 @@ export interface FileRoutesByTo {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
+  '/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
+  '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices': typeof AuthenticatedInvoicesIndexRoute
+  '/quotations': typeof AuthenticatedQuotationsIndexRoute
+  '/salary': typeof AuthenticatedSalaryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +202,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/renewals': typeof AuthenticatedRenewalsRoute
@@ -150,7 +211,13 @@ export interface FileRoutesById {
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
+  '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
+  '/_authenticated/salary/$id': typeof AuthenticatedSalaryIdRoute
+  '/_authenticated/salary/new': typeof AuthenticatedSalaryNewRoute
   '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/_authenticated/salary/': typeof AuthenticatedSalaryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,6 +227,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/clients'
     | '/dashboard'
+    | '/employees'
     | '/expenses'
     | '/payments'
     | '/renewals'
@@ -168,7 +236,13 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/quotations/$id'
+    | '/quotations/new'
+    | '/salary/$id'
+    | '/salary/new'
     | '/invoices/'
+    | '/quotations/'
+    | '/salary/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,6 +250,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/clients'
     | '/dashboard'
+    | '/employees'
     | '/expenses'
     | '/payments'
     | '/renewals'
@@ -184,7 +259,13 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/quotations/$id'
+    | '/quotations/new'
+    | '/salary/$id'
+    | '/salary/new'
     | '/invoices'
+    | '/quotations'
+    | '/salary'
   id:
     | '__root__'
     | '/'
@@ -193,6 +274,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/clients'
     | '/_authenticated/dashboard'
+    | '/_authenticated/employees'
     | '/_authenticated/expenses'
     | '/_authenticated/payments'
     | '/_authenticated/renewals'
@@ -201,7 +283,13 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/$id'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
+    | '/_authenticated/quotations/$id'
+    | '/_authenticated/quotations/new'
+    | '/_authenticated/salary/$id'
+    | '/_authenticated/salary/new'
     | '/_authenticated/invoices/'
+    | '/_authenticated/quotations/'
+    | '/_authenticated/salary/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -276,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExpensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/employees': {
+      id: '/_authenticated/employees'
+      path: '/employees'
+      fullPath: '/employees'
+      preLoaderRoute: typeof AuthenticatedEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -290,11 +385,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/salary/': {
+      id: '/_authenticated/salary/'
+      path: '/salary'
+      fullPath: '/salary/'
+      preLoaderRoute: typeof AuthenticatedSalaryIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quotations/': {
+      id: '/_authenticated/quotations/'
+      path: '/quotations'
+      fullPath: '/quotations/'
+      preLoaderRoute: typeof AuthenticatedQuotationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invoices/': {
       id: '/_authenticated/invoices/'
       path: '/invoices'
       fullPath: '/invoices/'
       preLoaderRoute: typeof AuthenticatedInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/salary/new': {
+      id: '/_authenticated/salary/new'
+      path: '/salary/new'
+      fullPath: '/salary/new'
+      preLoaderRoute: typeof AuthenticatedSalaryNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/salary/$id': {
+      id: '/_authenticated/salary/$id'
+      path: '/salary/$id'
+      fullPath: '/salary/$id'
+      preLoaderRoute: typeof AuthenticatedSalaryIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quotations/new': {
+      id: '/_authenticated/quotations/new'
+      path: '/quotations/new'
+      fullPath: '/quotations/new'
+      preLoaderRoute: typeof AuthenticatedQuotationsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quotations/$id': {
+      id: '/_authenticated/quotations/$id'
+      path: '/quotations/$id'
+      fullPath: '/quotations/$id'
+      preLoaderRoute: typeof AuthenticatedQuotationsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/invoices/new': {
@@ -335,6 +472,7 @@ const AuthenticatedClientsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedRenewalsRoute: typeof AuthenticatedRenewalsRoute
@@ -342,12 +480,19 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedInvoicesIdRoute: typeof AuthenticatedInvoicesIdRoute
   AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
+  AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
+  AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
+  AuthenticatedSalaryIdRoute: typeof AuthenticatedSalaryIdRoute
+  AuthenticatedSalaryNewRoute: typeof AuthenticatedSalaryNewRoute
   AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
+  AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
+  AuthenticatedSalaryIndexRoute: typeof AuthenticatedSalaryIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientsRoute: AuthenticatedClientsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedRenewalsRoute: AuthenticatedRenewalsRoute,
@@ -355,7 +500,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedInvoicesIdRoute: AuthenticatedInvoicesIdRoute,
   AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
+  AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
+  AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
+  AuthenticatedSalaryIdRoute: AuthenticatedSalaryIdRoute,
+  AuthenticatedSalaryNewRoute: AuthenticatedSalaryNewRoute,
   AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
+  AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
+  AuthenticatedSalaryIndexRoute: AuthenticatedSalaryIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

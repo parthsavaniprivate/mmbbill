@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   LayoutDashboard, Users, Package2, Receipt, Wallet, TrendingDown, RefreshCw,
-  BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search,
+  BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search, FileText, BadgeIndianRupee, UserCog,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -30,9 +30,12 @@ const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clients", label: "Clients", icon: Users },
   { to: "/invoices", label: "Invoices", icon: Receipt },
+  { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/payments", label: "Payments", icon: Wallet },
   { to: "/expenses", label: "Expenses", icon: TrendingDown },
   { to: "/renewals", label: "Renewals", icon: RefreshCw },
+  { to: "/employees", label: "Employees", icon: UserCog },
+  { to: "/salary", label: "Salary Slips", icon: BadgeIndianRupee },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;

@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 

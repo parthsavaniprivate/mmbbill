@@ -99,9 +99,12 @@ function QuotationDetail() {
         import("html2canvas-pro"),
         import("jspdf"),
       ]);
-      const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [162, 104] });
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 162, 104);
+      const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#f5f4f1", logging: false });
+      const widthMm = 162;
+      const heightMm = +(canvas.height * widthMm / canvas.width).toFixed(2);
+      const pdf = new jsPDF({ orientation: heightMm > widthMm ? "portrait" : "landscape", unit: "mm", format: [widthMm, heightMm] });
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, widthMm, heightMm);
+
       pdf.save(`Quote-${clientDisplay.replace(/[^\w-]+/g, "_")}-${q.quotation_number}.pdf`);
       toast.success("PDF downloaded", { id: "pdf" });
     } catch (e) {

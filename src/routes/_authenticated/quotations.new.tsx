@@ -68,10 +68,11 @@ function NewQuotationPage() {
       const { error: itErr } = await supabase.from("quotation_items").insert(
         items.map((it, idx) => ({
           quotation_id: q.id, item_name: it.item_name, description: it.description,
-          quantity: it.quantity, unit_price: it.unit_price,
-          amount: +(it.quantity * it.unit_price).toFixed(2), position: idx,
+          quantity: 1, unit_price: it.amount,
+          amount: +Number(it.amount || 0).toFixed(2), position: idx,
         }))
       );
+
       if (itErr) throw itErr;
       return q.id;
     },

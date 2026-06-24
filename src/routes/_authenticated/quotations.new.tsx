@@ -22,13 +22,11 @@ function NewQuotationPage() {
   const { companies, selected, isAll } = useCompany();
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
+  const [clientMode, setClientMode] = useState<"existing" | "custom">("existing");
   const [clientId, setClientId] = useState<string>("");
+  const [customClientName, setCustomClientName] = useState("");
   const today = new Date().toISOString().slice(0, 10);
-  const addDays = (d: string, n: number) => { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); };
   const [date, setDate] = useState(today);
-  const [validUntil, setValidUntil] = useState(addDays(today, 15));
-  const [gstRate, setGstRate] = useState("18");
-  const [discount, setDiscount] = useState("0");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Quotation valid for 15 days. Prices subject to change.");
   const [items, setItems] = useState<Item[]>([{ item_name: "", description: "", quantity: 1, unit_price: 0 }]);
@@ -47,24 +45,28 @@ function NewQuotationPage() {
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
-    const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    const gst = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
-    return { subtotal, gst, total: afterDisc + gst };
-  }, [items, discount, gstRate]);
+    return { subtotal, total: subtotal };
+  }, [items]);
 
   const create = useMutation({
     mutationFn: async () => {
       if (!companyId) throw new Error("Select company");
+      if (clientMode === "existing" && !clientId) throw new Error("Select a client or switch to custom");
+      if (clientMode === "custom" && !customClientName.trim()) throw new Error("Enter client name");
       if (items.some((i) => !i.item_name)) throw new Error("All items need a name");
 
       const { data: num, error: numErr } = await supabase.rpc("next_quotation_number", { _company_id: companyId });
       if (numErr) throw numErr;
 
       const { data: q, error } = await supabase.from("quotations").insert({
-        company_id: companyId, client_id: clientId || null,
+        company_id: companyId,
+        client_id: clientMode === "existing" ? clientId : null,
+        custom_client_name: clientMode === "custom" ? customClientName.trim() : null,
         quotation_number: num as string,
-        quotation_date: date, valid_until: validUntil || null,
-        gst_rate: Number(gstRate || 0), discount: Number(discount || 0),
+        quotation_date: date,
+        valid_until: null,
+        gst_rate: 0,
+        discount: 0,
         notes, terms, status: "draft",
       }).select().single();
       if (error) throw error;
@@ -97,18 +99,29 @@ function NewQuotationPage() {
             <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5"><Label>Client</Label>
-          <Select value={clientId} onValueChange={setClientId}>
-            <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
-            <SelectContent>
-              {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <div className="space-y-1.5">
+          <Label>Client</Label>
+          <div className="flex gap-2">
+            <Select value={clientMode} onValueChange={(v) => setClientMode(v as "existing" | "custom")}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="existing">Saved</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+            {clientMode === "existing" ? (
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="Select client" /></SelectTrigger>
+                <SelectContent>
+                  {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input className="flex-1" placeholder="Client / Brand name" value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} />
+            )}
+          </div>
         </div>
         <div className="space-y-1.5"><Label>Quotation Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>Valid Until</Label><Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>GST %</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>Discount (₹)</Label><Input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} /></div>
       </CardContent></Card>
 
       <Card><CardHeader><CardTitle>Items</CardTitle></CardHeader>
@@ -148,8 +161,6 @@ function NewQuotationPage() {
         </div>
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
           <Row label="Subtotal" value={inr(totals.subtotal)} />
-          <Row label="Discount" value={`- ${inr(Number(discount || 0))}`} />
-          <Row label={`GST (${gstRate}%)`} value={inr(totals.gst)} />
           <div className="border-t pt-2"><Row label="Grand Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>

@@ -710,6 +710,7 @@ export type Database = {
           company_id: string
           converted_invoice_id: string | null
           created_at: string
+          custom_client_name: string | null
           discount: number
           gst_amount: number
           gst_rate: number
@@ -729,6 +730,7 @@ export type Database = {
           company_id: string
           converted_invoice_id?: string | null
           created_at?: string
+          custom_client_name?: string | null
           discount?: number
           gst_amount?: number
           gst_rate?: number
@@ -748,6 +750,7 @@ export type Database = {
           company_id?: string
           converted_invoice_id?: string | null
           created_at?: string
+          custom_client_name?: string | null
           discount?: number
           gst_amount?: number
           gst_rate?: number

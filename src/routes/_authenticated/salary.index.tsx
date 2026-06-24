@@ -155,6 +155,7 @@ function SalaryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="ghost"><Link to="/salary/$id" params={{ id: s.id }}><Eye className="w-4 h-4" /></Link></Button>
+                        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Delete this slip?")) del.mutate(s.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                       </TableCell>
                     </TableRow>
                   );

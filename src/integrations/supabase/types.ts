@@ -542,6 +542,341 @@ export type Database = {
           },
         ]
       }
+      meta_accounts: {
+        Row: {
+          access_token: string | null
+          ad_account_id: string | null
+          ad_account_name: string | null
+          business_id: string | null
+          business_name: string | null
+          client_id: string | null
+          company_id: string
+          connected_by: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          last_sync_error: string | null
+          last_synced_at: string | null
+          meta_user_id: string | null
+          meta_user_name: string | null
+          status: Database["public"]["Enums"]["meta_account_status"]
+          timezone: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          ad_account_id?: string | null
+          ad_account_name?: string | null
+          business_id?: string | null
+          business_name?: string | null
+          client_id?: string | null
+          company_id: string
+          connected_by?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
+          meta_user_id?: string | null
+          meta_user_name?: string | null
+          status?: Database["public"]["Enums"]["meta_account_status"]
+          timezone?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          ad_account_id?: string | null
+          ad_account_name?: string | null
+          business_id?: string | null
+          business_name?: string | null
+          client_id?: string | null
+          company_id?: string
+          connected_by?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
+          meta_user_id?: string | null
+          meta_user_name?: string | null
+          status?: Database["public"]["Enums"]["meta_account_status"]
+          timezone?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_accounts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_spend_history: {
+        Row: {
+          clicks: number | null
+          created_at: string
+          currency: string | null
+          date: string
+          id: string
+          impressions: number | null
+          leads: number | null
+          meta_account_id: string
+          reach: number | null
+          spend: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          created_at?: string
+          currency?: string | null
+          date: string
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          meta_account_id: string
+          reach?: number | null
+          spend?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          created_at?: string
+          currency?: string | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          meta_account_id?: string
+          reach?: number | null
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_spend_history_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_billing_reports: {
+        Row: {
+          created_at: string
+          currency: string | null
+          file_url: string | null
+          generated_at: string
+          id: string
+          meta_account_id: string
+          period_end: string
+          period_start: string
+          total_spend: number | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          file_url?: string | null
+          generated_at?: string
+          id?: string
+          meta_account_id: string
+          period_end: string
+          period_start: string
+          total_spend?: number | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          file_url?: string | null
+          generated_at?: string
+          id?: string
+          meta_account_id?: string
+          period_end?: string
+          period_start?: string
+          total_spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_billing_reports_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaign_insights: {
+        Row: {
+          actions: Json | null
+          campaign_id: string
+          clicks: number | null
+          cost_per_lead: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number | null
+          leads: number | null
+          meta_account_id: string
+          purchase_value: number | null
+          reach: number | null
+          spend: number | null
+        }
+        Insert: {
+          actions?: Json | null
+          campaign_id: string
+          clicks?: number | null
+          cost_per_lead?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date: string
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          meta_account_id: string
+          purchase_value?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Update: {
+          actions?: Json | null
+          campaign_id?: string
+          clicks?: number | null
+          cost_per_lead?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          leads?: number | null
+          meta_account_id?: string
+          purchase_value?: number | null
+          reach?: number | null
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaign_insights_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "meta_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_campaign_insights_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_campaigns: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          daily_budget: number | null
+          id: string
+          lifetime_budget: number | null
+          meta_account_id: string
+          name: string | null
+          objective: string | null
+          start_time: string | null
+          status: string | null
+          stop_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          daily_budget?: number | null
+          id?: string
+          lifetime_budget?: number | null
+          meta_account_id: string
+          name?: string | null
+          objective?: string | null
+          start_time?: string | null
+          status?: string | null
+          stop_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          daily_budget?: number | null
+          id?: string
+          lifetime_budget?: number | null
+          meta_account_id?: string
+          name?: string | null
+          objective?: string | null
+          start_time?: string | null
+          status?: string | null
+          stop_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_campaigns_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_sync_log: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          meta_account_id: string
+          rows_synced: number | null
+          started_at: string
+          status: Database["public"]["Enums"]["meta_sync_status"]
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          meta_account_id: string
+          rows_synced?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["meta_sync_status"]
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          meta_account_id?: string
+          rows_synced?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["meta_sync_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_sync_log_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packages: {
         Row: {
           client_id: string
@@ -1050,6 +1385,12 @@ export type Database = {
         | "overdue"
         | "cancelled"
       invoice_type: "gst" | "proforma"
+      meta_account_status:
+        | "pending_account_select"
+        | "active"
+        | "disconnected"
+        | "error"
+      meta_sync_status: "running" | "success" | "error"
       package_status: "active" | "paused" | "expired" | "cancelled"
       payment_method:
         | "cash"
@@ -1215,6 +1556,13 @@ export const Constants = {
         "cancelled",
       ],
       invoice_type: ["gst", "proforma"],
+      meta_account_status: [
+        "pending_account_select",
+        "active",
+        "disconnected",
+        "error",
+      ],
+      meta_sync_status: ["running", "success", "error"],
       package_status: ["active", "paused", "expired", "cancelled"],
       payment_method: [
         "cash",

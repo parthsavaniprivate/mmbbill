@@ -22,8 +22,6 @@ function NewQuotationPage() {
   const { companies, selected, isAll } = useCompany();
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
-  const [clientMode, setClientMode] = useState<"existing" | "custom">("existing");
-  const [clientId, setClientId] = useState<string>("");
   const [customClientName, setCustomClientName] = useState("");
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);

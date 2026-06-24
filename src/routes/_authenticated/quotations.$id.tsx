@@ -89,6 +89,26 @@ function QuotationDetail() {
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
   const mailLink = cl?.email ? `mailto:${cl.email}?subject=${encodeURIComponent(`Quotation ${q.quotation_number}`)}&body=${encodeURIComponent(waMsg)}` : null;
 
+  async function downloadPdf() {
+    const el = document.getElementById("quote-doc");
+    if (!el) return;
+    try {
+      toast.loading("Generating PDF…", { id: "pdf" });
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [162, 104] });
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 162, 104);
+      pdf.save(`Quote-${clientDisplay.replace(/[^\w-]+/g, "_")}-${q.quotation_number}.pdf`);
+      toast.success("PDF downloaded", { id: "pdf" });
+    } catch (e) {
+      toast.error((e as Error).message, { id: "pdf" });
+    }
+  }
+
+
   // Parse notes for structured sections. Convention (any order, case-insensitive headings):
   //   Title: Social Media Marketing
   //   Handles: Facebook, Instagram, Youtube, Google Maps

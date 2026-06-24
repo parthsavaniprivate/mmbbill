@@ -31,7 +31,7 @@ import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
-import { Route as AuthenticatedSalaryIdEditRouteImport } from './routes/_authenticated/salary.$id.edit'
+import { Route as AuthenticatedSalaryIdEditRouteImport } from './routes/_authenticated/salary.$id_.edit'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -150,9 +150,9 @@ const AuthenticatedClientsIdRoute = AuthenticatedClientsIdRouteImport.update({
 } as any)
 const AuthenticatedSalaryIdEditRoute =
   AuthenticatedSalaryIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedSalaryIdRoute,
+    id: '/salary/$id_/edit',
+    path: '/salary/$id/edit',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -172,7 +172,7 @@ export interface FileRoutesByFullPath {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
-  '/salary/$id': typeof AuthenticatedSalaryIdRouteWithChildren
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
@@ -196,7 +196,7 @@ export interface FileRoutesByTo {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
-  '/salary/$id': typeof AuthenticatedSalaryIdRouteWithChildren
+  '/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/salary/new': typeof AuthenticatedSalaryNewRoute
   '/invoices': typeof AuthenticatedInvoicesIndexRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
@@ -222,12 +222,12 @@ export interface FileRoutesById {
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
-  '/_authenticated/salary/$id': typeof AuthenticatedSalaryIdRouteWithChildren
+  '/_authenticated/salary/$id': typeof AuthenticatedSalaryIdRoute
   '/_authenticated/salary/new': typeof AuthenticatedSalaryNewRoute
   '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/salary/': typeof AuthenticatedSalaryIndexRoute
-  '/_authenticated/salary/$id/edit': typeof AuthenticatedSalaryIdEditRoute
+  '/_authenticated/salary/$id_/edit': typeof AuthenticatedSalaryIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -302,7 +302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/'
     | '/_authenticated/quotations/'
     | '/_authenticated/salary/'
-    | '/_authenticated/salary/$id/edit'
+    | '/_authenticated/salary/$id_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -468,12 +468,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIdRouteImport
       parentRoute: typeof AuthenticatedClientsRoute
     }
-    '/_authenticated/salary/$id/edit': {
-      id: '/_authenticated/salary/$id/edit'
-      path: '/edit'
+    '/_authenticated/salary/$id_/edit': {
+      id: '/_authenticated/salary/$id_/edit'
+      path: '/salary/$id/edit'
       fullPath: '/salary/$id/edit'
       preLoaderRoute: typeof AuthenticatedSalaryIdEditRouteImport
-      parentRoute: typeof AuthenticatedSalaryIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -489,19 +489,6 @@ const AuthenticatedClientsRouteChildren: AuthenticatedClientsRouteChildren = {
 const AuthenticatedClientsRouteWithChildren =
   AuthenticatedClientsRoute._addFileChildren(AuthenticatedClientsRouteChildren)
 
-interface AuthenticatedSalaryIdRouteChildren {
-  AuthenticatedSalaryIdEditRoute: typeof AuthenticatedSalaryIdEditRoute
-}
-
-const AuthenticatedSalaryIdRouteChildren: AuthenticatedSalaryIdRouteChildren = {
-  AuthenticatedSalaryIdEditRoute: AuthenticatedSalaryIdEditRoute,
-}
-
-const AuthenticatedSalaryIdRouteWithChildren =
-  AuthenticatedSalaryIdRoute._addFileChildren(
-    AuthenticatedSalaryIdRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -515,11 +502,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
-  AuthenticatedSalaryIdRoute: typeof AuthenticatedSalaryIdRouteWithChildren
+  AuthenticatedSalaryIdRoute: typeof AuthenticatedSalaryIdRoute
   AuthenticatedSalaryNewRoute: typeof AuthenticatedSalaryNewRoute
   AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
   AuthenticatedSalaryIndexRoute: typeof AuthenticatedSalaryIndexRoute
+  AuthenticatedSalaryIdEditRoute: typeof AuthenticatedSalaryIdEditRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -535,11 +523,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
-  AuthenticatedSalaryIdRoute: AuthenticatedSalaryIdRouteWithChildren,
+  AuthenticatedSalaryIdRoute: AuthenticatedSalaryIdRoute,
   AuthenticatedSalaryNewRoute: AuthenticatedSalaryNewRoute,
   AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
   AuthenticatedSalaryIndexRoute: AuthenticatedSalaryIndexRoute,
+  AuthenticatedSalaryIdEditRoute: AuthenticatedSalaryIdEditRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

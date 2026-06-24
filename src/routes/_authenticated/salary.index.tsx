@@ -23,6 +23,16 @@ function SalaryPage() {
   const [status, setStatus] = useState("all");
   const now = new Date();
   const [year, setYear] = useState(String(now.getFullYear()));
+  const qc = useQueryClient();
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("salary_slips").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries({ queryKey: ["salary-slips"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: slips = [] } = useQuery({
     queryKey: ["salary-slips"],

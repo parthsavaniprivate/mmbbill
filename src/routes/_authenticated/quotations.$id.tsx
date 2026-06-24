@@ -139,7 +139,7 @@ function QuotationDetail() {
           {/* Title */}
           <h2 className="text-3xl font-semibold mb-10 leading-snug">
             Quote for {q.notes?.split("\n")[0] || "Services"} for<br />
-            {cl?.business_name || cl?.client_name || "—"}
+            {clientDisplay}
           </h2>
 
           {/* Items table — 3 columns like reference */}

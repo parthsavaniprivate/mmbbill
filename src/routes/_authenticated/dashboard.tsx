@@ -456,8 +456,19 @@ function Dashboard() {
       })()}
 
 
+      })()}
+
+      {/* Quotations & Salary Slips counts */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <MiniKpi title="Quotations" value={String(quotationsCount)} icon={CheckCircle2} />
+        <MiniKpi title="Quotation Value" value={inr(quotationsValue)} icon={IndianRupee} tone="ok" />
+        <MiniKpi title="Salary Slips" value={String(salaryCount)} icon={UserCheck} />
+        <MiniKpi title="Salary Paid" value={inr(salaryValue)} icon={Wallet} tone="warn" />
+      </div>
+
       {/* Analytics chart */}
       <Card className="shadow-card">
+
         <CardHeader className="space-y-4">
           <div>
             <CardTitle>Revenue vs Expenses vs Balance</CardTitle>

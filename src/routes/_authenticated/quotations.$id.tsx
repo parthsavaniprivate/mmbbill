@@ -158,31 +158,38 @@ function QuotationDetail() {
 
       <style>{`@media print { @page { size: 162mm 104mm; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } }`}</style>
 
-      <Card className="shadow-card print:shadow-none overflow-hidden q-doc">
-        <div id="quote-doc" className="bg-white text-black mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "8mm 10mm", fontSize: "9px", lineHeight: 1.35, color: "#111" }}>
-          {/* Top brand — minimal, right aligned */}
-          <div className="flex items-start justify-end mb-10">
-            <div className="flex items-center gap-2">
-              <img src={co?.logo_url || mmbLogo.url} alt="" className="h-8 w-8 object-contain" />
-              <div className="text-[13px] font-semibold tracking-wide">{co?.name}</div>
+      <Card className="shadow-card print:shadow-none overflow-hidden q-doc rounded-2xl">
+        <div id="quote-doc" className="mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "9mm 11mm", fontSize: "10px", lineHeight: 1.4, color: "#111", background: "#f5f4f1", borderRadius: "10mm" }}>
+          {/* Header: title + logo */}
+          <div className="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h1 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px", color: "#111" }}>
+                Quote for {serviceTitle} for
+              </h1>
+              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px" }}>
+                {(() => {
+                  const parts = clientDisplay.split(",");
+                  return (
+                    <>
+                      <span style={{ color: "#F26A2E" }}>{parts[0]}</span>
+                      {parts.length > 1 && <span style={{ color: "#6C42E0" }}>{"," + parts.slice(1).join(",")}</span>}
+                    </>
+                  );
+                })()}
+              </h2>
             </div>
+            <img src={co?.logo_url || mmbLogo.url} alt="" className="object-contain shrink-0" style={{ height: "14mm" }} />
           </div>
 
-          {/* Title */}
-          <h1 className="text-[20px] font-bold leading-tight mb-1">
-            Quote for {serviceTitle} for
-          </h1>
-          <h2 className="text-[20px] font-bold leading-tight mb-6">{clientDisplay}</h2>
-
           {/* Items table */}
-          <table className="w-full border-collapse mb-6" style={{ fontSize: "12px" }}>
+          <table className="w-full border-collapse mb-5" style={{ fontSize: "10px" }}>
             <thead>
-              <tr className="border-b-2 border-gray-800">
-                <th className="text-left py-2 pr-3 font-semibold w-[42%]">No of Options</th>
-                <th className="text-left py-2 px-3 font-semibold"></th>
-                <th className="text-right py-2 px-3 font-semibold w-[14%]">Our Fees</th>
-                {hasAdSpend && <th className="text-right py-2 px-3 font-semibold w-[16%]">Paid Ads Spent</th>}
-                {hasAdSpend && <th className="text-right py-2 pl-3 font-semibold w-[12%]">Total</th>}
+              <tr>
+                <th className="text-left pb-1 pr-3 w-[42%]"><HeadCell>No of Options</HeadCell></th>
+                <th className="text-left pb-1 px-3"></th>
+                <th className="text-left pb-1 px-3 w-[14%]"><HeadCell>Our Fees</HeadCell></th>
+                {hasAdSpend && <th className="text-left pb-1 px-3 w-[16%]"><HeadCell>Paid Ads Spent</HeadCell></th>}
+                {hasAdSpend && <th className="text-left pb-1 pl-3 w-[12%]"><HeadCell>Total</HeadCell></th>}
               </tr>
             </thead>
             <tbody>
@@ -192,12 +199,12 @@ function QuotationDetail() {
                 const ads = hasAdSpend ? Math.max(total - fee, 0) : 0;
                 const lines = (it.description || "").split("\n").filter(Boolean);
                 return (
-                  <tr key={it.id} className="border-b border-gray-200 align-top">
-                    <td className="py-3 pr-3 font-medium">{it.item_name}</td>
-                    <td className="py-3 px-3 text-gray-700 whitespace-pre-line">{lines.join("\n")}</td>
-                    <td className="py-3 px-3 text-right">{Math.round(fee).toLocaleString("en-IN")}</td>
-                    {hasAdSpend && <td className="py-3 px-3 text-right">{ads > 0 ? `${Math.round(ads).toLocaleString("en-IN")}${/approx/i.test(it.description || "") ? " (approx.)" : ""}` : "—"}</td>}
-                    {hasAdSpend && <td className="py-3 pl-3 text-right font-semibold">{Math.round(total).toLocaleString("en-IN")}</td>}
+                  <tr key={it.id} className="align-top">
+                    <td className="pt-3 pr-3 font-semibold">{it.item_name}</td>
+                    <td className="pt-3 px-3 whitespace-pre-line">{lines.join("\n")}</td>
+                    <td className="pt-3 px-3 font-semibold">{Math.round(fee).toLocaleString("en-IN")}</td>
+                    {hasAdSpend && <td className="pt-3 px-3 font-semibold">{ads > 0 ? <>{Math.round(ads).toLocaleString("en-IN")} {/approx/i.test(it.description || "") && <span className="font-normal text-gray-600">(approx.)</span>}</> : "—"}</td>}
+                    {hasAdSpend && <td className="pt-3 pl-3 font-semibold">{Math.round(total).toLocaleString("en-IN")}</td>}
                   </tr>
                 );
               })}
@@ -206,62 +213,61 @@ function QuotationDetail() {
 
           {/* Services included */}
           {servicesList.length > 0 && (
-            <div className="mb-5">
-              <div className="font-semibold mb-2">Our services will include following things:</div>
-              <ul className="space-y-1 pl-5 list-disc marker:text-gray-700">
-                {servicesList.map((s, i) => <li key={i}>{s}</li>)}
+            <div className="mb-4">
+              <SectionHead>Our services will include following things:</SectionHead>
+              <ul className="space-y-1 mt-2">
+                {servicesList.map((s, i) => <BulletItem key={i}>{s}</BulletItem>)}
               </ul>
             </div>
           )}
 
           {/* Handles */}
           {handles && (
-            <div className="mb-5">
-              <div className="font-semibold mb-2">Handles to be managed:</div>
-              <ul className="pl-5 list-disc marker:text-gray-700">
-                <li>{handles}</li>
-              </ul>
+            <div className="mb-4">
+              <SectionHead>Handles to be managed:</SectionHead>
+              <ul className="mt-2"><BulletItem>{handles}</BulletItem></ul>
             </div>
           )}
 
           {/* Note */}
           {noteText && (
-            <div className="mb-6">
-              <div className="font-semibold mb-1">Note:</div>
-              <div className="whitespace-pre-line">{noteText}</div>
+            <div className="mb-3">
+              <SectionHead>Note:</SectionHead>
+              <div className="mt-1 whitespace-pre-line">{noteText}</div>
             </div>
           )}
 
           {/* Totals — compact, only if discount/GST present */}
           {(Number(q.gst_rate) > 0 || Number(q.discount) > 0) && (
-            <div className="flex justify-end mb-6">
-              <div className="w-64 text-[12px] space-y-1">
+            <div className="flex justify-end mb-3">
+              <div className="w-56 space-y-1">
                 <Row label="Subtotal" value={inr(Number(q.subtotal))} />
                 {Number(q.discount) > 0 && <Row label="Discount" value={`- ${inr(Number(q.discount))}`} />}
                 {Number(q.gst_rate) > 0 && <Row label={`GST (${q.gst_rate}%)`} value={inr(Number(q.gst_amount))} />}
-                <div className="flex justify-between border-t border-gray-800 pt-1 font-bold text-[13px]">
+                <div className="flex justify-between border-t border-gray-800 pt-1 font-bold">
                   <span>Grand Total</span><span>{inr(Number(q.total))}</span>
                 </div>
-                <div className="text-[10px] italic text-gray-600">{amountInWords(Math.round(Number(q.total)))} Rupees Only</div>
+                <div className="text-[9px] italic text-gray-600">{amountInWords(Math.round(Number(q.total)))} Rupees Only</div>
               </div>
             </div>
           )}
 
           {/* Meta footer */}
-          <div className="mt-10 pt-3 border-t border-gray-300 flex items-end justify-between text-[10px] text-gray-600">
+          <div className="mt-4 pt-2 flex items-end justify-between text-[9px] text-gray-600">
             <div>
               <div><span className="text-gray-500">Quote #:</span> <span className="font-semibold text-gray-800">{q.quotation_number}</span></div>
               <div><span className="text-gray-500">Date:</span> {formatDate(q.quotation_date)}</div>
-              {q.valid_until && <div><span className="text-gray-500">Valid Until:</span> {formatDate(q.valid_until)}</div>}
             </div>
-            <div className="text-center">
-              {co?.signature_url && <img src={co.signature_url} alt="" className="h-10 mx-auto object-contain" />}
-              <div className="border-t border-gray-400 pt-0.5 mt-0.5 text-[11px] font-semibold text-gray-800 min-w-[140px]">Authorized Signatory</div>
-              <div>{co?.name}</div>
-            </div>
+            {co?.signature_url && (
+              <div className="text-center">
+                <img src={co.signature_url} alt="" className="h-8 mx-auto object-contain" />
+                <div className="text-[9px] font-semibold text-gray-800">{co?.name}</div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
+
 
     </div>
   );

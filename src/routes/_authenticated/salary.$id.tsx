@@ -122,7 +122,7 @@ function SalarySlipDetail() {
                 <Td>Professional Tax</Td><Td className="text-right">{Number(s.prof_tax) ? inr(Number(s.prof_tax)) : "—"}</Td>
               </tr>
               <tr>
-                <Td>&nbsp;</Td><Td><Td></Td>nbsp;</Td>
+                <Td>&nbsp;</Td><Td>&nbsp;</Td>
                 <Td>Loan</Td><Td className="text-right">{Number(s.loan) ? inr(Number(s.loan)) : "—"}</Td>
               </tr>
               <tr>

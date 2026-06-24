@@ -62,7 +62,7 @@ function SalarySlipDetail() {
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
-      <style>{`@media print { .no-print { display: none !important; } @page { size: A4; margin: 14mm; } }`}</style>
+      <style>{`@media print { .no-print { display: none !important; } @page { size: A4; margin: 10mm; } .slip { page-break-inside: avoid; } .slip + .slip { margin-top: 6mm; border-top: 1px dashed #999; padding-top: 6mm; } }`}</style>
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <Link to="/salary" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -83,68 +83,74 @@ function SalarySlipDetail() {
         </div>
       </div>
 
-      <Card className="shadow-card print:shadow-none overflow-hidden">
-        <div className="p-10 bg-white text-black text-[13px]">
-          {/* Top: title left, logo + address right */}
-          <div className="flex items-start justify-between mb-8">
-            <h2 className="text-3xl font-bold">Salary Slip</h2>
-            <div className="text-right">
-              <img src={co?.logo_url || mmbLogo.url} alt="" className="h-14 ml-auto object-contain mb-1" />
-              <div className="text-xs text-gray-700 whitespace-pre-line max-w-[260px]">{co?.address}</div>
+      {(() => {
+        const Slip = (
+          <div className="slip p-8 print:p-4 bg-white text-black text-[12px]">
+            {/* Top: title left, logo + address right */}
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-2xl font-bold">Salary Slip</h2>
+              <div className="text-right">
+                <img src={co?.logo_url || mmbLogo.url} alt="" className="h-12 ml-auto object-contain mb-1" />
+                <div className="text-[11px] text-gray-700 whitespace-pre-line max-w-[260px]">{co?.address}</div>
+              </div>
+            </div>
+
+            {/* Two-column meta */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 mb-3 text-[12px]">
+              <MetaRow k="Pay Period" v={period} />
+              <MetaRow k="Employee Name" v={empName} />
+              <MetaRow k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
+              <MetaRow k="Designation" v={s.designation || "—"} />
+              <MetaRow k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
+              <MetaRow k="Department" v={s.department || "—"} />
+            </div>
+
+            <table className="w-full border border-gray-800 border-collapse text-[12px]">
+              <thead>
+                <tr className="bg-gray-200">
+                  <Th>Earnings</Th><Th className="text-right">Amount</Th>
+                  <Th>Deductions</Th><Th className="text-right">Amount</Th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <Td>Basic Pay</Td><Td className="text-right">{inr(Number(s.basic))}</Td>
+                  <Td>Provident Fund</Td><Td className="text-right">{Number(s.pf) ? inr(Number(s.pf)) : "—"}</Td>
+                </tr>
+                <tr>
+                  <Td>Incentive Pay</Td><Td className="text-right">{Number(s.incentives) ? inr(Number(s.incentives)) : "—"}</Td>
+                  <Td>Professional Tax</Td><Td className="text-right">{Number(s.prof_tax) ? inr(Number(s.prof_tax)) : "—"}</Td>
+                </tr>
+                <tr>
+                  <Td>&nbsp;</Td><Td>&nbsp;</Td>
+                  <Td>Loan</Td><Td className="text-right">{Number(s.loan) ? inr(Number(s.loan)) : "—"}</Td>
+                </tr>
+                <tr>
+                  <Td>&nbsp;</Td><Td>&nbsp;</Td>
+                  <Td className="font-semibold">Total Deductions</Td><Td className="text-right font-semibold">{totalDed ? inr(totalDed) : "—"}</Td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <Td className="font-semibold">Total Earnings</Td>
+                  <Td className="text-right font-semibold">{inr(totalEarnings)}</Td>
+                  <Td className="font-semibold">Net Pay</Td>
+                  <Td className="text-right font-bold">{inr(net)}</Td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div className="grid grid-cols-2 gap-10 pt-10">
+              <div className="text-[12px]"><div className="border-t border-gray-800 pt-1">Employer Signature</div></div>
+              <div className="text-[12px] text-right"><div className="border-t border-gray-800 pt-1">Employee Signature</div></div>
             </div>
           </div>
-
-          {/* Two-column meta */}
-          <div className="grid grid-cols-2 gap-x-10 gap-y-1.5 mb-6 text-sm">
-            <MetaRow k="Pay Period" v={period} />
-            <MetaRow k="Employee Name" v={empName} />
-            <MetaRow k="Pay Date" v={s.pay_date ? formatDate(s.pay_date) : "—"} />
-            <MetaRow k="Designation" v={s.designation || "—"} />
-            <MetaRow k="Worked Days" v={s.worked_days != null ? String(s.worked_days) : "—"} />
-            <MetaRow k="Department" v={s.department || "—"} />
-          </div>
-
-          {/* Single combined table: Earnings | Amount | Deductions | Amount */}
-          <table className="w-full border border-gray-800 border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-200">
-                <Th>Earnings</Th><Th className="text-right">Amount</Th>
-                <Th>Deductions</Th><Th className="text-right">Amount</Th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <Td>Basic Pay</Td><Td className="text-right">{inr(Number(s.basic))}</Td>
-                <Td>Provident Fund</Td><Td className="text-right">{Number(s.pf) ? inr(Number(s.pf)) : "—"}</Td>
-              </tr>
-              <tr>
-                <Td>Incentive Pay</Td><Td className="text-right">{Number(s.incentives) ? inr(Number(s.incentives)) : "—"}</Td>
-                <Td>Professional Tax</Td><Td className="text-right">{Number(s.prof_tax) ? inr(Number(s.prof_tax)) : "—"}</Td>
-              </tr>
-              <tr>
-                <Td>&nbsp;</Td><Td>&nbsp;</Td>
-                <Td>Loan</Td><Td className="text-right">{Number(s.loan) ? inr(Number(s.loan)) : "—"}</Td>
-              </tr>
-              <tr>
-                <Td>&nbsp;</Td><Td>&nbsp;</Td>
-                <Td className="font-semibold">Total Deductions</Td><Td className="text-right font-semibold">{totalDed ? inr(totalDed) : "—"}</Td>
-              </tr>
-              <tr className="bg-gray-50">
-                <Td className="font-semibold">Total Earnings</Td>
-                <Td className="text-right font-semibold">{inr(totalEarnings)}</Td>
-                <Td className="font-semibold">Net Pay</Td>
-                <Td className="text-right font-bold">{inr(net)}</Td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Signatures */}
-          <div className="grid grid-cols-2 gap-10 pt-20">
-            <div className="text-sm"><div className="border-t border-gray-800 pt-1">Employer Signature</div></div>
-            <div className="text-sm text-right"><div className="border-t border-gray-800 pt-1">Employee Signature</div></div>
-          </div>
-        </div>
-      </Card>
+        );
+        return (
+          <Card className="shadow-card print:shadow-none overflow-hidden">
+            {Slip}
+            {Slip}
+          </Card>
+        );
+      })()}
     </div>
   );
 }

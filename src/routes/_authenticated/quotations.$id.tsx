@@ -167,17 +167,10 @@ function QuotationDetail() {
               <h1 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px", color: "#111" }}>
                 Quote for {serviceTitle} for
               </h1>
-              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px" }}>
-                {(() => {
-                  const parts = clientDisplay.split(",");
-                  return (
-                    <>
-                      <span style={{ color: "#F26A2E" }}>{parts[0]}</span>
-                      {parts.length > 1 && <span style={{ color: "#6C42E0" }}>{"," + parts.slice(1).join(",")}</span>}
-                    </>
-                  );
-                })()}
+              <h2 className="font-extrabold leading-tight tracking-tight" style={{ fontSize: "20px", color: "#111" }}>
+                {clientDisplay}
               </h2>
+
             </div>
             <img src={co?.logo_url || mmbLogo.url} alt="" className="object-contain shrink-0" style={{ height: "14mm" }} />
           </div>

@@ -44,7 +44,8 @@ function SalaryPage() {
     if (search) {
       const emp = s.employees as { name: string; employee_code: string | null } | null;
       const q = search.toLowerCase();
-      return (emp?.name || "").toLowerCase().includes(q) || (emp?.employee_code || "").toLowerCase().includes(q);
+      const name = s.employee_name || emp?.name || "";
+      return name.toLowerCase().includes(q) || (emp?.employee_code || "").toLowerCase().includes(q);
     }
     return true;
   }), [slips, isAll, selected, status, year, search]);
@@ -126,11 +127,13 @@ function SalaryPage() {
               <TableBody>
                 {filtered.map((s) => {
                   const emp = s.employees as { name: string; employee_code: string | null; designation: string | null } | null;
+                  const name = s.employee_name || emp?.name || "—";
+                  const designation = s.designation || emp?.designation || "";
                   return (
                     <TableRow key={s.id}>
                       <TableCell>
-                        <Link to="/salary/$id" params={{ id: s.id }} className="font-medium hover:underline">{emp?.name}</Link>
-                        <div className="text-xs text-muted-foreground">{emp?.employee_code} • {emp?.designation}</div>
+                        <Link to="/salary/$id" params={{ id: s.id }} className="font-medium hover:underline">{name}</Link>
+                        <div className="text-xs text-muted-foreground">{designation}</div>
                       </TableCell>
                       <TableCell>{MONTHS[s.month - 1]} {s.year}</TableCell>
                       <TableCell className="text-right">{inr(Number(s.gross))}</TableCell>

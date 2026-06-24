@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -21,120 +21,111 @@ function NewSalarySlip() {
   const { companies, selected, isAll } = useCompany();
   const now = new Date();
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
-  const [employeeId, setEmployeeId] = useState("");
-  const [month, setMonth] = useState(String(now.getMonth() + 1));
-  const [year, setYear] = useState(String(now.getFullYear()));
+
+  useEffect(() => {
+    const mmb = companies.find((c) => c.name.toLowerCase().includes("make me"));
+    if (mmb) setCompanyId(mmb.id);
+    else if (!companyId && companies[0]) setCompanyId(companies[0].id);
+  }, [companies, companyId]);
 
   const [form, setForm] = useState({
-    basic: 0, hra: 0, conveyance: 0, medical: 0, bonus: 0, incentives: 0, overtime: 0,
-    pf: 0, esi: 0, prof_tax: 0, tds: 0, other_deductions: 0,
+    employee_name: "",
+    designation: "",
+    department: "",
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+    pay_date: new Date().toISOString().slice(0, 10),
+    worked_days: 26,
+    basic: 0,
+    incentives: 0,
+    pf: 0,
+    prof_tax: 0,
+    loan: 0,
   });
-  const u = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
-
-  useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
-
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees", companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      const { data } = await supabase.from("employees").select("*").eq("company_id", companyId).eq("is_active", true).order("name");
-      return data ?? [];
-    },
-  });
-
-  const selectedEmp = employees.find((e) => e.id === employeeId);
-  useEffect(() => {
-    if (selectedEmp) {
-      setForm((f) => ({
-        ...f,
-        basic: Number(selectedEmp.basic),
-        hra: Number(selectedEmp.hra),
-        conveyance: Number(selectedEmp.conveyance),
-        medical: Number(selectedEmp.medical),
-      }));
-    }
-  }, [selectedEmp]);
+  const u = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
 
   const totals = useMemo(() => {
-    const gross = form.basic + form.hra + form.conveyance + form.medical + form.bonus + form.incentives + form.overtime;
-    const ded = form.pf + form.esi + form.prof_tax + form.tds + form.other_deductions;
+    const gross = Number(form.basic) + Number(form.incentives);
+    const ded = Number(form.pf) + Number(form.prof_tax) + Number(form.loan);
     return { gross, ded, net: gross - ded };
   }, [form]);
 
   const create = useMutation({
     mutationFn: async () => {
-      if (!companyId || !employeeId) throw new Error("Select employee");
+      if (!companyId) throw new Error("Select company");
+      if (!form.employee_name.trim()) throw new Error("Enter employee name");
       const { data, error } = await supabase.from("salary_slips").insert({
-        company_id: companyId, employee_id: employeeId,
-        month: Number(month), year: Number(year), ...form, status: "draft",
+        company_id: companyId,
+        employee_id: null,
+        employee_name: form.employee_name.trim(),
+        designation: form.designation.trim() || null,
+        department: form.department.trim() || null,
+        month: Number(form.month),
+        year: Number(form.year),
+        pay_date: form.pay_date || null,
+        worked_days: Number(form.worked_days),
+        basic: Number(form.basic),
+        incentives: Number(form.incentives),
+        pf: Number(form.pf),
+        prof_tax: Number(form.prof_tax),
+        loan: Number(form.loan),
+        status: "draft",
       }).select().single();
       if (error) throw error;
       return data.id;
     },
-    onSuccess: (id) => { toast.success("Salary slip created"); navigate({ to: "/salary/$id", params: { id } }); },
+    onSuccess: (id) => { toast.success("Salary slip generated"); navigate({ to: "/salary/$id", params: { id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <div className="space-y-4 max-w-4xl">
+    <div className="space-y-4 max-w-3xl">
       <Link to="/salary" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="w-4 h-4 mr-1" /> Back
       </Link>
       <h1 className="text-3xl font-bold tracking-tight">New Salary Slip</h1>
 
-      <Card><CardContent className="p-5 grid md:grid-cols-3 gap-3">
-        <Field label="Company">
-          <Select value={companyId} onValueChange={setCompanyId}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-        <Field label="Employee">
-          <Select value={employeeId} onValueChange={setEmployeeId}>
-            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name} {e.employee_code ? `(${e.employee_code})` : ""}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-        <Field label="Month">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-        <Field label="Year"><Input type="number" value={year} onChange={(e) => setYear(e.target.value)} /></Field>
-      </CardContent></Card>
+      <Card><CardHeader><CardTitle>Employee & Period</CardTitle></CardHeader>
+        <CardContent className="grid md:grid-cols-3 gap-3">
+          <Field label="Employee Name"><Input value={form.employee_name} onChange={(e) => u("employee_name", e.target.value)} /></Field>
+          <Field label="Designation"><Input value={form.designation} onChange={(e) => u("designation", e.target.value)} /></Field>
+          <Field label="Department"><Input value={form.department} onChange={(e) => u("department", e.target.value)} /></Field>
+          <Field label="Pay Period — Month">
+            <Select value={String(form.month)} onValueChange={(v) => u("month", Number(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
+            </Select>
+          </Field>
+          <Field label="Year"><Input type="number" value={form.year} onChange={(e) => u("year", Number(e.target.value))} /></Field>
+          <Field label="Pay Date"><Input type="date" value={form.pay_date} onChange={(e) => u("pay_date", e.target.value)} /></Field>
+          <Field label="Worked Days"><Input type="number" step="0.5" value={form.worked_days} onChange={(e) => u("worked_days", Number(e.target.value))} /></Field>
+        </CardContent>
+      </Card>
 
       <Card><CardHeader><CardTitle>Earnings</CardTitle></CardHeader>
-        <CardContent className="grid md:grid-cols-3 gap-3">
-          <Money label="Basic" value={form.basic} onChange={(v) => u({ basic: v })} />
-          <Money label="HRA" value={form.hra} onChange={(v) => u({ hra: v })} />
-          <Money label="Conveyance" value={form.conveyance} onChange={(v) => u({ conveyance: v })} />
-          <Money label="Medical" value={form.medical} onChange={(v) => u({ medical: v })} />
-          <Money label="Bonus" value={form.bonus} onChange={(v) => u({ bonus: v })} />
-          <Money label="Incentives" value={form.incentives} onChange={(v) => u({ incentives: v })} />
-          <Money label="Overtime" value={form.overtime} onChange={(v) => u({ overtime: v })} />
+        <CardContent className="grid md:grid-cols-2 gap-3">
+          <Money label="Basic Pay" value={form.basic} onChange={(v) => u("basic", v)} />
+          <Money label="Incentive Pay" value={form.incentives} onChange={(v) => u("incentives", v)} />
         </CardContent>
       </Card>
 
       <Card><CardHeader><CardTitle>Deductions</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-3">
-          <Money label="PF" value={form.pf} onChange={(v) => u({ pf: v })} />
-          <Money label="ESI" value={form.esi} onChange={(v) => u({ esi: v })} />
-          <Money label="Professional Tax" value={form.prof_tax} onChange={(v) => u({ prof_tax: v })} />
-          <Money label="TDS" value={form.tds} onChange={(v) => u({ tds: v })} />
-          <Money label="Other" value={form.other_deductions} onChange={(v) => u({ other_deductions: v })} />
+          <Money label="Provident Fund" value={form.pf} onChange={(v) => u("pf", v)} />
+          <Money label="Professional Tax" value={form.prof_tax} onChange={(v) => u("prof_tax", v)} />
+          <Money label="Loan" value={form.loan} onChange={(v) => u("loan", v)} />
         </CardContent>
       </Card>
 
       <Card><CardContent className="p-5 grid grid-cols-3 gap-4 text-center">
-        <div><div className="text-xs text-muted-foreground">Gross</div><div className="text-xl font-bold text-success">{inr(totals.gross)}</div></div>
-        <div><div className="text-xs text-muted-foreground">Deductions</div><div className="text-xl font-bold text-destructive">{inr(totals.ded)}</div></div>
-        <div><div className="text-xs text-muted-foreground">Net Salary</div><div className="text-xl font-bold text-primary">{inr(totals.net)}</div></div>
+        <div><div className="text-xs text-muted-foreground">Total Earnings</div><div className="text-xl font-bold text-success">{inr(totals.gross)}</div></div>
+        <div><div className="text-xs text-muted-foreground">Total Deductions</div><div className="text-xl font-bold text-destructive">{inr(totals.ded)}</div></div>
+        <div><div className="text-xs text-muted-foreground">Net Pay</div><div className="text-xl font-bold text-primary">{inr(totals.net)}</div></div>
       </CardContent></Card>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/salary">Cancel</Link></Button>
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Saving…" : "Create Slip"}</Button>
+        <Button onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Generating…" : "Generate Slip"}</Button>
       </div>
     </div>
   );

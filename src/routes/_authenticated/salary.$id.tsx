@@ -8,6 +8,7 @@ import { ArrowLeft, Printer, MessageCircle, Mail, Trash2, Pencil } from "lucide-
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
 type Status = Database["public"]["Enums"]["salary_status"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];

@@ -86,7 +86,7 @@ function SalarySlipDetail() {
         <div className="p-8 bg-white text-black text-[13px]">
           {/* Company header */}
           <div className="flex items-center gap-4 pb-4 mb-4 border-b-2 border-gray-800">
-            {co?.logo_url && <img src={co.logo_url} alt="" className="h-16 w-16 object-contain shrink-0" />}
+            <img src={co?.logo_url || mmbLogo.url} alt="" className="h-16 w-16 object-contain shrink-0" />
             <div className="flex-1">
               <div className="text-2xl font-bold leading-tight">{co?.name}</div>
               <div className="text-xs text-gray-600 whitespace-pre-line">{co?.address}</div>

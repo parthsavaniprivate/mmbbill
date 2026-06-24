@@ -135,10 +135,10 @@ function QuotationDetail() {
         </div>
       </div>
 
-      <style>{`@media print { @page { size: A4 portrait; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } }`}</style>
+      <style>{`@media print { @page { size: 162mm 104mm; margin: 0; } body { background: white; } .no-print { display: none !important; } .q-doc { box-shadow: none !important; } }`}</style>
 
       <Card className="shadow-card print:shadow-none overflow-hidden q-doc">
-        <div className="bg-white text-black mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "210mm", minHeight: "297mm", padding: "20mm 18mm", fontSize: "12px", lineHeight: 1.5, color: "#111" }}>
+        <div className="bg-white text-black mx-auto" style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", width: "162mm", minHeight: "104mm", padding: "8mm 10mm", fontSize: "9px", lineHeight: 1.35, color: "#111" }}>
           {/* Top brand — minimal, right aligned */}
           <div className="flex items-start justify-end mb-10">
             <div className="flex items-center gap-2">

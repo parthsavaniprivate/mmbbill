@@ -31,15 +31,8 @@ function NewQuotationPage() {
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
-  const { data: clients = [] } = useQuery({
-    queryKey: ["all-clients"],
-    queryFn: async () => {
-      const { data } = await supabase.from("clients").select("id, client_name, business_name, company_id");
-      return data ?? [];
-    },
-  });
+  useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
-  const filteredClients = clients.filter((c) => c.company_id === companyId);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + it.quantity * it.unit_price, 0);

@@ -139,7 +139,7 @@ function Dashboard() {
   const { selected, isAll, companies, setSelected } = useCompany();
   const { data, isLoading } = useAll();
 
-  const [rangeKey, setRangeKey] = useState<RangeKey>("6m");
+  const [rangeKey, setRangeKey] = useState<RangeKey>("tm");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
 

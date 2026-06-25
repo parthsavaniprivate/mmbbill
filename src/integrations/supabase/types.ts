@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_activity: {
+        Row: {
+          actor_id: string | null
+          client_id: string
+          company_id: string
+          created_at: string
+          id: string
+          kind: string
+          ref_id: string | null
+          summary: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          client_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          ref_id?: string | null
+          summary?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          ref_id?: string | null
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_activity_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_files: {
         Row: {
           category: Database["public"]["Enums"]["file_category"]
@@ -491,8 +539,10 @@ export type Database = {
           invoice_number: string
           invoice_sent_at: string | null
           invoice_type: Database["public"]["Enums"]["invoice_type"]
+          last_billed_at: string | null
           last_reminder_at: string | null
           management_fee: number
+          meta_account_id: string | null
           meta_spend_billed: number
           meta_spend_cumulative_at_invoice: number
           notes: string | null
@@ -518,8 +568,10 @@ export type Database = {
           invoice_number: string
           invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          last_billed_at?: string | null
           last_reminder_at?: string | null
           management_fee?: number
+          meta_account_id?: string | null
           meta_spend_billed?: number
           meta_spend_cumulative_at_invoice?: number
           notes?: string | null
@@ -545,8 +597,10 @@ export type Database = {
           invoice_number?: string
           invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
+          last_billed_at?: string | null
           last_reminder_at?: string | null
           management_fee?: number
+          meta_account_id?: string | null
           meta_spend_billed?: number
           meta_spend_cumulative_at_invoice?: number
           notes?: string | null
@@ -571,6 +625,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_meta_account_id_fkey"
+            columns: ["meta_account_id"]
+            isOneToOne: false
+            referencedRelation: "meta_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1409,6 +1470,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      client_financial_summary: {
+        Args: { _client_id: string }
+        Returns: {
+          last_invoice_date: string
+          overdue_amount: number
+          pending_amount: number
+          total_collected: number
+          total_invoices: number
+          total_revenue: number
+        }[]
+      }
+      client_ledger: {
+        Args: { _client_id: string }
+        Returns: {
+          balance: number
+          credit: number
+          debit: number
+          description: string
+          entry_date: string
+          kind: string
+          ref: string
+        }[]
+      }
       complete_meta_oauth: {
         Args: {
           _access_token: string
@@ -1445,6 +1529,15 @@ export type Database = {
         Returns: undefined
       }
       recalc_quotation_totals: { Args: { _id: string }; Returns: undefined }
+      record_client_activity: {
+        Args: {
+          _client_id: string
+          _kind: string
+          _ref_id: string
+          _summary: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user"

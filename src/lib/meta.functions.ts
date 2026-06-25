@@ -219,6 +219,57 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         }
       }
 
+      // Last-resort: per-campaign /{campaign_id}/insights for ACTIVE campaigns
+      // still missing — handles large accounts where /act_x/insights returns empty.
+      const seenAfterTotals = new Set<string>();
+      {
+        const { data: existing } = await db.from("meta_campaign_insights")
+          .select("campaign_id").eq("meta_account_id", row.id);
+        for (const r of existing ?? []) seenAfterTotals.add((r as { campaign_id: string }).campaign_id);
+      }
+      const stillMissing = campaigns.filter(c =>
+        c.status === "ACTIVE" && idMap.has(c.id) && !seenAfterTotals.has(idMap.get(c.id)!));
+      if (stillMissing.length) {
+        const limit = stillMissing.slice(0, 60);
+        console.log("[meta-sync]", row.ad_account_id, "per-campaign fallback for", limit.length, "campaigns");
+        const today = new Date().toISOString().slice(0, 10);
+        const perPayload: {
+          meta_account_id: string; campaign_id: string; date: string;
+          spend: number; reach: number; impressions: number; clicks: number;
+          ctr: number; cpc: number; cpm: number; leads: number; cost_per_lead: number;
+          purchase_value: number; actions: { action_type: string; value: string }[] | null;
+        }[] = [];
+        for (const c of limit) {
+          const insightRows = await meta.getInsightsForCampaign(row.access_token, c.id, days);
+          for (const t of insightRows) {
+            const leads = meta.leadsFromActions(t.actions);
+            const spend = Number(t.spend ?? 0);
+            perPayload.push({
+              meta_account_id: row.id,
+              campaign_id: idMap.get(c.id)!,
+              date: t.date_start ?? today,
+              spend,
+              reach: Number(t.reach ?? 0),
+              impressions: Number(t.impressions ?? 0),
+              clicks: Number(t.clicks ?? 0),
+              ctr: Number(t.ctr ?? 0),
+              cpc: Number(t.cpc ?? 0),
+              cpm: Number(t.cpm ?? 0),
+              leads,
+              cost_per_lead: leads > 0 ? spend / leads : 0,
+              purchase_value: meta.purchaseValueFromActions(t.action_values),
+              actions: t.actions ?? null,
+            });
+          }
+        }
+        if (perPayload.length) {
+          const { error: pErr } = await db.from("meta_campaign_insights")
+            .upsert(perPayload, { onConflict: "campaign_id,date" });
+          if (pErr) throw pErr;
+          rows += perPayload.length;
+        }
+      }
+
       // account-level daily spend (90 days)
       let dailyWarning: string | null = null;
       const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90)

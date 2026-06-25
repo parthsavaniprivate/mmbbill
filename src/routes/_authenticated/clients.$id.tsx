@@ -144,9 +144,20 @@ function ClientDetail() {
               <Button variant="outline"><MessageCircle className="w-4 h-4" />WhatsApp</Button>
             </a>
           )}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><Pencil className="w-4 h-4" />Edit</Button>
+            </DialogTrigger>
+            <ClientForm
+              id={id}
+              initial={client}
+              onClose={() => { setEditOpen(false); qc.invalidateQueries({ queryKey: ["client", id] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
+            />
+          </Dialog>
           <Button asChild><Link to="/invoices/new" search={{ client: id } as never}><Plus className="w-4 h-4" />New Invoice</Link></Button>
         </div>
       </div>
+
 
       <div className="grid md:grid-cols-3 gap-4">
         <InfoCard label="Mobile" value={client.mobile} />

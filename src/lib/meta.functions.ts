@@ -110,7 +110,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
     }).select("id").single();
 
     try {
-      const campaigns = await meta.listCampaigns(row.access_token, row.ad_account_id);
+      const campaigns = await meta.listCampaigns(row.access_token, row.ad_account_id).catch(() => []);
       let rows = 0;
 
       // upsert campaigns
@@ -138,7 +138,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       const idMap = new Map((dbCampaigns ?? []).map((c: { campaign_id: string; id: string }) => [c.campaign_id, c.id]));
 
       // insights
-      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days);
+      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days).catch(() => []);
       if (insights.length) {
         const payload = insights.map(i => {
           const leads = meta.leadsFromActions(i.actions);
@@ -169,7 +169,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       }
 
       // account-level daily spend (90 days)
-      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90);
+      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90).catch(() => []);
       if (daily.length) {
         const payload = daily.map(d => ({
           meta_account_id: row.id,

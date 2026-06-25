@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/clients/$id")({ component:
 function ClientDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+
 
   const { data: client } = useQuery({
     queryKey: ["client", id],

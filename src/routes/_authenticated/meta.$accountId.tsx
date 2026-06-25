@@ -287,6 +287,43 @@ function MetaDashboard() {
             </div>
           </CardContent></Card>
         </TabsContent>
+
+        <TabsContent value="debug" className="space-y-4">
+          <Card><CardContent className="p-4 space-y-3">
+            <div className="text-sm font-medium">Raw Meta insights actions (per campaign / day)</div>
+            <div className="text-xs text-muted-foreground">
+              Use this to verify which action_type values Meta returns. Leads counter maps:
+              <code className="ml-1">lead</code>, <code>onsite_conversion.lead_grouped</code>,
+              <code>onsite_conversion.messaging_conversation_started_7d</code>,
+              <code>messaging_conversation_started</code>, <code>whatsapp_conversation_started</code>,
+              <code>messaging_first_reply</code>, <code>messaging_conversation</code>, and anything ending in <code>.lead</code>.
+            </div>
+            <div className="max-h-[600px] overflow-auto rounded border">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/50 sticky top-0">
+                  <tr><th className="text-left p-2">Campaign</th><th className="text-left p-2">Date</th><th className="text-left p-2">Spend</th><th className="text-left p-2">Leads</th><th className="text-left p-2">actions[]</th></tr>
+                </thead>
+                <tbody>
+                  {insights.slice(0, 200).map((r) => {
+                    const c = campaigns.find((x) => x.id === r.campaign_id);
+                    return (
+                      <tr key={`${r.campaign_id}-${r.date}`} className="border-t align-top">
+                        <td className="p-2">{c?.name ?? r.campaign_id}</td>
+                        <td className="p-2">{r.date}</td>
+                        <td className="p-2">{Number(r.spend ?? 0).toFixed(2)}</td>
+                        <td className="p-2">{r.leads ?? 0}</td>
+                        <td className="p-2"><pre className="whitespace-pre-wrap break-all">{JSON.stringify(r.actions ?? [], null, 2)}</pre></td>
+                      </tr>
+                    );
+                  })}
+                  {insights.length === 0 && (
+                    <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No insights rows yet — click Sync now.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent></Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

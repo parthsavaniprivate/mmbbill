@@ -37,7 +37,7 @@ const STATUS_COLORS: Record<Status, string> = {
 function ClientsPage() {
   const { q } = Route.useSearch();
   const { selected, isAll, companies } = useCompany();
-  const navigate = useNavigate();
+  
   const [search, setSearch] = useState(q);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);

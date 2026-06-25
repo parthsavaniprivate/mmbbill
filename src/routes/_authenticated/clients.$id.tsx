@@ -149,11 +149,101 @@ function ClientDetail() {
       <div className="grid md:grid-cols-3 gap-4">
         <InfoCard label="Mobile" value={client.mobile} />
         <InfoCard label="Email" value={client.email} />
-        
+        <InfoCard label="GST" value={client.gst_number} />
         <InfoCard label="Status" value={client.status.replace("_", " ")} />
         <InfoCard label="Address" value={client.address} className="md:col-span-2" />
         {client.notes && <InfoCard label="Notes" value={client.notes} className="md:col-span-3" />}
       </div>
+
+      {/* Billing Settings */}
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Billing Settings</CardTitle></CardHeader>
+        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <Stat label="Service Charge" value={
+            client.service_charge_type === "percent_of_spend"
+              ? `${Number(client.service_charge_amount ?? 0)}% of ad spend`
+              : client.service_charge_type === "fixed_monthly"
+                ? `${inr(Number(client.service_charge_amount ?? 0))} / month`
+                : `${inr(Number(client.service_charge_amount ?? 0))} (custom)`
+          } />
+          <Stat label="Billing Cycle" value={(client.billing_cycle ?? "monthly").replace(/_/g, " ")} />
+          <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
+          <Stat label="Auto Sync Meta" value={client.auto_sync_meta ? "Enabled" : "Disabled"} />
+        </CardContent>
+      </Card>
+
+      {/* Meta Ads Information */}
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Meta Ads</CardTitle>
+          {metaSummary?.account?.id ? (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/meta/$accountId" params={{ accountId: metaSummary.account.id }}>Open Dashboard</Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline"><Link to="/meta">Connect Meta</Link></Button>
+          )}
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <Stat label="Ad Account" value={metaSummary?.account
+            ? (metaSummary.account.ad_account_name || metaSummary.account.ad_account_id)
+            : "Not linked"} />
+          <Stat label="Active Campaigns" value={metaSummary ? `${metaSummary.activeCampaigns} / ${metaSummary.totalCampaigns}` : "—"} />
+          <Stat label="Total Ad Spend" value={metaSummary ? inr(metaSummary.spend) : "—"} />
+          <Stat label="Last Sync" value={metaSummary?.account?.last_synced_at ? formatDate(metaSummary.account.last_synced_at) : "Never"} />
+          <Stat label="Today's Spend" value={metaSummary ? inr(metaSummary.todaySpend) : "—"} />
+          <Stat label="Last 7 Days" value={metaSummary ? inr(metaSummary.last7) : "—"} />
+          <Stat label="Last 30 Days" value={metaSummary ? inr(metaSummary.last30) : "—"} />
+          <Stat label="Already Billed" value={inr(Number(client.last_billed_spend ?? 0))} />
+        </CardContent>
+      </Card>
+
+      {/* Billing Summary */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Billing Summary</p>
+          {(() => {
+            const total = invoices.length;
+            const paid = invoices.filter(i => i.status === "paid").length;
+            const pending = invoices.filter(i => i.status === "pending" || i.status === "partially_paid").length;
+            const overdue = invoices.filter(i => i.status === "overdue").length;
+            return (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <Stat label="Total Invoices" value={String(total)} />
+                <Stat label="Paid" value={String(paid)} />
+                <Stat label="Pending" value={String(pending)} />
+                <Stat label="Overdue" value={String(overdue)} />
+              </div>
+            );
+          })()}
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Money</p>
+          {(() => {
+            const collected = invoices.reduce((a, i) => a + Number(i.amount_paid ?? 0), 0);
+            const billed = invoices.reduce((a, i) => a + Number(i.total ?? 0), 0);
+            const outstanding = Math.max(0, billed - collected);
+            return (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <Stat label="Total Billed" value={inr(billed)} />
+                <Stat label="Collected" value={inr(collected)} />
+                <Stat label="Outstanding" value={inr(outstanding)} />
+                <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
+              </div>
+            );
+          })()}
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Performance</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <Stat label="Leads" value={metaSummary ? metaSummary.leads.toLocaleString() : "—"} />
+            <Stat label="Reach" value={metaSummary ? metaSummary.reach.toLocaleString() : "—"} />
+            <Stat label="Impressions" value={metaSummary ? metaSummary.impressions.toLocaleString() : "—"} />
+            <Stat label="Clicks" value={metaSummary ? metaSummary.clicks.toLocaleString() : "—"} />
+          </div>
+        </CardContent></Card>
+      </div>
+
 
       <Tabs defaultValue="packages">
         <TabsList>

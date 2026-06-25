@@ -1,1 +1,3 @@
-UPDATE auth.users SET encrypted_password = crypt('MMB@1234', gen_salt('bf')), updated_at = now() WHERE email = 'parthsavaniprivate@gmail.com';
+-- Security: original statement contained a plaintext password and has been
+-- redacted. Rotate the affected user's password via the Supabase Auth dashboard.
+SELECT 1;

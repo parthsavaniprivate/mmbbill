@@ -103,9 +103,9 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
     if (!row.access_token || !row.ad_account_id) throw new Error("Account not fully connected");
 
     const meta = await import("./meta-api.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = context.supabase;
 
-    const { data: logRow } = await supabaseAdmin.from("meta_sync_log").insert({
+    const { data: logRow } = await db.from("meta_sync_log").insert({
       meta_account_id: row.id, status: "running",
     }).select("id").single();
 
@@ -126,16 +126,16 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
           start_time: c.start_time ?? null,
           stop_time: c.stop_time ?? null,
         }));
-        const { error: upErr } = await supabaseAdmin.from("meta_campaigns")
+        const { error: upErr } = await db.from("meta_campaigns")
           .upsert(payload, { onConflict: "meta_account_id,campaign_id" });
         if (upErr) throw upErr;
         rows += payload.length;
       }
 
       // load id map
-      const { data: dbCampaigns } = await supabaseAdmin.from("meta_campaigns")
+      const { data: dbCampaigns } = await db.from("meta_campaigns")
         .select("id, campaign_id").eq("meta_account_id", row.id);
-      const idMap = new Map((dbCampaigns ?? []).map(c => [c.campaign_id, c.id]));
+      const idMap = new Map((dbCampaigns ?? []).map((c: { campaign_id: string; id: string }) => [c.campaign_id, c.id]));
 
       // insights
       const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days);
@@ -161,7 +161,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
           };
         }).filter(p => p.campaign_id);
         if (payload.length) {
-          const { error: insErr } = await supabaseAdmin.from("meta_campaign_insights")
+          const { error: insErr } = await db.from("meta_campaign_insights")
             .upsert(payload, { onConflict: "campaign_id,date" });
           if (insErr) throw insErr;
           rows += payload.length;
@@ -181,23 +181,23 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
           leads: meta.leadsFromActions(d.actions),
           currency: row.currency,
         }));
-        const { error: spErr } = await supabaseAdmin.from("meta_ad_spend_history")
+        const { error: spErr } = await db.from("meta_ad_spend_history")
           .upsert(payload, { onConflict: "meta_account_id,date" });
         if (spErr) throw spErr;
         rows += payload.length;
       }
 
-      await supabaseAdmin.from("meta_accounts")
+      await db.from("meta_accounts")
         .update({ last_synced_at: new Date().toISOString(), last_sync_error: null }).eq("id", row.id);
-      if (logRow) await supabaseAdmin.from("meta_sync_log")
+      if (logRow) await db.from("meta_sync_log")
         .update({ status: "success", finished_at: new Date().toISOString(), rows_synced: rows }).eq("id", logRow.id);
 
       return { ok: true, rows };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      await supabaseAdmin.from("meta_accounts")
+      await db.from("meta_accounts")
         .update({ last_sync_error: msg }).eq("id", row.id);
-      if (logRow) await supabaseAdmin.from("meta_sync_log")
+      if (logRow) await db.from("meta_sync_log")
         .update({ status: "error", error: msg, finished_at: new Date().toISOString() }).eq("id", logRow.id);
       throw new Error(msg);
     }

@@ -237,7 +237,17 @@ function MetaDashboard() {
     return "bg-muted/40 text-muted-foreground border-border/60";
   };
 
-  const tooltipStyle = { background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 };
+  const chartAxisColor = "var(--muted-foreground)";
+  const chartGridColor = "var(--border)";
+  const chartLabelColor = "var(--foreground)";
+  const tooltipStyle = {
+    background: "var(--popover)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    color: "var(--popover-foreground)",
+    fontSize: 12,
+  };
+  const tooltipTextStyle = { color: "var(--popover-foreground)" };
 
   return (
     <div className="space-y-6">
@@ -372,10 +382,10 @@ function MetaDashboard() {
                           <stop offset="100%" stopColor="#06B6D4" />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                      <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmtMoney(v, currency)} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} opacity={0.45} />
+                      <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                      <YAxis fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                      <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} formatter={(v: number) => fmtMoney(v, currency)} />
                       <Area type="monotone" dataKey="spend" stroke="url(#spendStroke)" strokeWidth={2.5} fill="url(#spendGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -395,12 +405,12 @@ function MetaDashboard() {
                           <stop offset="100%" stopColor="#10B981" />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                      <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={tooltipStyle} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} opacity={0.45} />
+                      <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                      <YAxis fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                      <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} />
                       <Bar dataKey="leads" fill="url(#leadsGrad)" radius={[6, 6, 0, 0]} animationDuration={700}>
-                        <LabelList dataKey="leads" position="top" fontSize={10} fill="hsl(var(--muted-foreground))" formatter={(v: number) => v > 0 ? v : ""} />
+                        <LabelList dataKey="leads" position="top" fontSize={10} fill={chartLabelColor} formatter={(v: number) => v > 0 ? v : ""} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -422,10 +432,10 @@ function MetaDashboard() {
               {topCamps.length ? (
                 <ResponsiveContainer width="100%" height={Math.max(260, topCamps.length * 28)}>
                   <BarChart data={topCamps} layout="vertical" margin={{ left: 8, right: 24 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} horizontal={false} />
-                    <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis type="category" dataKey="name" width={200} fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmtMoney(v, currency)} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} opacity={0.45} horizontal={false} />
+                    <XAxis type="number" fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                    <YAxis type="category" dataKey="name" width={220} fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartLabelColor }} />
+                    <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} formatter={(v: number) => fmtMoney(v, currency)} />
                     <Bar dataKey="spend" radius={[0, 6, 6, 0]} animationDuration={700}>
                       {topCamps.map((c) => <Cell key={c.id} fill={c.fill} />)}
                     </Bar>
@@ -534,10 +544,10 @@ function MetaDashboard() {
                         <stop offset="100%" stopColor="#3b82f6" />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                    <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis fontSize={11} tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmtMoney(v, currency)} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} opacity={0.45} />
+                    <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                    <YAxis fontSize={11} tickLine={false} axisLine={false} stroke={chartAxisColor} tick={{ fill: chartAxisColor }} />
+                    <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} formatter={(v: number) => fmtMoney(v, currency)} />
                     <Bar dataKey="spend" fill="url(#monthGrad)" radius={[6, 6, 0, 0]} animationDuration={700} />
                   </BarChart>
                 </ResponsiveContainer>

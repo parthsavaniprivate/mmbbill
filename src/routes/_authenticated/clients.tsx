@@ -113,12 +113,14 @@ function ClientsPage() {
                 {filtered.map((c) => {
                   const co = companies.find((x) => x.id === c.company_id);
                   return (
-                    <TableRow key={c.id} className="cursor-pointer">
+                    <TableRow
+                      key={c.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate({ to: "/clients/$id", params: { id: c.id } })}
+                    >
                       <TableCell>
-                        <Link to="/clients/$id" params={{ id: c.id }} className="block">
-                          <p className="font-medium">{c.business_name || c.client_name}</p>
-                          {c.business_name && <p className="text-xs text-muted-foreground">{c.client_name}</p>}
-                        </Link>
+                        <p className="font-medium">{c.business_name || c.client_name}</p>
+                        {c.business_name && <p className="text-xs text-muted-foreground">{c.client_name}</p>}
                       </TableCell>
                       <TableCell><Badge variant="outline">{co?.name}</Badge></TableCell>
                       <TableCell className="text-sm">
@@ -130,7 +132,7 @@ function ClientsPage() {
                       <TableCell>
                         <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {c.whatsapp && (
                           <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
                             <Button size="icon" variant="ghost"><MessageCircle className="w-4 h-4 text-success" /></Button>

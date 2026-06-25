@@ -558,7 +558,7 @@ function MetaDashboard() {
                           <span className="truncate">{c.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="outline" className={statusBadge(c.status)}>{c.status}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={STATE_BADGE[c.state]}>{STATE_LABEL[c.state]}</Badge></TableCell>
                       <TableCell><Badge variant="outline" className={scoreColor(c.score)}>{c.score}</Badge></TableCell>
                       <TableCell className="text-right tabular-nums">{fmtMoney(c.spend, currency)}</TableCell>
                       <TableCell className="text-right tabular-nums">{fmtNum(c.impressions)}</TableCell>

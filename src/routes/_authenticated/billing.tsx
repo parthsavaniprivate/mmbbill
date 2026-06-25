@@ -57,7 +57,7 @@ function BillingDashboard() {
         );
       const metaAccountsQ = supabase
         .from("meta_accounts")
-        .select("id, client_id, company_id, account_name, ad_account_id");
+        .select("id, client_id, company_id, ad_account_id");
       const histQ = supabase
         .from("meta_ad_spend_history")
         .select("meta_account_id, spend, date");

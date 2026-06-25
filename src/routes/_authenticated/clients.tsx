@@ -157,12 +157,18 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
     mobile: initial?.mobile ?? "",
     whatsapp: initial?.whatsapp ?? "",
     email: initial?.email ?? "",
-    
+    gst_number: initial?.gst_number ?? "",
     address: initial?.address ?? "",
     notes: initial?.notes ?? "",
     status: (initial?.status ?? "active") as Status,
     company_id: initial?.company_id ?? (isAll ? companies[0]?.id ?? "" : selected),
+    service_charge_type: (initial?.service_charge_type ?? "fixed_monthly") as "fixed_monthly" | "percent_of_spend" | "custom",
+    service_charge_amount: String(initial?.service_charge_amount ?? ""),
+    credit_limit: initial?.credit_limit != null ? String(initial.credit_limit) : "",
+    billing_cycle: (initial?.billing_cycle ?? "monthly") as "monthly" | "weekly" | "custom",
+    auto_sync_meta: initial?.auto_sync_meta ?? true,
   });
+
 
   const save = useMutation({
     mutationFn: async () => {

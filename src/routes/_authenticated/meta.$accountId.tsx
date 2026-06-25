@@ -26,6 +26,48 @@ export const Route = createFileRoute("/_authenticated/meta/$accountId")({
   component: MetaDashboard,
 });
 
+type CampState = "delivering" | "paused" | "archived" | "completed" | "not_delivering" | "scheduled";
+
+function deriveCampaignState(
+  effective: string | null | undefined,
+  start: string | null | undefined,
+  stop: string | null | undefined,
+  spend: number,
+  impressions: number,
+): CampState {
+  const now = Date.now();
+  const eff = (effective ?? "").toUpperCase();
+  if (eff === "ARCHIVED" || eff === "DELETED") return "archived";
+  if (stop && new Date(stop).getTime() < now) return "completed";
+  if (eff === "PAUSED" || eff === "CAMPAIGN_PAUSED" || eff === "ADSET_PAUSED" || eff === "AD_PAUSED") return "paused";
+  if (start && new Date(start).getTime() > now) return "scheduled";
+  if (eff === "ACTIVE") {
+    if (spend === 0 && impressions === 0) return "not_delivering";
+    return "delivering";
+  }
+  if (eff === "IN_PROCESS" || eff === "WITH_ISSUES" || eff === "PENDING_REVIEW" || eff === "DISAPPROVED" || eff === "PREAPPROVED") return "not_delivering";
+  return "not_delivering";
+}
+
+const STATE_LABEL: Record<CampState, string> = {
+  delivering: "Delivering",
+  paused: "Paused",
+  archived: "Archived",
+  completed: "Completed",
+  not_delivering: "Not Delivering",
+  scheduled: "Scheduled",
+};
+
+const STATE_BADGE: Record<CampState, string> = {
+  delivering: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  scheduled: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  not_delivering: "bg-red-500/15 text-red-500 border-red-500/30",
+  completed: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+  paused: "bg-orange-500/15 text-orange-500 border-orange-500/30",
+  archived: "bg-muted/40 text-muted-foreground border-border/60",
+};
+
+
 function fmtMoney(n: number, currency = "INR") {
   const value = Number.isFinite(n) ? n : 0;
   try {

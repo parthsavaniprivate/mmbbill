@@ -138,7 +138,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       const idMap = new Map((dbCampaigns ?? []).map((c: { campaign_id: string; id: string }) => [c.campaign_id, c.id]));
 
       // insights
-      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days);
+      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days).catch(() => []);
       if (insights.length) {
         const payload = insights.map(i => {
           const leads = meta.leadsFromActions(i.actions);

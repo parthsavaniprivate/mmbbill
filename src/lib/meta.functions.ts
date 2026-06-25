@@ -139,8 +139,15 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         .select("id, campaign_id").eq("meta_account_id", row.id);
       const idMap = new Map((dbCampaigns ?? []).map((c: { campaign_id: string; id: string }) => [c.campaign_id, c.id]));
 
-      // insights
-      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days).catch(() => []);
+      // insights (campaign-level)
+      let insightsWarning: string | null = null;
+      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days)
+        .catch((e: unknown) => {
+          insightsWarning = `campaign insights: ${e instanceof Error ? e.message : String(e)}`;
+          console.error("[meta-sync] campaign insights failed", row.ad_account_id, e);
+          return [] as Awaited<ReturnType<typeof meta.getCampaignInsights>>;
+        });
+      console.log("[meta-sync]", row.ad_account_id, "campaigns:", campaigns.length, "insights rows:", insights.length);
       if (insights.length) {
         const payload = insights.map(i => {
           const leads = meta.leadsFromActions(i.actions);
@@ -171,7 +178,14 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       }
 
       // account-level daily spend (90 days)
-      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90).catch(() => []);
+      let dailyWarning: string | null = null;
+      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90)
+        .catch((e: unknown) => {
+          dailyWarning = `account spend: ${e instanceof Error ? e.message : String(e)}`;
+          console.error("[meta-sync] account spend failed", row.ad_account_id, e);
+          return [] as Awaited<ReturnType<typeof meta.getAccountDailySpend>>;
+        });
+      console.log("[meta-sync]", row.ad_account_id, "daily spend rows:", daily.length);
       if (daily.length) {
         const payload = daily.map(d => ({
           meta_account_id: row.id,
@@ -189,12 +203,13 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         rows += payload.length;
       }
 
+      const warning = [insightsWarning, dailyWarning].filter(Boolean).join(" | ") || null;
       await db.from("meta_accounts")
-        .update({ last_synced_at: new Date().toISOString(), last_sync_error: null }).eq("id", row.id);
+        .update({ last_synced_at: new Date().toISOString(), last_sync_error: warning }).eq("id", row.id);
       if (logRow) await db.from("meta_sync_log")
-        .update({ status: "success", finished_at: new Date().toISOString(), rows_synced: rows }).eq("id", logRow.id);
+        .update({ status: "success", error: warning, finished_at: new Date().toISOString(), rows_synced: rows }).eq("id", logRow.id);
 
-      return { ok: true, rows };
+      return { ok: true, rows, warning };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await db.from("meta_accounts")

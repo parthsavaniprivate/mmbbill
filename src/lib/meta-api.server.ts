@@ -17,8 +17,34 @@ async function gget<T>(path: string, token: string, params: Record<string, strin
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const r = await fetch(url);
   const j = await r.json();
-  if (!r.ok || j.error) throw new Error(j.error?.message || `Meta API ${r.status}`);
+  if (!r.ok || j.error) {
+    const msg = j.error?.message || `Meta API ${r.status}`;
+    console.error("[meta-api]", path, r.status, JSON.stringify(j.error ?? j).slice(0, 500));
+    throw new Error(msg);
+  }
   return j as T;
+}
+
+// Paginate through Graph API `data` arrays via the `paging.next` cursor.
+async function ggetAll<T>(path: string, token: string, params: Record<string, string> = {}): Promise<T[]> {
+  const first = new URL(`${GRAPH}${path}`);
+  first.searchParams.set("access_token", token);
+  for (const [k, v] of Object.entries(params)) first.searchParams.set(k, v);
+  let next: string | null = first.toString();
+  const out: T[] = [];
+  let pages = 0;
+  while (next && pages < 50) {
+    const r = await fetch(next);
+    const j: { data?: T[]; error?: { message?: string }; paging?: { next?: string } } = await r.json();
+    if (!r.ok || j.error) {
+      console.error("[meta-api]", path, r.status, JSON.stringify(j.error ?? j).slice(0, 500));
+      throw new Error(j.error?.message || `Meta API ${r.status}`);
+    }
+    if (j.data?.length) out.push(...j.data);
+    next = j.paging?.next ?? null;
+    pages++;
+  }
+  return out;
 }
 
 export async function exchangeCodeForToken(opts: {
@@ -101,25 +127,23 @@ export type InsightRow = {
 };
 
 export async function getCampaignInsights(token: string, adAccountId: string, days = 30) {
-  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values";
-  const j = await gget<{ data: InsightRow[] }>(`/${adAccountId}/insights`, token, {
+  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values,cost_per_action_type";
+  return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
     level: "campaign",
     fields,
     time_increment: "1",
     date_preset: days <= 7 ? "last_7d" : days <= 30 ? "last_30d" : "last_90d",
     limit: "500",
   });
-  return j.data ?? [];
 }
 
 export async function getAccountDailySpend(token: string, adAccountId: string, days = 90) {
-  const j = await gget<{ data: InsightRow[] }>(`/${adAccountId}/insights`, token, {
-    fields: "spend,impressions,clicks,reach,actions",
+  return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
+    fields: "spend,impressions,clicks,reach,actions,cost_per_action_type",
     time_increment: "1",
     date_preset: days <= 30 ? "last_30d" : days <= 90 ? "last_90d" : "maximum",
     limit: "500",
   });
-  return j.data ?? [];
 }
 
 export function leadsFromActions(actions?: { action_type: string; value: string }[]) {

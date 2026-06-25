@@ -58,48 +58,72 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          auto_sync_meta: boolean
+          billing_cycle: string
           business_name: string | null
           client_name: string
           company_id: string
           contact_person: string | null
           created_at: string
+          credit_limit: number | null
           email: string | null
           gst_number: string | null
           id: string
+          last_billed_spend: number
+          last_invoice_date: string | null
+          last_meta_sync: string | null
           mobile: string | null
           notes: string | null
+          service_charge_amount: number
+          service_charge_type: string
           status: Database["public"]["Enums"]["client_status"]
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
           address?: string | null
+          auto_sync_meta?: boolean
+          billing_cycle?: string
           business_name?: string | null
           client_name: string
           company_id: string
           contact_person?: string | null
           created_at?: string
+          credit_limit?: number | null
           email?: string | null
           gst_number?: string | null
           id?: string
+          last_billed_spend?: number
+          last_invoice_date?: string | null
+          last_meta_sync?: string | null
           mobile?: string | null
           notes?: string | null
+          service_charge_amount?: number
+          service_charge_type?: string
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
           address?: string | null
+          auto_sync_meta?: boolean
+          billing_cycle?: string
           business_name?: string | null
           client_name?: string
           company_id?: string
           contact_person?: string | null
           created_at?: string
+          credit_limit?: number | null
           email?: string | null
           gst_number?: string | null
           id?: string
+          last_billed_spend?: number
+          last_invoice_date?: string | null
+          last_meta_sync?: string | null
           mobile?: string | null
           notes?: string | null
+          service_charge_amount?: number
+          service_charge_type?: string
           status?: Database["public"]["Enums"]["client_status"]
           updated_at?: string
           whatsapp?: string | null
@@ -468,6 +492,9 @@ export type Database = {
           invoice_sent_at: string | null
           invoice_type: Database["public"]["Enums"]["invoice_type"]
           last_reminder_at: string | null
+          management_fee: number
+          meta_spend_billed: number
+          meta_spend_cumulative_at_invoice: number
           notes: string | null
           reminder_days: number | null
           reminders_sent: number
@@ -492,6 +519,9 @@ export type Database = {
           invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
           last_reminder_at?: string | null
+          management_fee?: number
+          meta_spend_billed?: number
+          meta_spend_cumulative_at_invoice?: number
           notes?: string | null
           reminder_days?: number | null
           reminders_sent?: number
@@ -516,6 +546,9 @@ export type Database = {
           invoice_sent_at?: string | null
           invoice_type?: Database["public"]["Enums"]["invoice_type"]
           last_reminder_at?: string | null
+          management_fee?: number
+          meta_spend_billed?: number
+          meta_spend_cumulative_at_invoice?: number
           notes?: string | null
           reminder_days?: number | null
           reminders_sent?: number

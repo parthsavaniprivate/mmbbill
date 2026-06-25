@@ -159,8 +159,16 @@ function MetaDashboard() {
     };
 
     // Per campaign
-    const perCamp = new Map<string, { name: string; spend: number; leads: number; clicks: number; impressions: number; status: string }>();
-    for (const c of campaigns) perCamp.set(c.id, { name: c.name ?? "—", spend: 0, leads: 0, clicks: 0, impressions: 0, status: c.status ?? "—" });
+    type CampAgg = { name: string; spend: number; leads: number; clicks: number; impressions: number; status: string; effective_status: string | null; start_time: string | null; stop_time: string | null };
+    const perCamp = new Map<string, CampAgg>();
+    for (const c of campaigns) perCamp.set(c.id, {
+      name: c.name ?? "—",
+      spend: 0, leads: 0, clicks: 0, impressions: 0,
+      status: c.status ?? "—",
+      effective_status: (c as { effective_status?: string | null }).effective_status ?? null,
+      start_time: (c as { start_time?: string | null }).start_time ?? null,
+      stop_time: (c as { stop_time?: string | null }).stop_time ?? null,
+    });
     for (const r of insights) {
       const c = perCamp.get(r.campaign_id);
       if (!c) continue;
@@ -172,12 +180,13 @@ function MetaDashboard() {
     const campArr = Array.from(perCamp.entries()).map(([id, v]) => {
       const ctr = v.impressions ? (v.clicks / v.impressions) * 100 : 0;
       const cpl = v.leads ? v.spend / v.leads : 0;
-      // Heuristic performance score 0-100: 60% CTR + 40% lead efficiency
-      const ctrScore = Math.min(100, ctr * 25); // 4% CTR -> 100
-      const cplScore = v.leads > 0 ? Math.max(0, 100 - Math.min(100, cpl / 5)) : 0; // 500 cpl -> 0
+      const ctrScore = Math.min(100, ctr * 25);
+      const cplScore = v.leads > 0 ? Math.max(0, 100 - Math.min(100, cpl / 5)) : 0;
       const score = Math.round(ctrScore * 0.6 + cplScore * 0.4);
-      return { id, ...v, ctr, cpl, score };
+      const state = deriveCampaignState(v.effective_status ?? v.status, v.start_time, v.stop_time, v.spend, v.impressions);
+      return { id, ...v, ctr, cpl, score, state };
     });
+
 
     const withSpend = campArr.filter(c => c.spend > 0);
     const withLeads = campArr.filter(c => c.leads > 0);

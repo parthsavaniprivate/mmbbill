@@ -173,6 +173,39 @@ function NewInvoicePage() {
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
       </CardContent></Card>
 
+      {clientId && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Meta Ad Spend Billing</CardTitle></CardHeader>
+          <CardContent className="p-5 pt-2 space-y-3 text-sm">
+            {!metaBilling ? (
+              <p className="text-muted-foreground">No Meta account linked to this client.</p>
+            ) : (
+              <>
+                <div className="grid sm:grid-cols-4 gap-3">
+                  <KV label="Ad Account" value={metaBilling.account.ad_account_name || metaBilling.account.ad_account_id || "—"} />
+                  <KV label="Cumulative Spend" value={inr(cumulativeSpend)} />
+                  <KV label="Already Billed" value={inr(lastBilled)} />
+                  <KV label="New Billable" value={inr(Math.max(0, cumulativeSpend - lastBilled))} highlight />
+                </div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={includeMeta} onChange={(e) => setIncludeMeta(e.target.checked)} />
+                  Bill new Meta ad spend on this invoice
+                </label>
+                {includeMeta && selectedClient && (
+                  <p className="text-muted-foreground text-xs">
+                    Management fee:{" "}
+                    {selectedClient.service_charge_type === "percent_of_spend"
+                      ? `${Number(selectedClient.service_charge_amount ?? 0)}% of new spend = ${inr(managementFee)}`
+                      : `${inr(Number(selectedClient.service_charge_amount ?? 0))} (${selectedClient.service_charge_type.replace(/_/g, " ")})`}
+                  </p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card><CardHeader><CardTitle>Items</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {items.map((it, idx) => (

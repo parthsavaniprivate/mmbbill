@@ -202,7 +202,7 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
         <Field label="Mobile" value={form.mobile} onChange={(v) => setForm({ ...form, mobile: v })} />
         <Field label="WhatsApp" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
         <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-        
+        <Field label="GST Number" value={form.gst_number} onChange={(v) => setForm({ ...form, gst_number: v })} />
         <div className="space-y-1.5">
           <Label>Status</Label>
           <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Status })}>
@@ -215,6 +215,41 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
             </SelectContent>
           </Select>
         </div>
+
+        <div className="col-span-2 mt-2 -mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Billing Settings</div>
+        <div className="space-y-1.5">
+          <Label>Service Charge Type</Label>
+          <Select value={form.service_charge_type} onValueChange={(v) => setForm({ ...form, service_charge_type: v as typeof form.service_charge_type })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fixed_monthly">Fixed Monthly</SelectItem>
+              <SelectItem value="percent_of_spend">Percentage on Ad Spend</SelectItem>
+              <SelectItem value="custom">Custom</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Field
+          label={form.service_charge_type === "percent_of_spend" ? "Service Charge (%)" : "Service Charge (₹)"}
+          value={form.service_charge_amount}
+          onChange={(v) => setForm({ ...form, service_charge_amount: v })}
+        />
+        <Field label="Credit Limit (₹)" value={form.credit_limit} onChange={(v) => setForm({ ...form, credit_limit: v })} />
+        <div className="space-y-1.5">
+          <Label>Billing Cycle</Label>
+          <Select value={form.billing_cycle} onValueChange={(v) => setForm({ ...form, billing_cycle: v as typeof form.billing_cycle })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="custom">Custom</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <label className="flex items-center gap-2 col-span-2 text-sm">
+          <input type="checkbox" checked={form.auto_sync_meta} onChange={(e) => setForm({ ...form, auto_sync_meta: e.target.checked })} />
+          Auto-sync Meta spend for this client
+        </label>
+
         <div className="space-y-1.5 col-span-2">
           <Label>Address</Label>
           <Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={2} />

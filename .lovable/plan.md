@@ -1,92 +1,69 @@
-# Meta Marketing API Integration
+# Phase 1 Business Upgrade — Implementation Plan
 
-Add a Meta (Facebook) Ads integration to InvoiceMMB so each client can connect their own Ad Account and your team can see spend, performance, leads and billing inside the CRM.
-
-> **Required from you before I can build this end-to-end:**
-> 1. A Meta App in https://developers.facebook.com with **Marketing API** + **Facebook Login** products enabled.
-> 2. `META_APP_ID` and `META_APP_SECRET` (I'll request via the secret tool).
-> 3. OAuth redirect URI whitelisted in the Meta app:
->    `https://invoicemmb.lovable.app/api/public/meta/oauth/callback`
-> 4. App in **Live** mode + business verification if you want to connect real client accounts (Meta requires `ads_read`, `ads_management`, `business_management` advanced access).
->
-> Without these the "Connect Meta Account" button will only work for you (the dev) and accounts added as testers.
+This is a large, multi-week scope. I'll break it into 5 shippable milestones so each one can be verified before moving on. Approve the plan and I'll start with Milestone 1.
 
 ---
 
-## 1. Database (one migration)
+## Milestone 1 — Database Foundation (1 migration)
 
-New tables (all company-scoped + RLS via existing `has_role` / company membership pattern):
+New columns / tables (reusing existing schema where possible):
 
-- **meta_accounts** — `id, company_id, client_id (nullable), meta_user_id, business_id, business_name, ad_account_id, ad_account_name, currency, timezone, access_token (encrypted), token_expires_at, status, connected_by, last_synced_at`
-- **meta_campaigns** — `id, meta_account_id, campaign_id, name, objective, status, daily_budget, lifetime_budget, start_time, stop_time`
-- **meta_campaign_insights** — `id, campaign_id, date, spend, reach, impressions, clicks, ctr, cpc, cpm, leads, cost_per_lead, actions jsonb` (unique on `campaign_id+date`)
-- **meta_ad_spend_history** — `id, meta_account_id, date, spend, currency` (unique on `account+date`) — powers daily/monthly trend
-- **meta_billing_reports** — `id, meta_account_id, period_start, period_end, total_spend, currency, generated_at, file_url`
-- **meta_sync_log** — `id, meta_account_id, started_at, finished_at, status, error, rows_synced`
+- `clients`: add `last_billed_spend numeric default 0`, `last_invoice_date date`, `last_billed_at timestamptz`
+- `client_meta_accounts` (new): `client_id`, `meta_account_id`, `meta_ad_account_id`, `is_primary`, timestamps — many-to-many link
+- `client_activity` (new): `client_id`, `actor_id`, `kind` (invoice_created/payment_received/quotation_created/meta_linked/meta_synced), `ref_id`, `summary jsonb`, `created_at`
+- `invoices`: add `billed_spend_from numeric`, `billed_spend_to numeric`, `meta_account_id uuid` (for spend-billing audit trail)
+- Encrypted token storage: enable `pgsodium`, add `meta_accounts.access_token_encrypted bytea`, migrate values, drop plaintext column in follow-up after verification
+- DB functions: `client_pending_amount(client_id)`, `client_ledger(client_id)` returning ledger rows, `record_client_activity(...)` helper
+- GRANTs + RLS on every new table (company-scoped via existing `has_role`/company pattern)
 
-Tokens stored encrypted via `pgsodium` or a `vault`-style helper; never returned to the browser.
+## Milestone 2 — Client Profile Dashboard
 
-## 2. Server logic (TanStack server functions + public routes)
+Route: `/_authenticated/clients/$clientId` (tabbed)
 
-OAuth (server routes, public prefix because Meta posts to them):
+Tabs: Overview · Invoices · Payments · Quotations · Meta Ads · Files · Settings · Ledger · Activity
 
-- `GET /api/public/meta/oauth/start` → builds Facebook login URL with state, redirects
-- `GET /api/public/meta/oauth/callback` → exchanges code → long-lived token → stores in `meta_accounts` (status: `pending_account_select`)
+- Overview cards: Total Invoices, Paid, Pending, Outstanding, Total Revenue, Last Invoice, Active Campaigns, Total Ad Spend
+- Each tab is a lazy child component reading from existing tables via server fns
+- Activity Timeline tab reads `client_activity`
+- Ledger tab with PDF + Excel export (reuse existing PDF print pattern; xlsx via `xlsx` package)
 
-Server functions (auth-gated, called from UI):
+## Milestone 3 — Meta Linking + Spend Billing Engine
 
-- `listMetaBusinesses(accountRowId)` / `listMetaAdAccounts(businessId)`
-- `selectMetaAdAccount({ rowId, businessId, adAccountId })`
-- `disconnectMetaAccount(rowId)`
-- `syncMetaAccount(rowId)` — pulls campaigns + last-N-days insights, upserts
-- `getMetaDashboard({ accountId, range })` — aggregates KPIs for cards/charts
-- `generateMetaReport({ accountId, period })` — builds PDF/Excel, stores in Supabase Storage `meta-reports/`
+- Settings tab: link/change/disconnect Meta ad accounts (UI over `client_meta_accounts`)
+- New server fn `computeBillableMetaSpend(clientId, metaAccountId)`:
+  - reads `meta_ad_spend_history` cumulative spend
+  - subtracts `clients.last_billed_spend` for that link
+  - returns delta
+- Invoice creation wizard: Client → detect linked Meta account → fetch billable spend → prefill line item
+- On invoice save: update `last_billed_spend`, `last_invoice_date`, `last_billed_at`, write `client_activity`
+- Idempotent — re-saving same invoice never double-bills
 
-Cron: `pg_cron` daily job hitting `/api/public/meta/cron/sync` (apikey header) → refresh tokens + sync all active accounts.
+## Milestone 4 — Pending Amount, Dashboard, Quote→Invoice, Files
 
-## 3. UI
+- Global financial cards (Total Revenue / Collected / Pending / Overdue) on Dashboard + per-client
+- Dashboard widgets: Top Clients by Revenue, Top Clients by Spend, Pending Collections, Recent Payments, Recent Invoices
+- `Convert to Invoice` button on quotation detail — copies client, items, gst, discount; creates invoice in draft
+- Files tab: upload to existing `client-files` bucket with category enum (gst/pan/agreement/invoice/other); list/download/delete
 
-New sidebar group **Meta Ads** with:
+## Milestone 5 — Security + Validation Report
 
-- `meta.index.tsx` — Accounts list, "Connect Meta Account" button, last synced, Sync Now, Disconnect
-- `meta.$accountId.tsx` — Tabs: **Overview**, **Campaigns**, **Billing**, **Reports**
-  - Overview cards: Total Spend, Active Campaigns, Reach, Impressions, Clicks, CTR, CPC, CPM, Leads, CPL, ROAS
-  - Charts (recharts): Daily Spend, Monthly Spend, Campaign Performance, Lead Generation
-  - Billing: current month / last month / lifetime, daily + monthly trend, campaign-wise spend, currency
-  - Reports: Daily/Weekly/Monthly generate → PDF + Excel download
-- Client portal: existing client login sees only their own `meta_accounts` (RLS scoped via `clients.user_id` link)
-
-All in the existing premium dark theme + semantic tokens, mobile responsive, "Last synced" timestamp + manual Sync button on every page.
-
-## 4. Security
-
-- OAuth only — no manual token paste
-- `access_token` encrypted at rest, only readable by `service_role` / server functions
-- Token refresh handled server-side before each sync (long-lived FB token = 60 days; auto-extend)
-- RLS: client sees only their accounts; staff scoped to company; admin sees all
-- All Meta API calls go through server fns — frontend only ever sees aggregated KPIs
-
-## 5. Build order
-
-1. Migration (tables + RLS + grants + encryption helpers + cron job)
-2. Secrets: `META_APP_ID`, `META_APP_SECRET`
-3. OAuth routes + Connect flow + account/business picker
-4. Sync server fn + manual Sync Now button
-5. Dashboard (cards + charts) + Campaigns table
-6. Billing tab
-7. Reports (PDF/Excel) + Storage bucket `meta-reports`
-8. Cron daily sync
-9. Client-portal scoping + permission gating
+- Migrate `meta_accounts.access_token` → `access_token_encrypted` using pgsodium; update server-side decrypt helper; remove plaintext column
+- Final report listing: Completed / Modified / DB changes / Routes / Tables / Functions / Remaining
 
 ---
 
-### Technical notes (for reference)
+## Technical notes
 
-- Meta Graph API base: `https://graph.facebook.com/v21.0`
-- Endpoints used: `/me/businesses`, `/{business}/owned_ad_accounts`, `/act_{id}/campaigns`, `/act_{id}/insights?level=campaign&fields=spend,reach,impressions,clicks,ctr,cpc,cpm,actions&time_increment=1`
-- Lead count derived from `actions` where `action_type='lead'`; ROAS from `purchase_roas`
-- PDF reuses the existing print-stylesheet pattern; Excel via `xlsx` (already viable in Worker runtime)
+- All server logic via `createServerFn` + `requireSupabaseAuth` (no edge functions)
+- New tables follow CREATE → GRANT → ENABLE RLS → POLICY pattern
+- Reuse `meta_ad_spend_history`, `meta_campaign_insights`, `invoices`, `payments`, `client-files` bucket
+- No duplicate tables: ledger is a VIEW/function over invoices+payments, not a new table
+- Activity log written by triggers on invoices/payments/quotations + explicit calls from Meta sync
 
 ---
 
-This is a big build (~10–15 files + 1 migration + 1 secret request). Confirm and I'll start with the migration and secret request in the next step.
+## Estimated scope
+
+~15-20 new/modified files per milestone, 1 migration per milestone (5 total). Each milestone is independently testable.
+
+**Reply "go" to start Milestone 1**, or tell me which milestones to reorder/drop.

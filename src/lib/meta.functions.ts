@@ -222,13 +222,18 @@ export const getMetaDashboard = createServerFn({ method: "POST" })
     if (accRes.error) throw new Error(accRes.error.message);
 
     const insights = insRes.data ?? [];
-    const sum = (k: keyof typeof insights[number]) => insights.reduce((a, r) => a + Number(r[k] ?? 0), 0);
-    const spend = sum("spend");
-    const reach = sum("reach");
-    const impressions = sum("impressions");
-    const clicks = sum("clicks");
-    const leads = sum("leads");
-    const purchaseValue = sum("purchase_value");
+    const spendHistory = (spendRes.data ?? []).filter(r => r.date >= since);
+    const sumI = (k: keyof typeof insights[number]) => insights.reduce((a, r) => a + Number(r[k] ?? 0), 0);
+    const sumS = (k: keyof typeof spendHistory[number]) => spendHistory.reduce((a, r) => a + Number(r[k] ?? 0), 0);
+
+    // Prefer account-level spend_history when insights are missing (large accounts often return empty campaign insights).
+    const hasInsights = insights.length > 0;
+    const spend = hasInsights ? sumI("spend") : sumS("spend");
+    const reach = hasInsights ? sumI("reach") : sumS("reach");
+    const impressions = hasInsights ? sumI("impressions") : sumS("impressions");
+    const clicks = hasInsights ? sumI("clicks") : sumS("clicks");
+    const leads = hasInsights ? sumI("leads") : sumS("leads");
+    const purchaseValue = hasInsights ? sumI("purchase_value") : 0;
 
     return {
       account: accRes.data,

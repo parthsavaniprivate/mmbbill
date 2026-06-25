@@ -156,7 +156,7 @@ function ClientsPage() {
   );
 }
 
-function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: () => void }) {
+export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>; id?: string; onClose: () => void }) {
   const { companies, selected, isAll } = useCompany();
   const [form, setForm] = useState({
     client_name: initial?.client_name ?? "",
@@ -182,20 +182,24 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
     mutationFn: async () => {
       if (!form.company_id) throw new Error("Select a company");
       if (!form.client_name) throw new Error("Client name required");
-      const { error } = await supabase.from("clients").insert({
+      const payload = {
         ...form,
         service_charge_amount: Number(form.service_charge_amount || 0),
         credit_limit: form.credit_limit ? Number(form.credit_limit) : null,
-      });
+      };
+      const { error } = id
+        ? await supabase.from("clients").update(payload).eq("id", id)
+        : await supabase.from("clients").insert(payload);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Client created"); onClose(); },
+    onSuccess: () => { toast.success(id ? "Client updated" : "Client created"); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
+
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader><DialogTitle>New Client</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{id ? "Edit Client" : "New Client"}</DialogTitle></DialogHeader>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5 col-span-2">
           <Label>Company *</Label>

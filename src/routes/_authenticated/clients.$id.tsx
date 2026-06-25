@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil } from "lucide-react";
+import { ClientForm } from "./clients.index";
+
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -23,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/clients/$id")({ component:
 function ClientDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+
 
   const { data: client } = useQuery({
     queryKey: ["client", id],
@@ -142,9 +146,20 @@ function ClientDetail() {
               <Button variant="outline"><MessageCircle className="w-4 h-4" />WhatsApp</Button>
             </a>
           )}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><Pencil className="w-4 h-4" />Edit</Button>
+            </DialogTrigger>
+            <ClientForm
+              id={id}
+              initial={client}
+              onClose={() => { setEditOpen(false); qc.invalidateQueries({ queryKey: ["client", id] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
+            />
+          </Dialog>
           <Button asChild><Link to="/invoices/new" search={{ client: id } as never}><Plus className="w-4 h-4" />New Invoice</Link></Button>
         </div>
       </div>
+
 
       <div className="grid md:grid-cols-3 gap-4">
         <InfoCard label="Mobile" value={client.mobile} />

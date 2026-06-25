@@ -109,6 +109,8 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       meta_account_id: row.id, status: "running",
     }).select("id").single();
 
+    await db.from("meta_accounts").update({ last_sync_error: null }).eq("id", row.id);
+
     try {
       const campaigns = await meta.listCampaigns(row.access_token, row.ad_account_id).catch(() => []);
       let rows = 0;

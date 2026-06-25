@@ -324,7 +324,7 @@ export const getMetaDashboard = createServerFn({ method: "POST" })
     const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
 
     const [accRes, campRes, insRes, spendRes] = await Promise.all([
-      context.supabase.from("meta_accounts").select("*").eq("id", data.rowId).maybeSingle(),
+      context.supabase.from("meta_accounts").select("id, company_id, client_id, business_name, ad_account_id, ad_account_name, currency, timezone, status, last_synced_at, last_sync_error, created_at").eq("id", data.rowId).maybeSingle(),
       context.supabase.from("meta_campaigns").select("*").eq("meta_account_id", data.rowId),
       context.supabase.from("meta_campaign_insights").select("*").eq("meta_account_id", data.rowId).gte("date", since).order("date"),
       context.supabase.from("meta_ad_spend_history").select("*").eq("meta_account_id", data.rowId).order("date"),

@@ -177,6 +177,48 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         }
       }
 
+      // Aggregated campaign totals — fallback so each campaign has at least one
+      // insights row even when time_increment=1 returns nothing (large accounts).
+      const seenCampaigns = new Set(insights.map(i => i.campaign_id));
+      const missing = campaigns.filter(c => !seenCampaigns.has(c.id));
+      if (missing.length) {
+        const totals = await meta.getCampaignTotals(row.access_token, row.ad_account_id, days)
+          .catch((e: unknown) => {
+            console.error("[meta-sync] campaign totals failed", row.ad_account_id, e);
+            return [] as Awaited<ReturnType<typeof meta.getCampaignTotals>>;
+          });
+        const today = new Date().toISOString().slice(0, 10);
+        const totalsPayload = totals
+          .filter(t => !seenCampaigns.has(t.campaign_id) && idMap.has(t.campaign_id))
+          .map(t => {
+            const leads = meta.leadsFromActions(t.actions);
+            const spend = Number(t.spend ?? 0);
+            return {
+              meta_account_id: row.id,
+              campaign_id: idMap.get(t.campaign_id)!,
+              date: today,
+              spend,
+              reach: Number(t.reach ?? 0),
+              impressions: Number(t.impressions ?? 0),
+              clicks: Number(t.clicks ?? 0),
+              ctr: Number(t.ctr ?? 0),
+              cpc: Number(t.cpc ?? 0),
+              cpm: Number(t.cpm ?? 0),
+              leads,
+              cost_per_lead: leads > 0 ? spend / leads : 0,
+              purchase_value: meta.purchaseValueFromActions(t.action_values),
+              actions: t.actions ?? null,
+            };
+          });
+        console.log("[meta-sync]", row.ad_account_id, "campaign totals fallback rows:", totalsPayload.length);
+        if (totalsPayload.length) {
+          const { error: tErr } = await db.from("meta_campaign_insights")
+            .upsert(totalsPayload, { onConflict: "campaign_id,date" });
+          if (tErr) throw tErr;
+          rows += totalsPayload.length;
+        }
+      }
+
       // account-level daily spend (90 days)
       let dailyWarning: string | null = null;
       const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90)

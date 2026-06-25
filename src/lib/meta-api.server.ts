@@ -137,6 +137,18 @@ export async function getCampaignInsights(token: string, adAccountId: string, da
   });
 }
 
+// Aggregated campaign totals (no per-day breakdown) — fallback when time_increment=1
+// returns empty (common on large accounts or messaging campaigns).
+export async function getCampaignTotals(token: string, adAccountId: string, days = 30) {
+  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values,cost_per_action_type";
+  return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
+    level: "campaign",
+    fields,
+    date_preset: days <= 7 ? "last_7d" : days <= 30 ? "last_30d" : "last_90d",
+    limit: "500",
+  });
+}
+
 export async function getAccountDailySpend(token: string, adAccountId: string, days = 90) {
   return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
     fields: "spend,impressions,clicks,reach,actions,cost_per_action_type",

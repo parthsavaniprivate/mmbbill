@@ -360,6 +360,15 @@ function ClientDetail() {
   );
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-medium">{value}</p>
+    </div>
+  );
+}
+
 function InfoCard({ label, value, className }: { label: string; value: string | null; className?: string }) {
   return (
     <Card className={className}>

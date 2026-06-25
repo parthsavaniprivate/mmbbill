@@ -149,6 +149,20 @@ export async function getCampaignTotals(token: string, adAccountId: string, days
   });
 }
 
+// Per-campaign insights via the campaign node — last-resort fallback when
+// /act_x/insights returns empty (large accounts, async-report-required, etc.).
+export async function getInsightsForCampaign(token: string, campaignId: string, days = 30) {
+  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values,cost_per_action_type";
+  return ggetAll<InsightRow>(`/${campaignId}/insights`, token, {
+    fields,
+    date_preset: days <= 7 ? "last_7d" : days <= 30 ? "last_30d" : "last_90d",
+    limit: "100",
+  }).catch((e) => {
+    console.error("[meta-api] per-campaign insights failed", campaignId, e instanceof Error ? e.message : e);
+    return [] as InsightRow[];
+  });
+}
+
 export async function getAccountDailySpend(token: string, adAccountId: string, days = 90) {
   return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
     fields: "spend,impressions,clicks,reach,actions,cost_per_action_type",

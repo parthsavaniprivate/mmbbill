@@ -207,7 +207,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       await db.from("meta_accounts")
         .update({ last_synced_at: new Date().toISOString(), last_sync_error: warning }).eq("id", row.id);
       if (logRow) await db.from("meta_sync_log")
-        .update({ status: warning ? "partial" : "success", error: warning, finished_at: new Date().toISOString(), rows_synced: rows }).eq("id", logRow.id);
+        .update({ status: "success", error: warning, finished_at: new Date().toISOString(), rows_synced: rows }).eq("id", logRow.id);
 
       return { ok: true, rows, warning };
     } catch (e) {

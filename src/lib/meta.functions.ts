@@ -236,7 +236,12 @@ export const getMetaDashboard = createServerFn({ method: "POST" })
     ]);
     if (accRes.error) throw new Error(accRes.error.message);
 
-    const insights = insRes.data ?? [];
+    const meta = await import("./meta-api.server");
+    const insights = (insRes.data ?? []).map((row) => {
+      const actions = Array.isArray(row.actions) ? row.actions as { action_type: string; value: string }[] : undefined;
+      const actionLeads = meta.leadsFromActions(actions);
+      return actionLeads > 0 ? { ...row, leads: actionLeads, cost_per_lead: Number(row.spend ?? 0) / actionLeads } : row;
+    });
     const spendHistory = (spendRes.data ?? []).filter(r => r.date >= since);
     const sumI = (k: keyof typeof insights[number]) => insights.reduce((a, r) => a + Number(r[k] ?? 0), 0);
     const sumS = (k: keyof typeof spendHistory[number]) => spendHistory.reduce((a, r) => a + Number(r[k] ?? 0), 0);

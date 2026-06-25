@@ -117,9 +117,26 @@ function InvoiceDetail() {
 
       <Card className="shadow-card print:shadow-none overflow-hidden">
         {(() => {
+          // Fallback: if this invoice has no line items in DB (legacy/imported),
+          // synthesize a single row from the invoice subtotal so the template
+          // doesn't render blank service name / qty / rate columns.
+          let displayItems = data.items;
+          if (!displayItems.length) {
+            const baseAmount = Number(inv.subtotal || 0) + Number(inv.discount || 0);
+            displayItems = [{
+              id: `synthetic-${inv.id}`,
+              invoice_id: inv.id,
+              description: inv.notes?.trim() || "Professional Services",
+              quantity: 1,
+              rate: baseAmount,
+              amount: baseAmount,
+              position: 0,
+              created_at: inv.created_at,
+            }];
+          }
           const tplData = {
             invoice: inv,
-            items: data.items,
+            items: displayItems,
             company: co,
             client: cl,
           } as Parameters<typeof BillOfSupplyTemplate>[0]["data"];

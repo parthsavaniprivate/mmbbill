@@ -186,7 +186,7 @@ function ClientDetail() {
         </CardHeader>
         <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <Stat label="Ad Account" value={metaSummary?.account
-            ? (metaSummary.account.ad_account_name || metaSummary.account.ad_account_id)
+            ? (metaSummary.account.ad_account_name || metaSummary.account.ad_account_id || "—")
             : "Not linked"} />
           <Stat label="Active Campaigns" value={metaSummary ? `${metaSummary.activeCampaigns} / ${metaSummary.totalCampaigns}` : "—"} />
           <Stat label="Total Ad Spend" value={metaSummary ? inr(metaSummary.spend) : "—"} />

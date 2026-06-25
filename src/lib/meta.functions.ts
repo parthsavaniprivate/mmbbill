@@ -110,7 +110,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
     }).select("id").single();
 
     try {
-      const campaigns = await meta.listCampaigns(row.access_token, row.ad_account_id);
+      const campaigns = await meta.listCampaigns(row.access_token, row.ad_account_id).catch(() => []);
       let rows = 0;
 
       // upsert campaigns

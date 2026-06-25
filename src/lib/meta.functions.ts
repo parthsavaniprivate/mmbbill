@@ -123,6 +123,8 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
           name: c.name,
           objective: c.objective,
           status: c.status,
+          effective_status: c.effective_status ?? null,
+          configured_status: c.configured_status ?? null,
           daily_budget: c.daily_budget ? Number(c.daily_budget) / 100 : null,
           lifetime_budget: c.lifetime_budget ? Number(c.lifetime_budget) / 100 : null,
           start_time: c.start_time ?? null,

@@ -174,7 +174,11 @@ function ClientForm({ initial, onClose }: { initial?: Partial<Client>; onClose: 
     mutationFn: async () => {
       if (!form.company_id) throw new Error("Select a company");
       if (!form.client_name) throw new Error("Client name required");
-      const { error } = await supabase.from("clients").insert(form);
+      const { error } = await supabase.from("clients").insert({
+        ...form,
+        service_charge_amount: Number(form.service_charge_amount || 0),
+        credit_limit: form.credit_limit ? Number(form.credit_limit) : null,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Client created"); onClose(); },

@@ -199,7 +199,7 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader><DialogTitle>New Client</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{id ? "Edit Client" : "New Client"}</DialogTitle></DialogHeader>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5 col-span-2">
           <Label>Company *</Label>

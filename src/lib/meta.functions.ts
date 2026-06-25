@@ -139,8 +139,15 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         .select("id, campaign_id").eq("meta_account_id", row.id);
       const idMap = new Map((dbCampaigns ?? []).map((c: { campaign_id: string; id: string }) => [c.campaign_id, c.id]));
 
-      // insights
-      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days).catch(() => []);
+      // insights (campaign-level)
+      let insightsWarning: string | null = null;
+      const insights = await meta.getCampaignInsights(row.access_token, row.ad_account_id, days)
+        .catch((e: unknown) => {
+          insightsWarning = `campaign insights: ${e instanceof Error ? e.message : String(e)}`;
+          console.error("[meta-sync] campaign insights failed", row.ad_account_id, e);
+          return [] as Awaited<ReturnType<typeof meta.getCampaignInsights>>;
+        });
+      console.log("[meta-sync]", row.ad_account_id, "campaigns:", campaigns.length, "insights rows:", insights.length);
       if (insights.length) {
         const payload = insights.map(i => {
           const leads = meta.leadsFromActions(i.actions);

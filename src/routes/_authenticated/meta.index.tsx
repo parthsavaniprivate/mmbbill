@@ -65,43 +65,45 @@ function MetaIndex() {
     if (isAll) { toast.error("Pick a company first"); return; }
     const origin = window.location.origin;
 
+    // CRITICAL: open the popup synchronously in the click handler, BEFORE any
+    // await. Opening after an await loses the user-gesture grant — the browser
+    // either blocks it or opens it in a degraded mode where Facebook renders
+    // as if framed ("www.facebook.com refused to connect").
+    const w = 600, h = 750;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(
+      "about:blank",
+      "meta_oauth",
+      `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`,
+    );
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups for this site and try again.");
+      return;
+    }
+    try {
+      popup.document.write(
+        '<!doctype html><title>Connecting to Meta…</title><body style="background:#0a0a0a;color:#eee;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div>Connecting to Meta…</div></body>',
+      );
+    } catch { /* cross-origin once navigated — ignore */ }
+
     // Create a single-use OAuth state row as the signed-in admin.
-    // The callback uses a SECURITY DEFINER RPC keyed off this id —
-    // no Supabase service role key is needed on the server.
     const { supabase } = await import("@/integrations/supabase/client");
     const { data: userRes } = await supabase.auth.getUser();
-    if (!userRes.user) { toast.error("You must be signed in"); return; }
+    if (!userRes.user) { popup.close(); toast.error("You must be signed in"); return; }
     const { data: state, error: stateErr } = await supabase
       .from("meta_oauth_states")
       .insert({ company_id: selected!, created_by: userRes.user.id, return_to: "/meta" })
       .select("id")
       .single();
-    if (stateErr || !state) { toast.error(stateErr?.message ?? "Could not start connection"); return; }
-
-    const url = `${origin}/api/public/meta/oauth/start?state=${state.id}`;
-
-    // Open in a popup to escape the Lovable preview iframe (Facebook blocks iframe embedding)
-    const w = 600, h = 750;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    const popup = window.open(
-      url,
-      "meta_oauth",
-      `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=yes,status=no`,
-    );
-
-    if (!popup) {
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = url;
-          return;
-        }
-      } catch {
-        // cross-origin top access blocked — fall through
-      }
-      toast.error("Popup blocked. Please allow popups for this site.");
+    if (stateErr || !state) {
+      popup.close();
+      toast.error(stateErr?.message ?? "Could not start connection");
       return;
     }
+
+    const url = `${origin}/api/public/meta/oauth/start?state=${state.id}`;
+    popup.location.href = url;
 
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== origin) return;

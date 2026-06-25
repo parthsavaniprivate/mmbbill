@@ -27,8 +27,16 @@ export const Route = createFileRoute("/_authenticated/meta/$accountId")({
 });
 
 function fmtMoney(n: number, currency = "INR") {
-  try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(n); }
-  catch { return n.toFixed(0); }
+  const value = Number.isFinite(n) ? n : 0;
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+  catch { return value.toFixed(2); }
 }
 function fmtNum(n: number) { return new Intl.NumberFormat("en-IN").format(Math.round(n)); }
 function pct(n: number) { return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`; }
@@ -216,7 +224,7 @@ function MetaDashboard() {
     { label: "CPC", value: fmtMoney(kpis.cpc, currency), icon: DollarSign, tint: "#f59e0b" },
     { label: "CPM", value: fmtMoney(kpis.cpm, currency), icon: Radio, tint: "#f97316" },
     { label: "Leads", value: fmtNum(kpis.leads), icon: Target, trendVal: trends.leads, sparkKey: "leads", tint: "#22c55e" },
-    { label: "Cost / Lead", value: kpis.leads ? fmtMoney(kpis.cpl, currency) : "—", icon: Flame, tint: "#ef4444" },
+    { label: "Cost / Result", value: kpis.leads ? fmtMoney(kpis.cpl, currency) : "—", icon: Flame, tint: "#ef4444" },
     { label: "ROAS", value: `${kpis.roas.toFixed(2)}x`, icon: Rocket, tint: "#8b5cf6" },
   ];
 
@@ -468,7 +476,7 @@ function MetaDashboard() {
                   <SelectItem value="spend">Sort: Spend</SelectItem>
                   <SelectItem value="leads">Sort: Leads</SelectItem>
                   <SelectItem value="ctr">Sort: CTR</SelectItem>
-                  <SelectItem value="cpl">Sort: CPL</SelectItem>
+                  <SelectItem value="cpl">Sort: Cost / result</SelectItem>
                 </SelectContent>
               </Select>
             </CardContent>
@@ -481,12 +489,12 @@ function MetaDashboard() {
                   <TableHead>Campaign</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Score</TableHead>
-                  <TableHead className="text-right">Spend</TableHead>
+                  <TableHead className="text-right">Amount spent</TableHead>
                   <TableHead className="text-right">Impressions</TableHead>
                   <TableHead className="text-right">Clicks</TableHead>
                   <TableHead className="text-right">CTR</TableHead>
-                  <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">CPL</TableHead>
+                  <TableHead className="text-right">Results</TableHead>
+                  <TableHead className="text-right">Cost per result</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {filteredCamps.map(c => (

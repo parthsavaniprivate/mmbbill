@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, MessageCircle, Phone, Mail } from "lucide-react";
+
+import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -37,7 +37,7 @@ const STATUS_COLORS: Record<Status, string> = {
 function ClientsPage() {
   const { q } = Route.useSearch();
   const { selected, isAll, companies } = useCompany();
-  const navigate = useNavigate();
+  
   const [search, setSearch] = useState(q);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
@@ -92,61 +92,66 @@ function ClientsPage() {
         </Select>
       </div>
 
-      <Card className="shadow-card">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading…</div>
-          ) : filtered.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">No clients. Create one to get started.</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => {
-                  const co = companies.find((x) => x.id === c.company_id);
-                  return (
-                    <TableRow
-                      key={c.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => navigate({ to: "/clients/$id", params: { id: c.id } })}
-                    >
-                      <TableCell>
-                        <p className="font-medium">{c.business_name || c.client_name}</p>
-                        {c.business_name && <p className="text-xs text-muted-foreground">{c.client_name}</p>}
-                      </TableCell>
-                      <TableCell><Badge variant="outline">{co?.name}</Badge></TableCell>
-                      <TableCell className="text-sm">
-                        <div className="flex flex-col gap-0.5">
-                          {c.mobile && <span className="flex items-center gap-1 text-muted-foreground"><Phone className="w-3 h-3" />{c.mobile}</span>}
-                          {c.email && <span className="flex items-center gap-1 text-muted-foreground"><Mail className="w-3 h-3" />{c.email}</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        {c.whatsapp && (
-                          <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                            <Button size="icon" variant="ghost"><MessageCircle className="w-4 h-4 text-success" /></Button>
-                          </a>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <Card className="shadow-card"><CardContent className="p-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+      ) : filtered.length === 0 ? (
+        <Card className="shadow-card"><CardContent className="p-12 text-center text-muted-foreground">No clients. Create one to get started.</CardContent></Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filtered.map((c) => {
+            const co = companies.find((x) => x.id === c.company_id);
+            const initials = (c.business_name || c.client_name).split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+            return (
+              <Link
+                key={c.id}
+                to="/clients/$id"
+                params={{ id: c.id }}
+                className="group block focus:outline-none"
+              >
+                <Card className="shadow-card transition-all hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer h-full">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center font-semibold text-primary">
+                        {initials || "?"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{c.business_name || c.client_name}</p>
+                        {c.business_name && <p className="text-xs text-muted-foreground truncate">{c.client_name}</p>}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
+                      {co?.name && (
+                        <Badge variant="outline" className="font-normal gap-1">
+                          <Building2 className="w-3 h-3" />{co.name}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="space-y-1 text-sm text-muted-foreground border-t border-border/60 pt-3">
+                      {c.mobile && <div className="flex items-center gap-2 truncate"><Phone className="w-3.5 h-3.5 shrink-0" />{c.mobile}</div>}
+                      {c.email && <div className="flex items-center gap-2 truncate"><Mail className="w-3.5 h-3.5 shrink-0" />{c.email}</div>}
+                      {!c.mobile && !c.email && <div className="text-xs italic">No contact info</div>}
+                    </div>
+
+                    {c.whatsapp && (
+                      <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="pt-1">
+                        <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex">
+                          <Button size="sm" variant="outline" className="gap-1.5 h-8">
+                            <MessageCircle className="w-3.5 h-3.5 text-success" /> WhatsApp
+                          </Button>
+                        </a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

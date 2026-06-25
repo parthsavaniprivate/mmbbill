@@ -21,7 +21,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Status = Database["public"]["Enums"]["client_status"];
 
-export const Route = createFileRoute("/_authenticated/clients")({
+export const Route = createFileRoute("/_authenticated/clients/")({
   validateSearch: (s: Record<string, unknown>): { q?: string } =>
     typeof s.q === "string" && s.q ? { q: s.q } : {},
   component: ClientsPage,

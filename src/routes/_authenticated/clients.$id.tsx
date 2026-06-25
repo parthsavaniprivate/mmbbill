@@ -56,6 +56,43 @@ function ClientDetail() {
       return data ?? [];
     },
   });
+  const { data: metaSummary } = useQuery({
+    queryKey: ["client-meta-summary", id],
+    queryFn: async () => {
+      const { data: account } = await supabase
+        .from("meta_accounts")
+        .select("id, ad_account_id, ad_account_name, business_name, currency, last_synced_at, status")
+        .eq("client_id", id).maybeSingle();
+      if (!account) return null;
+      const [{ count: campCount }, { count: activeCount }, { data: ins }, { data: hist }] = await Promise.all([
+        supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id),
+        supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id).eq("status", "ACTIVE"),
+        supabase.from("meta_campaign_insights").select("spend, leads, reach, impressions, clicks").eq("meta_account_id", account.id),
+        supabase.from("meta_ad_spend_history").select("spend, leads, reach, impressions, clicks, date").eq("meta_account_id", account.id),
+      ]);
+      const sum = (arr: { [k: string]: unknown }[] | null, k: string) =>
+        (arr ?? []).reduce((a, r) => a + Number((r as Record<string, unknown>)[k] ?? 0), 0);
+      const insightsHave = (ins ?? []).length > 0;
+      const today = new Date().toISOString().slice(0, 10);
+      const last7Cut = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+      const last30Cut = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+      const todaySpend = (hist ?? []).filter(r => r.date === today).reduce((a, r) => a + Number(r.spend ?? 0), 0);
+      const last7 = (hist ?? []).filter(r => r.date >= last7Cut).reduce((a, r) => a + Number(r.spend ?? 0), 0);
+      const last30 = (hist ?? []).filter(r => r.date >= last30Cut).reduce((a, r) => a + Number(r.spend ?? 0), 0);
+      return {
+        account,
+        totalCampaigns: campCount ?? 0,
+        activeCampaigns: activeCount ?? 0,
+        spend: insightsHave ? sum(ins, "spend") : sum(hist, "spend"),
+        leads: insightsHave ? sum(ins, "leads") : sum(hist, "leads"),
+        reach: insightsHave ? sum(ins, "reach") : sum(hist, "reach"),
+        impressions: insightsHave ? sum(ins, "impressions") : sum(hist, "impressions"),
+        clicks: insightsHave ? sum(ins, "clicks") : sum(hist, "clicks"),
+        todaySpend, last7, last30,
+      };
+    },
+  });
+
 
   const uploadFile = async (file: File, category: string): Promise<void> => {
     const path = `${id}/${Date.now()}-${file.name}`;
@@ -112,11 +149,101 @@ function ClientDetail() {
       <div className="grid md:grid-cols-3 gap-4">
         <InfoCard label="Mobile" value={client.mobile} />
         <InfoCard label="Email" value={client.email} />
-        
+        <InfoCard label="GST" value={client.gst_number} />
         <InfoCard label="Status" value={client.status.replace("_", " ")} />
         <InfoCard label="Address" value={client.address} className="md:col-span-2" />
         {client.notes && <InfoCard label="Notes" value={client.notes} className="md:col-span-3" />}
       </div>
+
+      {/* Billing Settings */}
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Billing Settings</CardTitle></CardHeader>
+        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <Stat label="Service Charge" value={
+            client.service_charge_type === "percent_of_spend"
+              ? `${Number(client.service_charge_amount ?? 0)}% of ad spend`
+              : client.service_charge_type === "fixed_monthly"
+                ? `${inr(Number(client.service_charge_amount ?? 0))} / month`
+                : `${inr(Number(client.service_charge_amount ?? 0))} (custom)`
+          } />
+          <Stat label="Billing Cycle" value={(client.billing_cycle ?? "monthly").replace(/_/g, " ")} />
+          <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
+          <Stat label="Auto Sync Meta" value={client.auto_sync_meta ? "Enabled" : "Disabled"} />
+        </CardContent>
+      </Card>
+
+      {/* Meta Ads Information */}
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Meta Ads</CardTitle>
+          {metaSummary?.account?.id ? (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/meta/$accountId" params={{ accountId: metaSummary.account.id }}>Open Dashboard</Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline"><Link to="/meta">Connect Meta</Link></Button>
+          )}
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <Stat label="Ad Account" value={metaSummary?.account
+            ? (metaSummary.account.ad_account_name || metaSummary.account.ad_account_id || "—")
+            : "Not linked"} />
+          <Stat label="Active Campaigns" value={metaSummary ? `${metaSummary.activeCampaigns} / ${metaSummary.totalCampaigns}` : "—"} />
+          <Stat label="Total Ad Spend" value={metaSummary ? inr(metaSummary.spend) : "—"} />
+          <Stat label="Last Sync" value={metaSummary?.account?.last_synced_at ? formatDate(metaSummary.account.last_synced_at) : "Never"} />
+          <Stat label="Today's Spend" value={metaSummary ? inr(metaSummary.todaySpend) : "—"} />
+          <Stat label="Last 7 Days" value={metaSummary ? inr(metaSummary.last7) : "—"} />
+          <Stat label="Last 30 Days" value={metaSummary ? inr(metaSummary.last30) : "—"} />
+          <Stat label="Already Billed" value={inr(Number(client.last_billed_spend ?? 0))} />
+        </CardContent>
+      </Card>
+
+      {/* Billing Summary */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Billing Summary</p>
+          {(() => {
+            const total = invoices.length;
+            const paid = invoices.filter(i => i.status === "paid").length;
+            const pending = invoices.filter(i => i.status === "pending" || i.status === "partially_paid").length;
+            const overdue = invoices.filter(i => i.status === "overdue").length;
+            return (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <Stat label="Total Invoices" value={String(total)} />
+                <Stat label="Paid" value={String(paid)} />
+                <Stat label="Pending" value={String(pending)} />
+                <Stat label="Overdue" value={String(overdue)} />
+              </div>
+            );
+          })()}
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Money</p>
+          {(() => {
+            const collected = invoices.reduce((a, i) => a + Number(i.amount_paid ?? 0), 0);
+            const billed = invoices.reduce((a, i) => a + Number(i.total ?? 0), 0);
+            const outstanding = Math.max(0, billed - collected);
+            return (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <Stat label="Total Billed" value={inr(billed)} />
+                <Stat label="Collected" value={inr(collected)} />
+                <Stat label="Outstanding" value={inr(outstanding)} />
+                <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
+              </div>
+            );
+          })()}
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Performance</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <Stat label="Leads" value={metaSummary ? metaSummary.leads.toLocaleString() : "—"} />
+            <Stat label="Reach" value={metaSummary ? metaSummary.reach.toLocaleString() : "—"} />
+            <Stat label="Impressions" value={metaSummary ? metaSummary.impressions.toLocaleString() : "—"} />
+            <Stat label="Clicks" value={metaSummary ? metaSummary.clicks.toLocaleString() : "—"} />
+          </div>
+        </CardContent></Card>
+      </div>
+
 
       <Tabs defaultValue="packages">
         <TabsList>
@@ -229,6 +356,15 @@ function ClientDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 font-medium">{value}</p>
     </div>
   );
 }

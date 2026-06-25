@@ -127,25 +127,23 @@ export type InsightRow = {
 };
 
 export async function getCampaignInsights(token: string, adAccountId: string, days = 30) {
-  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values";
-  const j = await gget<{ data: InsightRow[] }>(`/${adAccountId}/insights`, token, {
+  const fields = "campaign_id,spend,reach,impressions,clicks,ctr,cpc,cpm,actions,action_values,cost_per_action_type";
+  return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
     level: "campaign",
     fields,
     time_increment: "1",
     date_preset: days <= 7 ? "last_7d" : days <= 30 ? "last_30d" : "last_90d",
     limit: "500",
   });
-  return j.data ?? [];
 }
 
 export async function getAccountDailySpend(token: string, adAccountId: string, days = 90) {
-  const j = await gget<{ data: InsightRow[] }>(`/${adAccountId}/insights`, token, {
-    fields: "spend,impressions,clicks,reach,actions",
+  return ggetAll<InsightRow>(`/${adAccountId}/insights`, token, {
+    fields: "spend,impressions,clicks,reach,actions,cost_per_action_type",
     time_increment: "1",
     date_preset: days <= 30 ? "last_30d" : days <= 90 ? "last_90d" : "maximum",
     limit: "500",
   });
-  return j.data ?? [];
 }
 
 export function leadsFromActions(actions?: { action_type: string; value: string }[]) {

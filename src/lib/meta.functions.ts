@@ -103,9 +103,9 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
     if (!row.access_token || !row.ad_account_id) throw new Error("Account not fully connected");
 
     const meta = await import("./meta-api.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = context.supabase;
 
-    const { data: logRow } = await supabaseAdmin.from("meta_sync_log").insert({
+    const { data: logRow } = await db.from("meta_sync_log").insert({
       meta_account_id: row.id, status: "running",
     }).select("id").single();
 

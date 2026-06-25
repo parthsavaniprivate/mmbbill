@@ -169,7 +169,7 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
       }
 
       // account-level daily spend (90 days)
-      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90);
+      const daily = await meta.getAccountDailySpend(row.access_token, row.ad_account_id, 90).catch(() => []);
       if (daily.length) {
         const payload = daily.map(d => ({
           meta_account_id: row.id,

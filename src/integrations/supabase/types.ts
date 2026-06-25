@@ -822,8 +822,10 @@ export type Database = {
       meta_campaigns: {
         Row: {
           campaign_id: string
+          configured_status: string | null
           created_at: string
           daily_budget: number | null
+          effective_status: string | null
           id: string
           lifetime_budget: number | null
           meta_account_id: string
@@ -836,8 +838,10 @@ export type Database = {
         }
         Insert: {
           campaign_id: string
+          configured_status?: string | null
           created_at?: string
           daily_budget?: number | null
+          effective_status?: string | null
           id?: string
           lifetime_budget?: number | null
           meta_account_id: string
@@ -850,8 +854,10 @@ export type Database = {
         }
         Update: {
           campaign_id?: string
+          configured_status?: string | null
           created_at?: string
           daily_budget?: number | null
+          effective_status?: string | null
           id?: string
           lifetime_budget?: number | null
           meta_account_id?: string

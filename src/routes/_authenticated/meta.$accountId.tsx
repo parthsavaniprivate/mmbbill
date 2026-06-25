@@ -26,6 +26,48 @@ export const Route = createFileRoute("/_authenticated/meta/$accountId")({
   component: MetaDashboard,
 });
 
+type CampState = "delivering" | "paused" | "archived" | "completed" | "not_delivering" | "scheduled";
+
+function deriveCampaignState(
+  effective: string | null | undefined,
+  start: string | null | undefined,
+  stop: string | null | undefined,
+  spend: number,
+  impressions: number,
+): CampState {
+  const now = Date.now();
+  const eff = (effective ?? "").toUpperCase();
+  if (eff === "ARCHIVED" || eff === "DELETED") return "archived";
+  if (stop && new Date(stop).getTime() < now) return "completed";
+  if (eff === "PAUSED" || eff === "CAMPAIGN_PAUSED" || eff === "ADSET_PAUSED" || eff === "AD_PAUSED") return "paused";
+  if (start && new Date(start).getTime() > now) return "scheduled";
+  if (eff === "ACTIVE") {
+    if (spend === 0 && impressions === 0) return "not_delivering";
+    return "delivering";
+  }
+  if (eff === "IN_PROCESS" || eff === "WITH_ISSUES" || eff === "PENDING_REVIEW" || eff === "DISAPPROVED" || eff === "PREAPPROVED") return "not_delivering";
+  return "not_delivering";
+}
+
+const STATE_LABEL: Record<CampState, string> = {
+  delivering: "Delivering",
+  paused: "Paused",
+  archived: "Archived",
+  completed: "Completed",
+  not_delivering: "Not Delivering",
+  scheduled: "Scheduled",
+};
+
+const STATE_BADGE: Record<CampState, string> = {
+  delivering: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  scheduled: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  not_delivering: "bg-red-500/15 text-red-500 border-red-500/30",
+  completed: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+  paused: "bg-orange-500/15 text-orange-500 border-orange-500/30",
+  archived: "bg-muted/40 text-muted-foreground border-border/60",
+};
+
+
 function fmtMoney(n: number, currency = "INR") {
   const value = Number.isFinite(n) ? n : 0;
   try {
@@ -159,8 +201,16 @@ function MetaDashboard() {
     };
 
     // Per campaign
-    const perCamp = new Map<string, { name: string; spend: number; leads: number; clicks: number; impressions: number; status: string }>();
-    for (const c of campaigns) perCamp.set(c.id, { name: c.name ?? "—", spend: 0, leads: 0, clicks: 0, impressions: 0, status: c.status ?? "—" });
+    type CampAgg = { name: string; spend: number; leads: number; clicks: number; impressions: number; status: string; effective_status: string | null; start_time: string | null; stop_time: string | null };
+    const perCamp = new Map<string, CampAgg>();
+    for (const c of campaigns) perCamp.set(c.id, {
+      name: c.name ?? "—",
+      spend: 0, leads: 0, clicks: 0, impressions: 0,
+      status: c.status ?? "—",
+      effective_status: (c as { effective_status?: string | null }).effective_status ?? null,
+      start_time: (c as { start_time?: string | null }).start_time ?? null,
+      stop_time: (c as { stop_time?: string | null }).stop_time ?? null,
+    });
     for (const r of insights) {
       const c = perCamp.get(r.campaign_id);
       if (!c) continue;
@@ -172,12 +222,13 @@ function MetaDashboard() {
     const campArr = Array.from(perCamp.entries()).map(([id, v]) => {
       const ctr = v.impressions ? (v.clicks / v.impressions) * 100 : 0;
       const cpl = v.leads ? v.spend / v.leads : 0;
-      // Heuristic performance score 0-100: 60% CTR + 40% lead efficiency
-      const ctrScore = Math.min(100, ctr * 25); // 4% CTR -> 100
-      const cplScore = v.leads > 0 ? Math.max(0, 100 - Math.min(100, cpl / 5)) : 0; // 500 cpl -> 0
+      const ctrScore = Math.min(100, ctr * 25);
+      const cplScore = v.leads > 0 ? Math.max(0, 100 - Math.min(100, cpl / 5)) : 0;
       const score = Math.round(ctrScore * 0.6 + cplScore * 0.4);
-      return { id, ...v, ctr, cpl, score };
+      const state = deriveCampaignState(v.effective_status ?? v.status, v.start_time, v.stop_time, v.spend, v.impressions);
+      return { id, ...v, ctr, cpl, score, state };
     });
+
 
     const withSpend = campArr.filter(c => c.spend > 0);
     const withLeads = campArr.filter(c => c.leads > 0);
@@ -230,7 +281,7 @@ function MetaDashboard() {
 
   // Campaign table filter/sort
   const filteredCamps = campArr
-    .filter(c => (statusFilter === "all" ? true : c.status === statusFilter))
+    .filter(c => (statusFilter === "all" ? true : c.state === statusFilter))
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === "spend") return b.spend - a.spend;
@@ -239,11 +290,6 @@ function MetaDashboard() {
       return (a.cpl || Infinity) - (b.cpl || Infinity);
     });
 
-  const statusBadge = (s: string) => {
-    if (s === "ACTIVE") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-    if (s === "PAUSED") return "bg-amber-500/15 text-amber-400 border-amber-500/30";
-    return "bg-muted/40 text-muted-foreground border-border/60";
-  };
 
   const chartAxisColor = "var(--muted-foreground)";
   const chartGridColor = "var(--border)";
@@ -462,14 +508,18 @@ function MetaDashboard() {
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search campaigns…" className="pl-8" />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All status</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="PAUSED">Paused</SelectItem>
-                  <SelectItem value="ARCHIVED">Archived</SelectItem>
+                  <SelectItem value="delivering">Delivering</SelectItem>
+                  <SelectItem value="not_delivering">Not Delivering</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
+
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -508,7 +558,7 @@ function MetaDashboard() {
                           <span className="truncate">{c.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="outline" className={statusBadge(c.status)}>{c.status}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={STATE_BADGE[c.state]}>{STATE_LABEL[c.state]}</Badge></TableCell>
                       <TableCell><Badge variant="outline" className={scoreColor(c.score)}>{c.score}</Badge></TableCell>
                       <TableCell className="text-right tabular-nums">{fmtMoney(c.spend, currency)}</TableCell>
                       <TableCell className="text-right tabular-nums">{fmtNum(c.impressions)}</TableCell>

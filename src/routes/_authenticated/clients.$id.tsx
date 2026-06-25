@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil, Download } from "lucide-react";
 import { ClientForm } from "./clients.index";
 
 import { inr, formatDate } from "@/lib/format";
@@ -60,6 +60,95 @@ function ClientDetail() {
       return data ?? [];
     },
   });
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ["client-payments", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("*, invoices!inner(invoice_number, client_id, company_id)")
+        .eq("invoices.client_id", id)
+        .order("payment_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const { data: quotations = [] } = useQuery({
+    queryKey: ["client-quotations", id],
+    queryFn: async () => {
+      const { data } = await supabase.from("quotations").select("*").eq("client_id", id).order("quotation_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const { data: activity = [] } = useQuery({
+    queryKey: ["client-activity", id],
+    queryFn: async () => {
+      const { data } = await supabase.from("client_activity").select("*").eq("client_id", id).order("created_at", { ascending: false }).limit(100);
+      return data ?? [];
+    },
+  });
+
+  const { data: ledger = [] } = useQuery({
+    queryKey: ["client-ledger", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("client_ledger", { _client_id: id });
+      if (error) throw error;
+      return (data ?? []) as Array<{ entry_date: string; kind: string; ref: string; description: string; debit: number; credit: number; balance: number }>;
+    },
+  });
+
+  const { data: availableMetaAccounts = [] } = useQuery({
+    queryKey: ["meta-accounts-available", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("meta_accounts")
+        .select("id, ad_account_id, ad_account_name, business_name, client_id, status")
+        .in("status", ["active", "pending_account_select"])
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const linkMeta = useMutation({
+    mutationFn: async (metaAccountId: string | null) => {
+      // Unlink: clear client_id on whatever was linked. Link: set client_id on selected row.
+      if (metaAccountId === null) {
+        const linked = availableMetaAccounts.find(m => m.client_id === id);
+        if (!linked) return;
+        const { error } = await supabase.from("meta_accounts").update({ client_id: null }).eq("id", linked.id);
+        if (error) throw error;
+        return;
+      }
+      // Clear any prior link to this client first (single-link semantics on UI side)
+      await supabase.from("meta_accounts").update({ client_id: null }).eq("client_id", id);
+      const { error } = await supabase.from("meta_accounts").update({ client_id: id }).eq("id", metaAccountId);
+      if (error) throw error;
+      await supabase.rpc("record_client_activity", {
+        _client_id: id, _kind: "meta_linked", _ref_id: metaAccountId, _summary: {},
+      });
+    },
+    onSuccess: () => {
+      toast.success("Meta account updated");
+      qc.invalidateQueries({ queryKey: ["client-meta-summary", id] });
+      qc.invalidateQueries({ queryKey: ["meta-accounts-available", id] });
+      qc.invalidateQueries({ queryKey: ["client-activity", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const exportLedgerCSV = () => {
+    const rows = [
+      ["Date", "Type", "Ref", "Description", "Debit", "Credit", "Balance"],
+      ...ledger.map(r => [r.entry_date, r.kind, r.ref, r.description, r.debit, r.credit, r.balance]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `ledger-${id}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
   const { data: metaSummary } = useQuery({
     queryKey: ["client-meta-summary", id],
     queryFn: async () => {
@@ -261,10 +350,15 @@ function ClientDetail() {
 
 
       <Tabs defaultValue="packages">
-        <TabsList>
-          <TabsTrigger value="packages">Packages & Deliverables</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="packages">Packages</TabsTrigger>
           <TabsTrigger value="invoices">Invoices ({invoices.length})</TabsTrigger>
+          <TabsTrigger value="payments">Payments ({payments.length})</TabsTrigger>
+          <TabsTrigger value="quotations">Quotations ({quotations.length})</TabsTrigger>
+          <TabsTrigger value="ledger">Ledger</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="files">Files ({files.length})</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="packages" className="space-y-3">
@@ -367,6 +461,151 @@ function ClientDetail() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card><CardContent className="p-0">
+            {payments.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">No payments recorded.</div>
+            ) : (
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Date</TableHead><TableHead>Invoice</TableHead><TableHead>Method</TableHead><TableHead>Reference</TableHead><TableHead className="text-right">Amount</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {payments.map((p) => {
+                    const inv = p.invoices as { invoice_number: string } | null;
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>{formatDate(p.payment_date)}</TableCell>
+                        <TableCell className="font-medium">{inv?.invoice_number ?? "—"}</TableCell>
+                        <TableCell><Badge variant="outline">{p.method}</Badge></TableCell>
+                        <TableCell className="text-muted-foreground">{p.reference ?? "—"}</TableCell>
+                        <TableCell className="text-right font-medium">{inr(Number(p.amount))}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="quotations">
+          <Card><CardContent className="p-0">
+            {quotations.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">No quotations yet.</div>
+            ) : (
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Number</TableHead><TableHead>Date</TableHead><TableHead>Valid Until</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {quotations.map((q) => (
+                    <TableRow key={q.id}>
+                      <TableCell><Link to="/quotations/$id" params={{ id: q.id }} className="font-medium hover:underline">{q.quotation_number}</Link></TableCell>
+                      <TableCell>{formatDate(q.quotation_date)}</TableCell>
+                      <TableCell>{q.valid_until ? formatDate(q.valid_until) : "—"}</TableCell>
+                      <TableCell>{inr(Number(q.total))}</TableCell>
+                      <TableCell><Badge variant="outline">{q.status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="ledger" className="space-y-3">
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={exportLedgerCSV} disabled={ledger.length === 0}>
+              <Download className="w-4 h-4" />Export CSV
+            </Button>
+          </div>
+          <Card><CardContent className="p-0">
+            {ledger.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">No ledger entries.</div>
+            ) : (
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Ref</TableHead><TableHead>Description</TableHead>
+                  <TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead className="text-right">Balance</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {ledger.map((r, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{formatDate(r.entry_date)}</TableCell>
+                      <TableCell><Badge variant="outline">{r.kind}</Badge></TableCell>
+                      <TableCell className="font-medium">{r.ref}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.description}</TableCell>
+                      <TableCell className="text-right">{r.debit ? inr(Number(r.debit)) : "—"}</TableCell>
+                      <TableCell className="text-right">{r.credit ? inr(Number(r.credit)) : "—"}</TableCell>
+                      <TableCell className="text-right font-semibold">{inr(Number(r.balance))}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <Card><CardContent className="p-4">
+            {activity.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">No activity yet.</div>
+            ) : (
+              <ol className="relative border-l border-border pl-6 space-y-4">
+                {activity.map((a) => {
+                  const s = (a.summary as Record<string, unknown>) ?? {};
+                  return (
+                    <li key={a.id} className="relative">
+                      <span className="absolute -left-[29px] top-1.5 w-3 h-3 rounded-full bg-primary" />
+                      <div className="flex justify-between items-baseline gap-3">
+                        <p className="font-medium">{a.kind.replace(/_/g, " ")}</p>
+                        <span className="text-xs text-muted-foreground">{formatDate(a.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {Object.entries(s).map(([k, v]) => `${k}: ${String(v)}`).join(" · ") || "—"}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-3">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Meta Ad Account Link</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2 items-end">
+                <div className="space-y-1.5 flex-1 min-w-[260px]">
+                  <Label>Linked Meta Account</Label>
+                  <Select
+                    value={availableMetaAccounts.find(m => m.client_id === id)?.id ?? "__none__"}
+                    onValueChange={(v) => linkMeta.mutate(v === "__none__" ? null : v)}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Not linked</SelectItem>
+                      {availableMetaAccounts.map(m => (
+                        <SelectItem key={m.id} value={m.id} disabled={!!m.client_id && m.client_id !== id}>
+                          {m.ad_account_name || m.ad_account_id || m.business_name || m.id}
+                          {m.client_id && m.client_id !== id ? " (linked elsewhere)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" asChild><Link to="/meta">Manage Meta Accounts</Link></Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                When linked, invoices generated for this client can auto-fetch billable ad spend.
+                Each new invoice bills only the spend accrued since the previous one.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

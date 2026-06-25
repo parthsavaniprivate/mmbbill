@@ -447,6 +447,106 @@ function Dashboard() {
         );
       })()}
 
+      {/* Top Clients · Pending Collections · Recent Payments */}
+      {(() => {
+        const clientMap = new Map(data.clients.map(c => [c.id, c]));
+        const byClient = new Map<string, { revenue: number; collected: number; pending: number; overdue: number }>();
+        for (const inv of invoices) {
+          if (!inv.client_id) continue;
+          const c = byClient.get(inv.client_id) ?? { revenue: 0, collected: 0, pending: 0, overdue: 0 };
+          const total = Number(inv.total ?? 0);
+          const paid = Number(inv.amount_paid ?? 0);
+          c.revenue += total;
+          c.collected += paid;
+          c.pending += Math.max(0, total - paid);
+          if (inv.status === "overdue") c.overdue += Math.max(0, total - paid);
+          byClient.set(inv.client_id, c);
+        }
+        const rows = [...byClient.entries()].map(([cid, v]) => ({
+          id: cid,
+          name: (clientMap.get(cid) as { business_name?: string; client_name?: string } | undefined)?.business_name
+            || (clientMap.get(cid) as { client_name?: string } | undefined)?.client_name || "Unknown",
+          ...v,
+        }));
+        const topRevenue = [...rows].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+        const topPending = [...rows].filter(r => r.pending > 0).sort((a, b) => b.pending - a.pending).slice(0, 5);
+        const recentPayments = [...data.payments]
+          .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1)).slice(0, 5);
+
+        const totalPending = rows.reduce((s, r) => s + r.pending, 0);
+        const totalOverdue = rows.reduce((s, r) => s + r.overdue, 0);
+
+        return (
+          <>
+            <div className="grid gap-4 md:grid-cols-4">
+              <MiniKpi title="Total Revenue" value={inr(rows.reduce((s, r) => s + r.revenue, 0))} icon={IndianRupee} />
+              <MiniKpi title="Total Collected" value={inr(rows.reduce((s, r) => s + r.collected, 0))} icon={CheckCircle2} tone="ok" />
+              <MiniKpi title="Pending Amount" value={inr(totalPending)} icon={Clock} tone="warn" />
+              <MiniKpi title="Overdue Amount" value={inr(totalOverdue)} icon={AlertCircle} tone="danger" />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card className="shadow-card">
+                <CardHeader className="pb-2"><CardTitle className="text-base">Top Clients by Revenue</CardTitle></CardHeader>
+                <CardContent>
+                  {topRevenue.length === 0 ? <p className="text-sm text-muted-foreground">No data.</p> : (
+                    <ul className="space-y-2">
+                      {topRevenue.map(r => (
+                        <li key={r.id} className="flex justify-between text-sm">
+                          <Link to="/clients/$id" params={{ id: r.id }} className="font-medium hover:underline truncate pr-2">{r.name}</Link>
+                          <span className="font-semibold tabular-nums">{inr(r.revenue)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-card">
+                <CardHeader className="pb-2"><CardTitle className="text-base">Pending Collections</CardTitle></CardHeader>
+                <CardContent>
+                  {topPending.length === 0 ? <p className="text-sm text-muted-foreground">All clear.</p> : (
+                    <ul className="space-y-2">
+                      {topPending.map(r => (
+                        <li key={r.id} className="flex justify-between text-sm">
+                          <Link to="/clients/$id" params={{ id: r.id }} className="font-medium hover:underline truncate pr-2">{r.name}</Link>
+                          <span className="font-semibold tabular-nums text-amber-500">{inr(r.pending)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-card">
+                <CardHeader className="pb-2"><CardTitle className="text-base">Recent Payments</CardTitle></CardHeader>
+                <CardContent>
+                  {recentPayments.length === 0 ? <p className="text-sm text-muted-foreground">No payments yet.</p> : (
+                    <ul className="space-y-2">
+                      {recentPayments.map(p => {
+                        const inv = p.invoices as { clients?: { business_name?: string; client_name?: string } | null } | null;
+                        const name = inv?.clients?.business_name || inv?.clients?.client_name || "—";
+                        return (
+                          <li key={p.id} className="flex justify-between text-sm">
+                            <span className="truncate pr-2">
+                              <span className="font-medium">{name}</span>
+                              <span className="text-muted-foreground"> · {formatDate(p.payment_date)}</span>
+                            </span>
+                            <span className="font-semibold tabular-nums text-emerald-500">{inr(Number(p.amount))}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        );
+      })()}
+
+
+
 
 
 

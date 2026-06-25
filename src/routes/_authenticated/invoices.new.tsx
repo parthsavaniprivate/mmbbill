@@ -32,32 +32,72 @@ function NewInvoicePage() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState(addMonth(new Date().toISOString().slice(0, 10)));
   const [discount, setDiscount] = useState("0");
+  const [gstRate, setGstRate] = useState("18");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days.");
   const [items, setItems] = useState<Item[]>([{ description: "", quantity: 1, rate: 0 }]);
+  const [includeMeta, setIncludeMeta] = useState(true);
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["all-clients"],
     queryFn: async () => {
-      const { data } = await supabase.from("clients").select("id, client_name, business_name, company_id");
+      const { data } = await supabase.from("clients")
+        .select("id, client_name, business_name, company_id, service_charge_type, service_charge_amount, last_billed_spend");
       return data ?? [];
     },
   });
 
   const filteredClients = clients.filter((c) => c.company_id === companyId);
+  const selectedClient = clients.find((c) => c.id === clientId);
+
+  // Meta billing preview — cumulative lifetime spend minus already-billed.
+  const { data: metaBilling } = useQuery({
+    enabled: !!clientId,
+    queryKey: ["meta-billable", clientId],
+    queryFn: async () => {
+      const { data: acc } = await supabase.from("meta_accounts")
+        .select("id, ad_account_name, ad_account_id, last_synced_at, currency")
+        .eq("client_id", clientId!).maybeSingle();
+      if (!acc) return null;
+      const [{ data: hist }, { data: ins }] = await Promise.all([
+        supabase.from("meta_ad_spend_history").select("spend").eq("meta_account_id", acc.id),
+        supabase.from("meta_campaign_insights").select("spend").eq("meta_account_id", acc.id),
+      ]);
+      const histSum = (hist ?? []).reduce((a, r) => a + Number(r.spend ?? 0), 0);
+      const insSum = (ins ?? []).reduce((a, r) => a + Number(r.spend ?? 0), 0);
+      const cumulative = histSum > 0 ? histSum : insSum;
+      return { account: acc, cumulative };
+    },
+  });
+
+  const lastBilled = Number(selectedClient?.last_billed_spend ?? 0);
+  const cumulativeSpend = Number(metaBilling?.cumulative ?? 0);
+  const billableSpend = includeMeta ? Math.max(0, cumulativeSpend - lastBilled) : 0;
+  const managementFee = (() => {
+    if (!selectedClient || !includeMeta) return 0;
+    const amt = Number(selectedClient.service_charge_amount ?? 0);
+    if (selectedClient.service_charge_type === "percent_of_spend") return +(billableSpend * amt / 100).toFixed(2);
+    return amt; // fixed_monthly or custom — flat amount
+  })();
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
+    const itemsSubtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
+    const subtotal = itemsSubtotal + billableSpend + managementFee;
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    return { subtotal, total: afterDisc };
-  }, [items, discount]);
+    const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
+    return { subtotal, gstAmount, total: afterDisc + gstAmount };
+  }, [items, discount, billableSpend, managementFee, gstRate]);
+
 
   const create = useMutation({
     mutationFn: async () => {
       if (!companyId || !clientId) throw new Error("Select company and client");
-      if (items.some((i) => !i.description)) throw new Error("All items need a description");
+      const userItems = items.filter(i => i.description || i.quantity || i.rate);
+      if (userItems.some((i) => !i.description)) throw new Error("All items need a description");
+      if (!userItems.length && billableSpend <= 0 && managementFee <= 0)
+        throw new Error("Add at least one line item or enable Meta billing");
 
       const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", {
         _company_id: companyId, _type: "gst",
@@ -69,20 +109,38 @@ function NewInvoicePage() {
         invoice_number: numData as string,
         invoice_type: "gst", invoice_date: date,
         due_date: dueDate || null,
-        gst_rate: 0,
+        gst_rate: Number(gstRate || 0),
         discount: Number(discount || 0),
+        meta_spend_billed: billableSpend,
+        meta_spend_cumulative_at_invoice: cumulativeSpend,
+        management_fee: managementFee,
         notes, terms,
       }).select().single();
       if (error) throw error;
 
+      // Compose item rows: Meta spend → Management fee → user-entered items
+      let pos = 0;
+      const allItems: { description: string; quantity: number; rate: number }[] = [];
+      if (billableSpend > 0) allItems.push({ description: "Meta Ad Spend (new since last invoice)", quantity: 1, rate: billableSpend });
+      if (managementFee > 0) allItems.push({ description: "Agency Management Fee", quantity: 1, rate: managementFee });
+      for (const it of userItems) allItems.push(it);
+
       const { error: itErr } = await supabase.from("invoice_items").insert(
-        items.map((it, idx) => ({
+        allItems.map((it) => ({
           invoice_id: inv.id, description: it.description,
           quantity: it.quantity, rate: it.rate,
-          amount: +(it.quantity * it.rate).toFixed(2), position: idx,
+          amount: +(it.quantity * it.rate).toFixed(2), position: pos++,
         }))
       );
       if (itErr) throw itErr;
+
+      // Update client's cumulative billed spend so the next invoice only bills new spend.
+      if (includeMeta && billableSpend > 0) {
+        await supabase.from("clients").update({
+          last_billed_spend: cumulativeSpend,
+          last_invoice_date: date,
+        }).eq("id", clientId);
+      }
       return inv.id;
     },
     onSuccess: (id) => { toast.success("Invoice created"); navigate({ to: "/invoices/$id", params: { id } }); },
@@ -115,6 +173,39 @@ function NewInvoicePage() {
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
       </CardContent></Card>
 
+      {clientId && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Meta Ad Spend Billing</CardTitle></CardHeader>
+          <CardContent className="p-5 pt-2 space-y-3 text-sm">
+            {!metaBilling ? (
+              <p className="text-muted-foreground">No Meta account linked to this client.</p>
+            ) : (
+              <>
+                <div className="grid sm:grid-cols-4 gap-3">
+                  <KV label="Ad Account" value={metaBilling.account.ad_account_name || metaBilling.account.ad_account_id || "—"} />
+                  <KV label="Cumulative Spend" value={inr(cumulativeSpend)} />
+                  <KV label="Already Billed" value={inr(lastBilled)} />
+                  <KV label="New Billable" value={inr(Math.max(0, cumulativeSpend - lastBilled))} highlight />
+                </div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={includeMeta} onChange={(e) => setIncludeMeta(e.target.checked)} />
+                  Bill new Meta ad spend on this invoice
+                </label>
+                {includeMeta && selectedClient && (
+                  <p className="text-muted-foreground text-xs">
+                    Management fee:{" "}
+                    {selectedClient.service_charge_type === "percent_of_spend"
+                      ? `${Number(selectedClient.service_charge_amount ?? 0)}% of new spend = ${inr(managementFee)}`
+                      : `${inr(Number(selectedClient.service_charge_amount ?? 0))} (${selectedClient.service_charge_type.replace(/_/g, " ")})`}
+                  </p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card><CardHeader><CardTitle>Items</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {items.map((it, idx) => (
@@ -144,14 +235,19 @@ function NewInvoicePage() {
 
       <Card><CardContent className="p-5 grid md:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <div className="space-y-1.5"><Label>Discount (₹)</Label><Input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>Discount (₹)</Label><Input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
+          </div>
           <div className="space-y-1.5"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
           <div className="space-y-1.5"><Label>Terms & Conditions</Label><Textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={3} /></div>
         </div>
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
+          {billableSpend > 0 && <Row label="Meta Ad Spend" value={inr(billableSpend)} />}
+          {managementFee > 0 && <Row label="Management Fee" value={inr(managementFee)} />}
           <Row label="Subtotal" value={inr(totals.subtotal)} />
-          <Row label="Discount" value={`- ${inr(Number(discount || 0))}`} />
-          
+          {Number(discount) > 0 && <Row label="Discount" value={`- ${inr(Number(discount))}`} />}
+          {totals.gstAmount > 0 && <Row label={`GST (${gstRate}%)`} value={inr(totals.gstAmount)} />}
           <div className="border-t pt-2"><Row label="Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>
@@ -171,3 +267,13 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
     </div>
   );
 }
+
+function KV({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 font-medium ${highlight ? "text-primary" : ""}`}>{value}</p>
+    </div>
+  );
+}
+

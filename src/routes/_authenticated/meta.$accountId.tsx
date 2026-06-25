@@ -281,7 +281,7 @@ function MetaDashboard() {
 
   // Campaign table filter/sort
   const filteredCamps = campArr
-    .filter(c => (statusFilter === "all" ? true : c.status === statusFilter))
+    .filter(c => (statusFilter === "all" ? true : c.state === statusFilter))
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === "spend") return b.spend - a.spend;
@@ -290,11 +290,6 @@ function MetaDashboard() {
       return (a.cpl || Infinity) - (b.cpl || Infinity);
     });
 
-  const statusBadge = (s: string) => {
-    if (s === "ACTIVE") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-    if (s === "PAUSED") return "bg-amber-500/15 text-amber-400 border-amber-500/30";
-    return "bg-muted/40 text-muted-foreground border-border/60";
-  };
 
   const chartAxisColor = "var(--muted-foreground)";
   const chartGridColor = "var(--border)";

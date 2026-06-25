@@ -233,10 +233,15 @@ export const syncMetaAccount = createServerFn({ method: "POST" })
         const limit = stillMissing.slice(0, 60);
         console.log("[meta-sync]", row.ad_account_id, "per-campaign fallback for", limit.length, "campaigns");
         const today = new Date().toISOString().slice(0, 10);
-        const perPayload: Array<Record<string, unknown>> = [];
+        const perPayload: {
+          meta_account_id: string; campaign_id: string; date: string;
+          spend: number; reach: number; impressions: number; clicks: number;
+          ctr: number; cpc: number; cpm: number; leads: number; cost_per_lead: number;
+          purchase_value: number; actions: { action_type: string; value: string }[] | null;
+        }[] = [];
         for (const c of limit) {
-          const rows = await meta.getInsightsForCampaign(row.access_token, c.id, days);
-          for (const t of rows) {
+          const insightRows = await meta.getInsightsForCampaign(row.access_token, c.id, days);
+          for (const t of insightRows) {
             const leads = meta.leadsFromActions(t.actions);
             const spend = Number(t.spend ?? 0);
             perPayload.push({

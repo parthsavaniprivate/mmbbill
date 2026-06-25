@@ -102,15 +102,17 @@ export async function listAllAdAccounts(token: string) {
 
 export type CampaignRow = {
   id: string; name: string; objective: string; status: string;
+  effective_status?: string; configured_status?: string;
   daily_budget?: string; lifetime_budget?: string;
   start_time?: string; stop_time?: string;
 };
 
 export async function listCampaigns(token: string, adAccountId: string) {
-  const fields = "id,name,objective,status,daily_budget,lifetime_budget,start_time,stop_time";
+  const fields = "id,name,objective,status,effective_status,configured_status,daily_budget,lifetime_budget,start_time,stop_time";
   const j = await gget<{ data: CampaignRow[] }>(`/${adAccountId}/campaigns`, token, { fields, limit: "500" });
   return j.data ?? [];
 }
+
 
 export type InsightRow = {
   campaign_id: string;

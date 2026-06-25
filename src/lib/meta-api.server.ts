@@ -146,11 +146,23 @@ export async function getAccountDailySpend(token: string, adAccountId: string, d
   });
 }
 
+const LEAD_ACTION_TYPES = new Set([
+  "lead",
+  "leadgen.other",
+  "onsite_conversion.lead_grouped",
+  "onsite_conversion.messaging_conversation_started_7d",
+  "messaging_conversation_started",
+  "messaging_conversation_started_7d",
+  "whatsapp_conversation_started",
+  "messaging_first_reply",
+  "messaging_conversation",
+]);
+
 export function leadsFromActions(actions?: { action_type: string; value: string }[]) {
   if (!actions) return 0;
   let total = 0;
   for (const a of actions) {
-    if (a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped" || a.action_type.endsWith(".lead")) {
+    if (LEAD_ACTION_TYPES.has(a.action_type) || a.action_type.endsWith(".lead")) {
       total += Number(a.value) || 0;
     }
   }

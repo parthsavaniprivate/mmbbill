@@ -90,49 +90,17 @@ function QuotationDetail() {
   const waLink = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waMsg)}` : null;
   const mailLink = cl?.email ? `mailto:${cl.email}?subject=${encodeURIComponent(`Quotation ${q.quotation_number}`)}&body=${encodeURIComponent(waMsg)}` : null;
 
-  async function downloadPdf() {
-    const el = document.getElementById("quote-doc");
-    if (!el) return;
-    try {
-      toast.loading("Generating PDF…", { id: "pdf" });
-      // Wait for fonts so html2canvas measures glyphs correctly (prevents the
-      // "spaced-out letters" bug caused by font-fallback width mismatch).
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas-pro"),
-        import("jspdf"),
-      ]);
-      const canvas = await html2canvas(el, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: "#f5f4f1",
-        logging: false,
-        letterRendering: true,
-        onclone: (doc) => {
-          // Neutralise negative letter-spacing (tracking-tight) which makes
-          // html2canvas mis-measure widths and inject gaps between glyphs.
-          const root = doc.getElementById("quote-doc");
-          if (root) {
-            root.querySelectorAll<HTMLElement>("*").forEach((n) => {
-              n.style.letterSpacing = "normal";
-              n.style.wordSpacing = "normal";
-              n.style.textRendering = "geometricPrecision";
-            });
-          }
-        },
-      } as Parameters<typeof html2canvas>[1]);
-      const widthMm = 162;
-      const heightMm = +(canvas.height * widthMm / canvas.width).toFixed(2);
-      const pdf = new jsPDF({ orientation: heightMm > widthMm ? "portrait" : "landscape", unit: "mm", format: [widthMm, heightMm] });
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, widthMm, heightMm);
-
-      pdf.save(`Quote-${clientDisplay.replace(/[^\w-]+/g, "_")}-${q.quotation_number}.pdf`);
-      toast.success("PDF downloaded", { id: "pdf" });
-    } catch (e) {
-      toast.error((e as Error).message, { id: "pdf" });
-    }
+  function downloadPdf() {
+    // Use the browser's native print-to-PDF — the @page styles below already
+    // size it to 162×104mm and html2canvas mangles flex + word-spacing.
+    const prevTitle = document.title;
+    document.title = `Quote-${clientDisplay.replace(/[^\w-]+/g, "_")}-${q.quotation_number}`;
+    const restore = () => {
+      document.title = prevTitle;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    window.print();
   }
 
 

@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil } from "lucide-react";
+import { ClientForm } from "./clients.index";
+
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 

@@ -350,10 +350,15 @@ function ClientDetail() {
 
 
       <Tabs defaultValue="packages">
-        <TabsList>
-          <TabsTrigger value="packages">Packages & Deliverables</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="packages">Packages</TabsTrigger>
           <TabsTrigger value="invoices">Invoices ({invoices.length})</TabsTrigger>
+          <TabsTrigger value="payments">Payments ({payments.length})</TabsTrigger>
+          <TabsTrigger value="quotations">Quotations ({quotations.length})</TabsTrigger>
+          <TabsTrigger value="ledger">Ledger</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="files">Files ({files.length})</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="packages" className="space-y-3">

@@ -95,11 +95,34 @@ function QuotationDetail() {
     if (!el) return;
     try {
       toast.loading("Generating PDF…", { id: "pdf" });
+      // Wait for fonts so html2canvas measures glyphs correctly (prevents the
+      // "spaced-out letters" bug caused by font-fallback width mismatch).
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
         import("html2canvas-pro"),
         import("jspdf"),
       ]);
-      const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#f5f4f1", logging: false });
+      const canvas = await html2canvas(el, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: "#f5f4f1",
+        logging: false,
+        letterRendering: true,
+        onclone: (doc) => {
+          // Neutralise negative letter-spacing (tracking-tight) which makes
+          // html2canvas mis-measure widths and inject gaps between glyphs.
+          const root = doc.getElementById("quote-doc");
+          if (root) {
+            root.querySelectorAll<HTMLElement>("*").forEach((n) => {
+              n.style.letterSpacing = "normal";
+              n.style.wordSpacing = "normal";
+              n.style.textRendering = "geometricPrecision";
+            });
+          }
+        },
+      } as Parameters<typeof html2canvas>[1]);
       const widthMm = 162;
       const heightMm = +(canvas.height * widthMm / canvas.width).toFixed(2);
       const pdf = new jsPDF({ orientation: heightMm > widthMm ? "portrait" : "landscape", unit: "mm", format: [widthMm, heightMm] });

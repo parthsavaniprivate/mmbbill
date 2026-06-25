@@ -34,6 +34,7 @@ const NAV = [
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/payments", label: "Payments", icon: Wallet },
+  { to: "/billing", label: "Billing", icon: BadgeIndianRupee },
   { to: "/expenses", label: "Expenses", icon: TrendingDown },
   { to: "/renewals", label: "Renewals", icon: RefreshCw },
   { to: "/meta", label: "Meta Ads", icon: Facebook },

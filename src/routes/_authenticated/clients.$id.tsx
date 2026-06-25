@@ -64,7 +64,7 @@ function ClientDetail() {
         .select("id, ad_account_id, ad_account_name, business_name, currency, last_synced_at, status")
         .eq("client_id", id).maybeSingle();
       if (!account) return null;
-      const [{ count: campCount }, { data: activeCamps }, { data: ins }, { data: hist }] = await Promise.all([
+      const [{ count: campCount }, { count: activeCount }, { data: ins }, { data: hist }] = await Promise.all([
         supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id),
         supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id).eq("status", "ACTIVE"),
         supabase.from("meta_campaign_insights").select("spend, leads, reach, impressions, clicks").eq("meta_account_id", account.id),
@@ -82,7 +82,7 @@ function ClientDetail() {
       return {
         account,
         totalCampaigns: campCount ?? 0,
-        activeCampaigns: activeCamps ?? 0,
+        activeCampaigns: activeCount ?? 0,
         spend: insightsHave ? sum(ins, "spend") : sum(hist, "spend"),
         leads: insightsHave ? sum(ins, "leads") : sum(hist, "leads"),
         reach: insightsHave ? sum(ins, "reach") : sum(hist, "reach"),

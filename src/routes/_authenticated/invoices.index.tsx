@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, Eye, MessageCircle, Bell } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
 import { daysBetween } from "@/lib/reminders";
+import { toast } from "sonner";
 
 type Status = Database["public"]["Enums"]["invoice_status"];
 type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };
@@ -33,10 +36,23 @@ const REMINDABLE: Status[] = ["pending", "partially_paid", "overdue"];
 
 function InvoicesPage() {
   const { selected, isAll, companies } = useCompany();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
+  const [deleteFor, setDeleteFor] = useState<string | null>(null);
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("invoice_items").delete().eq("invoice_id", id);
+      await supabase.from("payments").delete().eq("invoice_id", id);
+      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Invoice deleted"); qc.invalidateQueries({ queryKey: ["invoices"] }); setDeleteFor(null); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices"],
@@ -152,28 +168,53 @@ function InvoicesPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button asChild size="sm" variant="ghost" title="View">
-                            <Link to="/invoices/$id" params={{ id: i.id }}><Eye className="w-4 h-4" /></Link>
-                          </Button>
-                          {canRemind && (
-                            <Button size="sm" variant="outline" onClick={() => setReminderFor(i.id)} title="Send Reminder">
-                              <Bell className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {canRemind && (cl?.whatsapp || cl?.mobile) && (
-                            <Button size="sm" variant="ghost" title="Open WhatsApp"
-                              onClick={() => {
-                                const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
-                                const a = document.createElement("a");
-                                a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
-                                document.body.appendChild(a); a.click(); a.remove();
-                              }}
-                            ><MessageCircle className="w-4 h-4" /></Button>
-                          )}
+                        <div className="flex justify-end items-center gap-1">
                           {pending > 0 && i.status !== "cancelled" && (
                             <MarkAsPaidButton invoiceId={i.id} pending={pending} />
                           )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="ghost" title="More actions">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem asChild>
+                                <Link to="/invoices/$id" params={{ id: i.id }}>
+                                  <Eye className="w-4 h-4" /> View
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to="/invoices/$id" params={{ id: i.id }}>
+                                  <Pencil className="w-4 h-4" /> Edit
+                                </Link>
+                              </DropdownMenuItem>
+                              {canRemind && (
+                                <DropdownMenuItem onSelect={() => setReminderFor(i.id)}>
+                                  <Bell className="w-4 h-4" /> Send Reminder
+                                </DropdownMenuItem>
+                              )}
+                              {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
+                                    const a = document.createElement("a");
+                                    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+                                    document.body.appendChild(a); a.click(); a.remove();
+                                  }}
+                                >
+                                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onSelect={() => setDeleteFor(i.id)}
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -202,6 +243,27 @@ function InvoicesPage() {
           companyName={companies.find((c) => c.id === reminderInv.company_id)?.name}
         />
       )}
+
+      <AlertDialog open={!!deleteFor} onOpenChange={(v) => !v && setDeleteFor(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this invoice?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the invoice, its line items, and any recorded payments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={del.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              onClick={(e) => { e.preventDefault(); if (deleteFor) del.mutate(deleteFor); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {del.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

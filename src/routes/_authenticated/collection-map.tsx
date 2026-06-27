@@ -206,9 +206,14 @@ function CollectionMapPage() {
     });
   }, [enriched, search, filter]);
 
-  const mapPoints = useMemo(() => filtered.filter(e => e.client.latitude != null && e.client.longitude != null), [filtered]);
+  const mapPoints = useMemo(
+    () => filtered.filter(e =>
+      e.client.latitude != null && e.client.longitude != null &&
+      haversineKm([Number(e.client.latitude), Number(e.client.longitude)], SURAT) <= RADIUS_KM
+    ),
+    [filtered],
+  );
   const points: [number, number][] = mapPoints.map(e => [Number(e.client.latitude), Number(e.client.longitude)]);
-  const fallback: [number, number] = [22.3511, 78.6677]; // India
 
   // Summary
   const summary = useMemo(() => {

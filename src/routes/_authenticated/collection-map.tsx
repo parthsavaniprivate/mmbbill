@@ -57,24 +57,47 @@ function computeStatus(inv: InvoiceRow | undefined): Status {
   return "pending";
 }
 
+// Surat center and 100km service radius
+const SURAT: [number, number] = [21.1702, 72.8311];
+const RADIUS_KM = 100;
+// Nominatim viewbox ~1.2deg around Surat (~130km) to bias geocoding
+const SURAT_VIEWBOX = `${SURAT[1] - 1.2},${SURAT[0] + 1.2},${SURAT[1] + 1.2},${SURAT[0] - 1.2}`;
+
+function haversineKm(a: [number, number], b: [number, number]) {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[0] - a[0]);
+  const dLon = toRad(b[1] - a[1]);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(s));
+}
+
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (!points.length) return;
-    const b = L.latLngBounds(points);
-    map.fitBounds(b, { padding: [40, 40], maxZoom: 13 });
+    if (!points.length) {
+      map.setView(SURAT, 9);
+      return;
+    }
+    const b = L.latLngBounds([...points, SURAT]);
+    map.fitBounds(b, { padding: [40, 40], maxZoom: 12 });
   }, [points, map]);
   return null;
 }
 
-// Nominatim throttled geocoder (1 req/sec). Updates DB cache.
+// Nominatim throttled geocoder (1 req/sec). Updates DB cache. Biased to Surat region.
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`, {
-      headers: { "Accept-Language": "en" },
-    });
+    const q = /surat|gujarat|india/i.test(address) ? address : `${address}, Surat, Gujarat, India`;
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&viewbox=${SURAT_VIEWBOX}&bounded=1&q=${encodeURIComponent(q)}`,
+      { headers: { "Accept-Language": "en" } },
+    );
     const j = await r.json();
-    if (Array.isArray(j) && j[0]) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
+    if (Array.isArray(j) && j[0]) {
+      const lat = parseFloat(j[0].lat);
+      const lng = parseFloat(j[0].lon);
+      if (haversineKm([lat, lng], SURAT) <= RADIUS_KM + 30) return { lat, lng };
+    }
   } catch {/* ignore */}
   return null;
 }

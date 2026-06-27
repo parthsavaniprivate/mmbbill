@@ -325,7 +325,7 @@ function CollectionMapPage() {
 
 
       <Card className="overflow-hidden">
-        <div className="h-[600px] w-full">
+        <div className="h-[60vh] sm:h-[600px] w-full">
           <MapContainer
             center={SURAT}
             zoom={9}

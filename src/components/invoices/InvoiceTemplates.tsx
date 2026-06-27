@@ -48,24 +48,24 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
         <span className="uppercase">{inv.invoice_type === "proforma" ? "Proforma Invoice" : "Bill of Supply"}</span>
         <span className="border border-gray-300 text-gray-500 px-2 py-0.5 rounded uppercase">Original for Recipient</span>
       </div>
-      <div className="flex items-start gap-6 pt-2">
+      <div className="flex items-center gap-6 pt-2">
         {co?.logo_url ? (
           <img src={co.logo_url} alt={co.name} className="w-28 h-28 object-contain shrink-0" />
         ) : (
           <div className="w-28 h-28 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
         )}
-        <div className="flex-1 text-center">
+        <div className="flex-1">
           <h2 className="text-3xl font-extrabold uppercase tracking-wide">{co?.name}</h2>
           {co?.address && <p className="text-sm mt-1 text-gray-700 whitespace-pre-line">{co.address}</p>}
           {co?.phone && <p className="text-sm mt-1"><span className="font-semibold">Mobile:</span> {co.phone}</p>}
         </div>
       </div>
       <div className="h-1 bg-black" />
-      <div className="bg-gray-100 grid grid-cols-3 gap-4 px-5 py-3 text-sm">
+      <div className="bg-gray-100 flex justify-between px-5 py-3 text-sm">
         <div><span className="font-bold">Invoice No.:</span> {inv.invoice_number}</div>
         <div><span className="font-bold">Invoice Date:</span> {formatDate(inv.invoice_date)}</div>
-        <div className="text-right"><span className="font-bold">Due Date:</span> {inv.due_date ? formatDate(inv.due_date) : "—"}</div>
       </div>
+
       <div>
         <p className="text-sm font-bold uppercase mb-1">Bill To</p>
         <p className="font-bold">{cl?.business_name || cl?.client_name}</p>

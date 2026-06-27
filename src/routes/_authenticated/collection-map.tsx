@@ -318,8 +318,23 @@ function CollectionMapPage() {
 
       <Card className="overflow-hidden">
         <div className="h-[600px] w-full">
-          <MapContainer center={points[0] ?? fallback} zoom={5} style={{ height: "100%", width: "100%" }} scrollWheelZoom>
-            <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MapContainer
+            center={SURAT}
+            zoom={9}
+            minZoom={8}
+            maxZoom={18}
+            maxBounds={L.latLngBounds([SURAT[0] - 1.3, SURAT[1] - 1.3], [SURAT[0] + 1.3, SURAT[1] + 1.3])}
+            maxBoundsViscosity={1}
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
+              url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+            />
+            <Circle center={SURAT} radius={RADIUS_KM * 1000} pathOptions={{ color: "#3b82f6", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.05, dashArray: "6 6" }} />
+            <Marker position={SURAT} icon={pinIcon("#1d4ed8", true)} />
             <FitBounds points={points} />
             {mapPoints.map(e => {
               const selected = routeMode && routeSel.includes(e.client.id);

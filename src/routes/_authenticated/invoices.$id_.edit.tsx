@@ -72,8 +72,8 @@ function EditInvoicePage() {
         due_date: dueDate || null,
         discount: Number(discount || 0),
         gst_rate: Number(gstRate || 0),
-        notes: notes || null,
-        terms: terms || null,
+        notes: notes.trim() || null,
+        terms: terms.trim() || null,
       }).eq("id", id);
       if (uErr) throw uErr;
 

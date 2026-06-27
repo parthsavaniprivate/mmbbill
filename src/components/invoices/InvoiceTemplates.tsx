@@ -117,10 +117,10 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
         <p>{amountInWords(Math.round(Number(inv.total)))} Rupees</p>
 
       </div>
-      {(inv.notes || inv.terms || co?.bank_name) && (
+      {(inv.notes?.trim() || inv.terms?.trim() || co?.bank_name) && (
         <div className="pt-4 border-t space-y-3 text-sm">
-          {inv.notes && <div><p className="font-bold">Notes</p><p className="whitespace-pre-line">{inv.notes}</p></div>}
-          {inv.terms && <div><p className="font-bold">Terms &amp; Conditions</p><p className="whitespace-pre-line">{inv.terms}</p></div>}
+          {inv.notes?.trim() && <div><p className="font-bold">Notes</p><p className="whitespace-pre-line">{inv.notes}</p></div>}
+          {inv.terms?.trim() && <div><p className="font-bold">Terms &amp; Conditions</p><p className="whitespace-pre-line">{inv.terms}</p></div>}
           {co?.bank_name && (
             <div><p className="font-bold">Bank Details</p>
               <p>{co.bank_name} · A/c: {co.bank_account} · IFSC: {co.bank_ifsc}</p>
@@ -245,10 +245,10 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
         </div>
       </div>
 
-      {(inv.notes || inv.terms) && (
+      {(inv.notes?.trim() || inv.terms?.trim()) && (
         <div className="px-8 pb-4 text-sm space-y-2">
-          {inv.notes && <div><p className="font-bold">Notes</p><p className="text-slate-600 whitespace-pre-line">{inv.notes}</p></div>}
-          {inv.terms && <div><p className="font-bold">Terms &amp; Conditions</p><p className="text-slate-600 whitespace-pre-line">{inv.terms}</p></div>}
+          {inv.notes?.trim() && <div><p className="font-bold">Notes</p><p className="text-slate-600 whitespace-pre-line">{inv.notes}</p></div>}
+          {inv.terms?.trim() && <div><p className="font-bold">Terms &amp; Conditions</p><p className="text-slate-600 whitespace-pre-line">{inv.terms}</p></div>}
         </div>
       )}
 

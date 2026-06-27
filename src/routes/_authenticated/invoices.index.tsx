@@ -40,6 +40,9 @@ function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
+  const [period, setPeriod] = useState("all"); // all | this_month | last_month | YYYY-MM | custom
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
 
@@ -64,10 +67,47 @@ function InvoicesPage() {
     },
   });
 
+  const monthOptions = (() => {
+    const set = new Set<string>();
+    invoices.forEach((i) => { if (i.invoice_date) set.add(i.invoice_date.slice(0, 7)); });
+    return Array.from(set).sort().reverse();
+  })();
+
+  const periodRange = (): { from: string; to: string } | null => {
+    if (period === "all") return null;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (period === "this_month") {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { from: ymd(s), to: ymd(e) };
+    }
+    if (period === "last_month") {
+      const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const e = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { from: ymd(s), to: ymd(e) };
+    }
+    if (period === "custom") {
+      if (!from && !to) return null;
+      return { from: from || "0000-01-01", to: to || "9999-12-31" };
+    }
+    // YYYY-MM
+    const [y, m] = period.split("-").map(Number);
+    const s = new Date(y, m - 1, 1);
+    const e = new Date(y, m, 0);
+    return { from: ymd(s), to: ymd(e) };
+  };
+
+  const range = periodRange();
+
   const filtered = invoices.filter((i) => {
     if (!isAll && i.company_id !== selected) return false;
     if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
     if (status !== "all" && i.status !== status) return false;
+    if (range && i.invoice_date) {
+      if (i.invoice_date < range.from || i.invoice_date > range.to) return false;
+    }
     if (search) {
       const cl = i.clients as ClientLite | null;
       const s = search.toLowerCase();
@@ -122,6 +162,26 @@ function InvoicesPage() {
             {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Period" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="this_month">This Month</SelectItem>
+            <SelectItem value="last_month">Last Month</SelectItem>
+            <SelectItem value="custom">Custom Range</SelectItem>
+            {monthOptions.length > 0 && monthOptions.map((m) => {
+              const [y, mm] = m.split("-");
+              const label = new Date(Number(y), Number(mm) - 1, 1).toLocaleString("en-IN", { month: "short", year: "numeric" });
+              return <SelectItem key={m} value={m}>{label}</SelectItem>;
+            })}
+          </SelectContent>
+        </Select>
+        {period === "custom" && (
+          <>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+          </>
+        )}
       </div>
 
       <Card className="shadow-card">

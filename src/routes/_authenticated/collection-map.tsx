@@ -183,19 +183,23 @@ function CollectionMapPage() {
     return { client: c, agg, status, latest: agg?.latest };
   }), [clients, byClient]);
 
+  const pendingOnly = useMemo(
+    () => enriched.filter(e => e.status === "pending" || e.status === "partial" || e.status === "overdue"),
+    [enriched],
+  );
+
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
     const monthEnd = new Date(monthStart); monthEnd.setMonth(monthEnd.getMonth()+1);
-    return enriched.filter(({ client, agg, status, latest }) => {
+    return pendingOnly.filter(({ client, agg, status, latest }) => {
       if (s) {
         const hay = `${client.client_name} ${client.business_name ?? ""} ${client.mobile ?? ""} ${latest?.invoice_number ?? ""}`.toLowerCase();
         if (!hay.includes(s)) return false;
       }
-      if (filter === "pending") return status === "pending" || status === "partial" || status === "overdue";
       if (filter === "overdue") return status === "overdue";
       if (filter === "partial") return status === "partial";
-      if (filter === "paid") return status === "paid";
+      if (filter === "pending") return status === "pending";
       if (filter === "high") return (agg?.pending ?? 0) > 50000;
       if (filter === "month") {
         if (!latest?.due_date) return false;
@@ -204,7 +208,8 @@ function CollectionMapPage() {
       }
       return true;
     });
-  }, [enriched, search, filter]);
+  }, [pendingOnly, search, filter]);
+
 
   const mapPoints = useMemo(
     () => filtered.filter(e =>

@@ -215,7 +215,7 @@ function NewInvoicePage() {
               <div className="col-span-6 space-y-1"><Label className="text-xs">Description</Label>
                 <Input value={it.description} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
               </div>
-              <div className="col-span-2 space-y-1"><Label className="text-xs">Qty</Label>
+              <div className="col-span-2 space-y-1"><Label className="text-xs">Months / Qty</Label>
                 <Input type="number" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))} />
               </div>
               <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>

@@ -114,7 +114,8 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
       </div>
       <div className="text-right text-sm">
         <p className="font-bold">Total Amount (in words)</p>
-        <p>{amountInWords(Math.round(Number(inv.total)))} Rupees Only</p>
+        <p>{amountInWords(Math.round(Number(inv.total)))} Rupees</p>
+
       </div>
       {(inv.notes || inv.terms || co?.bank_name) && (
         <div className="pt-4 border-t space-y-3 text-sm">

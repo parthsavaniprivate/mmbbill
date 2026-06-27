@@ -162,6 +162,26 @@ function InvoicesPage() {
             {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Period" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="this_month">This Month</SelectItem>
+            <SelectItem value="last_month">Last Month</SelectItem>
+            <SelectItem value="custom">Custom Range</SelectItem>
+            {monthOptions.length > 0 && monthOptions.map((m) => {
+              const [y, mm] = m.split("-");
+              const label = new Date(Number(y), Number(mm) - 1, 1).toLocaleString("en-IN", { month: "short", year: "numeric" });
+              return <SelectItem key={m} value={m}>{label}</SelectItem>;
+            })}
+          </SelectContent>
+        </Select>
+        {period === "custom" && (
+          <>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+          </>
+        )}
       </div>
 
       <Card className="shadow-card">

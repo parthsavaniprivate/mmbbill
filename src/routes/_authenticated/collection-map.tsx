@@ -104,7 +104,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
 
 function CollectionMapPage() {
   const { selected, isAll } = useCompany();
-  const [filter, setFilter] = useState<"all" | "pending" | "overdue" | "partial" | "paid" | "high" | "month">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "overdue" | "partial" | "high" | "month">("all");
   const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [routeMode, setRouteMode] = useState(false);

@@ -41,10 +41,14 @@ function NewInvoicePage() {
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
   const { data: clients = [] } = useQuery({
-    queryKey: ["all-clients"],
+    queryKey: ["all-clients", companyId],
+    enabled: !!companyId,
     queryFn: async () => {
-      const { data } = await supabase.from("clients")
-        .select("id, client_name, business_name, company_id, service_charge_type, service_charge_amount, last_billed_spend");
+      const { data, error } = await supabase.from("clients")
+        .select("id, client_name, business_name, company_id, service_charge_type, service_charge_amount, last_billed_spend")
+        .eq("company_id", companyId)
+        .order("business_name", { ascending: true });
+      if (error) throw error;
       return data ?? [];
     },
   });

@@ -281,12 +281,12 @@ function CollectionMapPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-semibold">Collection Map</h1>
-          <p className="text-sm text-muted-foreground">Track pending collections on the map. {geocoding && <span className="text-amber-600">Geocoding addresses…</span>}</p>
+      <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold">Collection Map</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Pending collections only. {geocoding && <span className="text-amber-600">Geocoding…</span>}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant={routeMode ? "default" : "outline"} size="sm" onClick={() => { setRouteMode(v => !v); setRouteSel([]); }}>
             <RouteIcon className="w-4 h-4" /> {routeMode ? `Route (${routeSel.length})` : "Collection Route"}
           </Button>
@@ -294,7 +294,7 @@ function CollectionMapPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
         <SummaryCard label="Pending" value={inr(summary.pending)} color="text-red-600" />
         <SummaryCard label="Overdue" value={inr(summary.overdue)} color="text-red-900" />
         <SummaryCard label="Collected this month" value={inr(monthPayments)} color="text-green-600" />
@@ -302,24 +302,27 @@ function CollectionMapPage() {
         <SummaryCard label="Clients overdue" value={String(summary.clientsOverdue)} />
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        {([
-          ["all","All"],["pending","Pending"],["overdue","Overdue"],
-          ["partial","Partial"],["paid","Paid"],["high","High Value > ₹50k"],["month","Due This Month"],
-        ] as const).map(([k,l]) => (
-          <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{l}</Button>
-        ))}
-        <div className="relative ml-auto w-full md:w-72">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {([
+            ["all","All"],["pending","Pending"],["overdue","Overdue"],
+            ["partial","Partial"],["high","> ₹50k"],["month","Due This Month"],
+          ] as const).map(([k,l]) => (
+            <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{l}</Button>
+          ))}
+        </div>
+        <div className="relative sm:ml-auto w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search site, client, phone, invoice…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
       </div>
 
       <div className="flex items-center gap-3 text-xs flex-wrap">
-        {(Object.keys(STATUS_COLORS) as Status[]).map(s => (
+        {(["pending","partial","overdue"] as Status[]).map(s => (
           <span key={s} className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full" style={{ background: STATUS_COLORS[s] }} />{STATUS_LABEL[s]}</span>
         ))}
       </div>
+
 
       <Card className="overflow-hidden">
         <div className="h-[600px] w-full">

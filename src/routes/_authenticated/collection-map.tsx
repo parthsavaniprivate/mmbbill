@@ -57,10 +57,10 @@ function computeStatus(inv: InvoiceRow | undefined): Status {
   return "pending";
 }
 
-// Surat center and 100km service radius
-const SURAT: [number, number] = [21.1702, 72.8311];
+// Make Me Brand HQ (Pal, Surat) — map center
+const SURAT: [number, number] = [21.1959, 72.7933];
 const RADIUS_KM = 100;
-// Nominatim viewbox ~1.2deg around Surat (~130km) to bias geocoding
+// Nominatim viewbox ~1.2deg around center (~130km) to bias geocoding
 const SURAT_VIEWBOX = `${SURAT[1] - 1.2},${SURAT[0] + 1.2},${SURAT[1] + 1.2},${SURAT[0] - 1.2}`;
 
 function haversineKm(a: [number, number], b: [number, number]) {
@@ -74,15 +74,19 @@ function haversineKm(a: [number, number], b: [number, number]) {
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
+    // Fix Leaflet showing blank tiles when container size changes after init
+    const t = setTimeout(() => map.invalidateSize(), 100);
     if (!points.length) {
-      map.setView(SURAT, 9);
-      return;
+      map.setView(SURAT, 11);
+    } else {
+      const b = L.latLngBounds([...points, SURAT]);
+      map.fitBounds(b, { padding: [40, 40], maxZoom: 13 });
     }
-    const b = L.latLngBounds([...points, SURAT]);
-    map.fitBounds(b, { padding: [40, 40], maxZoom: 12 });
+    return () => clearTimeout(t);
   }, [points, map]);
   return null;
 }
+
 
 // Nominatim throttled geocoder (1 req/sec). Updates DB cache. Biased to Surat region.
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -328,14 +332,13 @@ function CollectionMapPage() {
         <div className="h-[60vh] sm:h-[600px] w-full">
           <MapContainer
             center={SURAT}
-            zoom={9}
-            minZoom={8}
+            zoom={11}
+            minZoom={7}
             maxZoom={18}
-            maxBounds={L.latLngBounds([SURAT[0] - 1.3, SURAT[1] - 1.3], [SURAT[0] + 1.3, SURAT[1] + 1.3])}
-            maxBoundsViscosity={1}
             style={{ height: "100%", width: "100%" }}
             scrollWheelZoom
           >
+
             <TileLayer
               attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
               url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"

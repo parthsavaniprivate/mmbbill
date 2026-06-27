@@ -116,7 +116,7 @@ function NewInvoicePage() {
         meta_spend_billed: billableSpend,
         meta_spend_cumulative_at_invoice: cumulativeSpend,
         management_fee: managementFee,
-        notes, terms,
+        notes: notes.trim() || null, terms: terms.trim() || null,
       }).select().single();
       if (error) throw error;
 

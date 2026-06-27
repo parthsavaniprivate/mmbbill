@@ -214,6 +214,7 @@ function InvoicesPage() {
                         <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
                       </TableCell>
                       <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
+                      <TableCell className="text-sm">{i.invoice_date ? formatDate(i.invoice_date) : "—"}</TableCell>
                       <TableCell className="text-sm">
                         {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}
                         {pending > 0 && overdueDays > 0 && (

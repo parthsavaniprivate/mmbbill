@@ -1,0 +1,1 @@
+UPDATE public.companies SET address = 'A-303, Monarch Opp. Nakshtra Heights, Gaurav Path Road, Pal, Surat, Gujarat, 394510', phone = '7383177700' WHERE id = 'be142a85-aa67-4e8d-ade3-421735973c7f';

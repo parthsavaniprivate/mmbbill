@@ -332,14 +332,13 @@ function CollectionMapPage() {
         <div className="h-[60vh] sm:h-[600px] w-full">
           <MapContainer
             center={SURAT}
-            zoom={9}
-            minZoom={8}
+            zoom={11}
+            minZoom={7}
             maxZoom={18}
-            maxBounds={L.latLngBounds([SURAT[0] - 1.3, SURAT[1] - 1.3], [SURAT[0] + 1.3, SURAT[1] + 1.3])}
-            maxBoundsViscosity={1}
             style={{ height: "100%", width: "100%" }}
             scrollWheelZoom
           >
+
             <TileLayer
               attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
               url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"

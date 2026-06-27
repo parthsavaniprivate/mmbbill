@@ -115,11 +115,14 @@ export type Database = {
           created_at: string
           credit_limit: number | null
           email: string | null
+          geocoded_at: string | null
           gst_number: string | null
           id: string
           last_billed_spend: number
           last_invoice_date: string | null
           last_meta_sync: string | null
+          latitude: number | null
+          longitude: number | null
           mobile: string | null
           notes: string | null
           service_charge_amount: number
@@ -139,11 +142,14 @@ export type Database = {
           created_at?: string
           credit_limit?: number | null
           email?: string | null
+          geocoded_at?: string | null
           gst_number?: string | null
           id?: string
           last_billed_spend?: number
           last_invoice_date?: string | null
           last_meta_sync?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mobile?: string | null
           notes?: string | null
           service_charge_amount?: number
@@ -163,11 +169,14 @@ export type Database = {
           created_at?: string
           credit_limit?: number | null
           email?: string | null
+          geocoded_at?: string | null
           gst_number?: string | null
           id?: string
           last_billed_spend?: number
           last_invoice_date?: string | null
           last_meta_sync?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mobile?: string | null
           notes?: string | null
           service_charge_amount?: number

@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   LayoutDashboard, Users, Package2, Receipt, Wallet, TrendingDown, RefreshCw,
   BarChart3, Settings, LogOut, Moon, Sun, Sparkles, Search, FileText, BadgeIndianRupee,
-  Facebook,
+  Facebook, Map,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
@@ -34,6 +34,7 @@ const NAV = [
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/payments", label: "Payments", icon: Wallet },
+  { to: "/collection-map", label: "Collection Map", icon: Map },
   { to: "/billing", label: "Billing", icon: BadgeIndianRupee },
   { to: "/expenses", label: "Expenses", icon: TrendingDown },
   { to: "/renewals", label: "Renewals", icon: RefreshCw },

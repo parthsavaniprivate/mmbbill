@@ -36,10 +36,23 @@ const REMINDABLE: Status[] = ["pending", "partially_paid", "overdue"];
 
 function InvoicesPage() {
   const { selected, isAll, companies } = useCompany();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
+  const [deleteFor, setDeleteFor] = useState<string | null>(null);
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("invoice_items").delete().eq("invoice_id", id);
+      await supabase.from("payments").delete().eq("invoice_id", id);
+      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Invoice deleted"); qc.invalidateQueries({ queryKey: ["invoices"] }); setDeleteFor(null); },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: invoices = [] } = useQuery({
     queryKey: ["invoices"],

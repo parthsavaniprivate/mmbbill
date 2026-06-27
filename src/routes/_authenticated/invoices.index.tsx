@@ -67,10 +67,47 @@ function InvoicesPage() {
     },
   });
 
+  const monthOptions = (() => {
+    const set = new Set<string>();
+    invoices.forEach((i) => { if (i.invoice_date) set.add(i.invoice_date.slice(0, 7)); });
+    return Array.from(set).sort().reverse();
+  })();
+
+  const periodRange = (): { from: string; to: string } | null => {
+    if (period === "all") return null;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (period === "this_month") {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { from: ymd(s), to: ymd(e) };
+    }
+    if (period === "last_month") {
+      const s = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const e = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { from: ymd(s), to: ymd(e) };
+    }
+    if (period === "custom") {
+      if (!from && !to) return null;
+      return { from: from || "0000-01-01", to: to || "9999-12-31" };
+    }
+    // YYYY-MM
+    const [y, m] = period.split("-").map(Number);
+    const s = new Date(y, m - 1, 1);
+    const e = new Date(y, m, 0);
+    return { from: ymd(s), to: ymd(e) };
+  };
+
+  const range = periodRange();
+
   const filtered = invoices.filter((i) => {
     if (!isAll && i.company_id !== selected) return false;
     if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
     if (status !== "all" && i.status !== status) return false;
+    if (range && i.invoice_date) {
+      if (i.invoice_date < range.from || i.invoice_date > range.to) return false;
+    }
     if (search) {
       const cl = i.clients as ClientLite | null;
       const s = search.toLowerCase();

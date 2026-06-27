@@ -194,6 +194,7 @@ function InvoicesPage() {
                 <TableRow>
                   <TableHead>Number</TableHead>
                   <TableHead>Client</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Pending</TableHead>

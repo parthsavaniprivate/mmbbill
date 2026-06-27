@@ -341,7 +341,7 @@ function CollectionMapPage() {
 
             <TileLayer
               attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
-              url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               subdomains="abcd"
             />
             <Circle center={SURAT} radius={RADIUS_KM * 1000} pathOptions={{ color: "#3b82f6", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.05, dashArray: "6 6" }} />

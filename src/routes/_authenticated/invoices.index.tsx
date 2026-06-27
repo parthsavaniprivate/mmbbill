@@ -185,7 +185,7 @@ function InvoicesPage() {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link to="/invoices/$id" params={{ id: i.id }}>
+                                <Link to="/invoices/$id_/edit" params={{ id: i.id }}>
                                   <Pencil className="w-4 h-4" /> Edit
                                 </Link>
                               </DropdownMenuItem>

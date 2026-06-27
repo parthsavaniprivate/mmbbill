@@ -34,6 +34,7 @@ import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
 import { Route as AuthenticatedSalaryIdEditRouteImport } from './routes/_authenticated/salary.$id_.edit'
+import { Route as AuthenticatedInvoicesIdEditRouteImport } from './routes/_authenticated/invoices.$id_.edit'
 import { Route as ApiPublicMetaOauthStartRouteImport } from './routes/api/public/meta/oauth.start'
 import { Route as ApiPublicMetaOauthCallbackRouteImport } from './routes/api/public/meta/oauth.callback'
 
@@ -170,6 +171,12 @@ const AuthenticatedSalaryIdEditRoute =
     path: '/salary/$id/edit',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInvoicesIdEditRoute =
+  AuthenticatedInvoicesIdEditRouteImport.update({
+    id: '/invoices/$id_/edit',
+    path: '/invoices/$id/edit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicMetaOauthStartRoute = ApiPublicMetaOauthStartRouteImport.update({
   id: '/api/public/meta/oauth/start',
   path: '/api/public/meta/oauth/start',
@@ -206,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/meta/': typeof AuthenticatedMetaIndexRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/salary/': typeof AuthenticatedSalaryIndexRoute
+  '/invoices/$id/edit': typeof AuthenticatedInvoicesIdEditRoute
   '/salary/$id/edit': typeof AuthenticatedSalaryIdEditRoute
   '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
   '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
@@ -234,6 +242,7 @@ export interface FileRoutesByTo {
   '/meta': typeof AuthenticatedMetaIndexRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
   '/salary': typeof AuthenticatedSalaryIndexRoute
+  '/invoices/$id/edit': typeof AuthenticatedInvoicesIdEditRoute
   '/salary/$id/edit': typeof AuthenticatedSalaryIdEditRoute
   '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
   '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
@@ -264,6 +273,7 @@ export interface FileRoutesById {
   '/_authenticated/meta/': typeof AuthenticatedMetaIndexRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/salary/': typeof AuthenticatedSalaryIndexRoute
+  '/_authenticated/invoices/$id_/edit': typeof AuthenticatedInvoicesIdEditRoute
   '/_authenticated/salary/$id_/edit': typeof AuthenticatedSalaryIdEditRoute
   '/api/public/meta/oauth/callback': typeof ApiPublicMetaOauthCallbackRoute
   '/api/public/meta/oauth/start': typeof ApiPublicMetaOauthStartRoute
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/meta/'
     | '/quotations/'
     | '/salary/'
+    | '/invoices/$id/edit'
     | '/salary/$id/edit'
     | '/api/public/meta/oauth/callback'
     | '/api/public/meta/oauth/start'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/meta'
     | '/quotations'
     | '/salary'
+    | '/invoices/$id/edit'
     | '/salary/$id/edit'
     | '/api/public/meta/oauth/callback'
     | '/api/public/meta/oauth/start'
@@ -351,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meta/'
     | '/_authenticated/quotations/'
     | '/_authenticated/salary/'
+    | '/_authenticated/invoices/$id_/edit'
     | '/_authenticated/salary/$id_/edit'
     | '/api/public/meta/oauth/callback'
     | '/api/public/meta/oauth/start'
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalaryIdEditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/invoices/$id_/edit': {
+      id: '/_authenticated/invoices/$id_/edit'
+      path: '/invoices/$id/edit'
+      fullPath: '/invoices/$id/edit'
+      preLoaderRoute: typeof AuthenticatedInvoicesIdEditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/meta/oauth/start': {
       id: '/api/public/meta/oauth/start'
       path: '/api/public/meta/oauth/start'
@@ -580,6 +600,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMetaIndexRoute: typeof AuthenticatedMetaIndexRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
   AuthenticatedSalaryIndexRoute: typeof AuthenticatedSalaryIndexRoute
+  AuthenticatedInvoicesIdEditRoute: typeof AuthenticatedInvoicesIdEditRoute
   AuthenticatedSalaryIdEditRoute: typeof AuthenticatedSalaryIdEditRoute
 }
 
@@ -604,6 +625,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMetaIndexRoute: AuthenticatedMetaIndexRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
   AuthenticatedSalaryIndexRoute: AuthenticatedSalaryIndexRoute,
+  AuthenticatedInvoicesIdEditRoute: AuthenticatedInvoicesIdEditRoute,
   AuthenticatedSalaryIdEditRoute: AuthenticatedSalaryIdEditRoute,
 }
 

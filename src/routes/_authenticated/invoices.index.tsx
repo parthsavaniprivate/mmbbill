@@ -40,6 +40,9 @@ function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
+  const [period, setPeriod] = useState("all"); // all | this_month | last_month | YYYY-MM | custom
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
 

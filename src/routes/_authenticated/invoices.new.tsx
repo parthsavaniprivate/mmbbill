@@ -76,7 +76,9 @@ function NewInvoicePage() {
   const cumulativeSpend = Number(metaBilling?.cumulative ?? 0);
   const billableSpend = includeMeta ? Math.max(0, cumulativeSpend - lastBilled) : 0;
   const managementFee = (() => {
-    if (!selectedClient || !includeMeta) return 0;
+    // Only auto-bill the management fee when a Meta account is linked AND
+    // the user opted in. Otherwise the user enters charges manually as line items.
+    if (!selectedClient || !includeMeta || !metaBilling) return 0;
     const amt = Number(selectedClient.service_charge_amount ?? 0);
     if (selectedClient.service_charge_type === "percent_of_spend") return +(billableSpend * amt / 100).toFixed(2);
     return amt; // fixed_monthly or custom — flat amount

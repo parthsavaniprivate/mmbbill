@@ -168,28 +168,53 @@ function InvoicesPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button asChild size="sm" variant="ghost" title="View">
-                            <Link to="/invoices/$id" params={{ id: i.id }}><Eye className="w-4 h-4" /></Link>
-                          </Button>
-                          {canRemind && (
-                            <Button size="sm" variant="outline" onClick={() => setReminderFor(i.id)} title="Send Reminder">
-                              <Bell className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {canRemind && (cl?.whatsapp || cl?.mobile) && (
-                            <Button size="sm" variant="ghost" title="Open WhatsApp"
-                              onClick={() => {
-                                const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
-                                const a = document.createElement("a");
-                                a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
-                                document.body.appendChild(a); a.click(); a.remove();
-                              }}
-                            ><MessageCircle className="w-4 h-4" /></Button>
-                          )}
+                        <div className="flex justify-end items-center gap-1">
                           {pending > 0 && i.status !== "cancelled" && (
                             <MarkAsPaidButton invoiceId={i.id} pending={pending} />
                           )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="ghost" title="More actions">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem asChild>
+                                <Link to="/invoices/$id" params={{ id: i.id }}>
+                                  <Eye className="w-4 h-4" /> View
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to="/invoices/$id" params={{ id: i.id }}>
+                                  <Pencil className="w-4 h-4" /> Edit
+                                </Link>
+                              </DropdownMenuItem>
+                              {canRemind && (
+                                <DropdownMenuItem onSelect={() => setReminderFor(i.id)}>
+                                  <Bell className="w-4 h-4" /> Send Reminder
+                                </DropdownMenuItem>
+                              )}
+                              {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
+                                    const a = document.createElement("a");
+                                    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+                                    document.body.appendChild(a); a.click(); a.remove();
+                                  }}
+                                >
+                                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onSelect={() => setDeleteFor(i.id)}
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>

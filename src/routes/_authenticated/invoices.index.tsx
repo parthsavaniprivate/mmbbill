@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, Eye, MessageCircle, Bell } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
 import { daysBetween } from "@/lib/reminders";
+import { toast } from "sonner";
 
 type Status = Database["public"]["Enums"]["invoice_status"];
 type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };

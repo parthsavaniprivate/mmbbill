@@ -82,7 +82,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
         {items.map((it) => (
           <div key={it.id} className="grid grid-cols-12 py-3 text-sm border-b border-gray-200">
             <div className="col-span-6 uppercase">{it.description}</div>
-            <div className="col-span-2 text-right">{it.quantity} PCS</div>
+            <div className="col-span-2 text-right">{it.quantity} UOM</div>
             <div className="col-span-2 text-right">{Number(it.rate).toLocaleString("en-IN")}</div>
             <div className="col-span-2 text-right">{Number(it.amount).toLocaleString("en-IN")}</div>
           </div>

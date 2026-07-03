@@ -167,5 +167,11 @@
 
 @media print {
   .no-print { display: none !important; }
-  body { background: white !important; color: black !important; }
+  body { background: white !important; }
+  /* Preserve colors, backgrounds, and gradients when printing / saving as PDF */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 }

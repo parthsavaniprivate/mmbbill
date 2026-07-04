@@ -45,24 +45,24 @@ function ReportsPage() {
     },
   });
 
-  if (!data) return <div className="text-muted-foreground">Loading…</div>;
+  const safe = data ?? { invoices: [], payments: [], expenses: [], clients: [], salaries: [], allInvoices: [] };
 
   const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) => {
     const byGlobal = isAll ? rows : rows.filter((r) => r.company_id === selected);
     return companyFilter === "all" ? byGlobal : byGlobal.filter((r) => r.company_id === companyFilter);
   };
 
-  const invoices = filtCompany(data.invoices);
-  const expenses = filtCompany(data.expenses);
-  const salaries = filtCompany(data.salaries);
-  const openInvoices = filtCompany(data.allInvoices).filter((i) => Number(i.total) - Number(i.amount_paid) > 0);
-  const payments = data.payments.filter((p) => {
+  const invoices = filtCompany(safe.invoices);
+  const expenses = filtCompany(safe.expenses);
+  const salaries = filtCompany(safe.salaries);
+  const openInvoices = filtCompany(safe.allInvoices).filter((i) => Number(i.total) - Number(i.amount_paid) > 0);
+  const payments = safe.payments.filter((p) => {
     const inv = p.invoices as { company_id: string } | null;
     if (!isAll && inv?.company_id !== selected) return false;
     if (companyFilter !== "all" && inv?.company_id !== companyFilter) return false;
     return true;
   });
-  const clients = filtCompany(data.clients);
+  const clients = filtCompany(safe.clients);
 
   const totRev = payments.reduce((s, p) => s + Number(p.amount), 0);
   const totExp = expenses.reduce((s, e) => s + Number(e.amount), 0);

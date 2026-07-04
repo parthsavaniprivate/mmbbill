@@ -140,8 +140,10 @@ function AuthedLayout() {
               </Button>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-6 max-w-[1600px] w-full mx-auto">
-            <Outlet />
+          <main className="flex-1 w-full p-3 sm:p-4 md:p-6">
+            <div className="mx-auto w-full max-w-[1800px]">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

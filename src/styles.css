@@ -187,3 +187,12 @@
     color-adjust: exact !important;
   }
 }
+
+/* Keep lucide icons at their intended size inside leaflet popups */
+.leaflet-popup-content svg {
+  max-width: none !important;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.leaflet-popup-content a { color: inherit; }
+.leaflet-popup-content { margin: 12px 14px; }

@@ -142,7 +142,8 @@ function AuthedLayout() {
           </header>
           <main className="flex-1 w-full p-3 sm:p-4 md:p-6">
             <div className="mx-auto w-full max-w-[1800px]">
-            <Outlet />
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

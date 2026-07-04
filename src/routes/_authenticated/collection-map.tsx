@@ -324,7 +324,7 @@ function CollectionMapPage() {
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               subdomains="abcd"
             />
-            <Circle center={SURAT} radius={RADIUS_KM * 1000} pathOptions={{ color: "#3b82f6", weight: 2, fillColor: "#3b82f6", fillOpacity: 0.05, dashArray: "6 6" }} />
+            
             <Marker position={SURAT} icon={pinIcon("#1d4ed8", true)} />
             <FitBounds points={points} />
             {mapPoints.map(e => {

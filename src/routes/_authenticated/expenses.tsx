@@ -207,6 +207,7 @@ function ExpensesPage() {
             <Dialog open={openFix} onOpenChange={(o) => { setOpenFix(o); if (!o) setEditingFix(null); }}>
               <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4" />Add Fixed</Button></DialogTrigger>
               <RecurringForm
+                key={editingFix?.id ?? "new"}
                 initial={editingFix}
                 onClose={() => { setOpenFix(false); setEditingFix(null); qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); }}
               />

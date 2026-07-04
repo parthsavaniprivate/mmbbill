@@ -14,7 +14,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Cart
 
 export const Route = createFileRoute("/_authenticated/reports")({ component: ReportsPage });
 
-type ReportType = "revenue" | "expense" | "profit" | "client" | "payment" | "aging" | "top";
+const RANGES: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
 
 function ReportsPage() {
   const { selected, isAll, companies } = useCompany();
@@ -22,30 +22,36 @@ function ReportsPage() {
   const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
-  const [reportType, setReportType] = useState<ReportType>("revenue");
+  const [range, setRange] = useState<string>("30d");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
+
+  const setQuick = (key: string) => {
+    setRange(key);
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - RANGES[key]);
+    setFrom(start.toISOString().slice(0, 10));
+    setTo(end.toISOString().slice(0, 10));
+  };
 
   const { data } = useQuery({
     queryKey: ["report", from, to],
     queryFn: async () => {
-      const [invoices, payments, expenses, clients, salaries, allInvoices] = await Promise.all([
+      const [invoices, payments, expenses, salaries, allInvoices] = await Promise.all([
         supabase.from("invoices").select("*, clients(client_name, business_name)").gte("invoice_date", from).lte("invoice_date", to),
         supabase.from("payments").select("*, invoices(company_id, invoice_number, clients(client_name, business_name))").gte("payment_date", from).lte("payment_date", to),
         supabase.from("expenses").select("*").gte("expense_date", from).lte("expense_date", to),
-        supabase.from("clients").select("*"),
         supabase.from("salary_slips").select("company_id, net, pay_date, month").gte("pay_date", from).lte("pay_date", to),
-        // For aging: all non-cancelled invoices with a balance, any date
-        supabase.from("invoices").select("id,company_id,client_id,invoice_number,invoice_date,due_date,total,amount_paid,status,clients(client_name,business_name)").neq("status", "cancelled"),
+        supabase.from("invoices").select("id,company_id,invoice_number,invoice_date,due_date,total,amount_paid,status,clients(client_name,business_name)").neq("status", "cancelled"),
       ]);
       return {
         invoices: invoices.data ?? [], payments: payments.data ?? [],
-        expenses: expenses.data ?? [], clients: clients.data ?? [],
-        salaries: salaries.data ?? [], allInvoices: allInvoices.data ?? [],
+        expenses: expenses.data ?? [], salaries: salaries.data ?? [], allInvoices: allInvoices.data ?? [],
       };
     },
   });
 
-  const safe = data ?? { invoices: [], payments: [], expenses: [], clients: [], salaries: [], allInvoices: [] };
+  const safe = data ?? { invoices: [], payments: [], expenses: [], salaries: [], allInvoices: [] };
 
   const filtCompany = <T extends { company_id?: string | null }>(rows: T[]) => {
     const byGlobal = isAll ? rows : rows.filter((r) => r.company_id === selected);
@@ -62,7 +68,6 @@ function ReportsPage() {
     if (companyFilter !== "all" && inv?.company_id !== companyFilter) return false;
     return true;
   });
-  const clients = filtCompany(safe.clients);
 
   const totRev = payments.reduce((s, p) => s + Number(p.amount), 0);
   const totExp = expenses.reduce((s, e) => s + Number(e.amount), 0);
@@ -70,30 +75,16 @@ function ReportsPage() {
   const totBilled = invoices.reduce((s, i) => s + Number(i.total), 0);
   const netProfit = totRev - totExp - totSal;
 
-  // Monthly trend
   const trend = useMemo(() => {
-    const map = new Map<string, { month: string; revenue: number; expense: number; salary: number }>();
+    const map = new Map<string, { month: string; revenue: number; expense: number; salary: number; profit: number }>();
     const key = (d: string) => d.slice(0, 7);
-    for (const p of payments) {
-      const k = key(p.payment_date);
-      const e = map.get(k) ?? { month: k, revenue: 0, expense: 0, salary: 0 };
-      e.revenue += Number(p.amount); map.set(k, e);
-    }
-    for (const x of expenses) {
-      const k = key(x.expense_date);
-      const e = map.get(k) ?? { month: k, revenue: 0, expense: 0, salary: 0 };
-      e.expense += Number(x.amount); map.set(k, e);
-    }
-    for (const s of salaries) {
-      if (!s.pay_date) continue;
-      const k = key(s.pay_date);
-      const e = map.get(k) ?? { month: k, revenue: 0, expense: 0, salary: 0 };
-      e.salary += Number(s.net || 0); map.set(k, e);
-    }
-    return [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
+    const get = (k: string) => map.get(k) ?? { month: k, revenue: 0, expense: 0, salary: 0, profit: 0 };
+    for (const p of payments) { const k = key(p.payment_date); const e = get(k); e.revenue += Number(p.amount); map.set(k, e); }
+    for (const x of expenses) { const k = key(x.expense_date); const e = get(k); e.expense += Number(x.amount); map.set(k, e); }
+    for (const s of salaries) { if (!s.pay_date) continue; const k = key(s.pay_date); const e = get(k); e.salary += Number(s.net || 0); map.set(k, e); }
+    return [...map.values()].map((v) => ({ ...v, profit: v.revenue - v.expense - v.salary })).sort((a, b) => a.month.localeCompare(b.month));
   }, [payments, expenses, salaries]);
 
-  // Top clients by revenue
   const topClients = useMemo(() => {
     const map = new Map<string, { name: string; revenue: number; count: number }>();
     for (const p of payments) {
@@ -102,17 +93,15 @@ function ReportsPage() {
       const e = map.get(name) ?? { name, revenue: 0, count: 0 };
       e.revenue += Number(p.amount); e.count += 1; map.set(name, e);
     }
-    return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+    return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
   }, [payments]);
 
-  // Top expense categories
   const topExpenseCats = useMemo(() => {
     const map = new Map<string, number>();
     for (const e of expenses) map.set(e.category, (map.get(e.category) ?? 0) + Number(e.amount));
-    return [...map.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount);
+    return [...map.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount).slice(0, 5);
   }, [expenses]);
 
-  // Aging buckets
   const aging = useMemo(() => {
     const buckets = { current: 0, d30: 0, d60: 0, d90: 0, d90p: 0 };
     const rows: { client: string; invoice: string; due: string | null; days: number; balance: number }[] = [];
@@ -130,33 +119,17 @@ function ReportsPage() {
       else buckets.d90p += bal;
     }
     rows.sort((a, b) => b.days - a.days);
-    return { buckets, rows };
+    return { buckets, rows: rows.slice(0, 5), totalOpen: rows.length };
   }, [openInvoices]);
 
-  const exportCurrent = () => {
-    const fname = `${reportType}-report-${from}-to-${to}.csv`;
-    if (reportType === "revenue" || reportType === "profit") {
-      downloadCSV(fname, invoices.map((i) => {
-        const cl = i.clients as { client_name: string; business_name: string | null } | null;
-        return { date: i.invoice_date, number: i.invoice_number, client: cl?.business_name || cl?.client_name, total: i.total, paid: i.amount_paid, status: i.status };
-      }));
-    } else if (reportType === "expense") {
-      downloadCSV(fname, expenses.map((e) => ({ date: e.expense_date, category: e.category, vendor: e.vendor, amount: e.amount, description: e.description })));
-    } else if (reportType === "payment") {
-      downloadCSV(fname, payments.map((p) => {
-        const inv = p.invoices as { invoice_number: string; clients: { client_name: string; business_name: string | null } | null } | null;
-        return { date: p.payment_date, invoice: inv?.invoice_number, client: inv?.clients?.business_name || inv?.clients?.client_name, amount: p.amount, method: p.method };
-      }));
-    } else if (reportType === "aging") {
-      downloadCSV(fname, aging.rows.map((r) => ({ client: r.client, invoice: r.invoice, due_date: r.due, days_overdue: r.days, balance: r.balance })));
-    } else if (reportType === "top") {
-      downloadCSV(fname, topClients.map((c) => ({ client: c.name, revenue: c.revenue, payments: c.count })));
-    } else {
-      downloadCSV(fname, clients.map((c) => ({
-        company: companies.find((co) => co.id === c.company_id)?.name,
-        name: c.client_name, business: c.business_name, status: c.status, email: c.email, mobile: c.mobile,
-      })));
-    }
+  const exportAll = () => {
+    downloadCSV(`summary-${from}-to-${to}.csv`, [
+      { metric: "Total Billed", amount: totBilled },
+      { metric: "Collected", amount: totRev },
+      { metric: "Expenses", amount: totExp },
+      { metric: "Salaries", amount: totSal },
+      { metric: "Net Profit", amount: netProfit },
+    ]);
   };
 
   return (
@@ -168,73 +141,51 @@ function ReportsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print</Button>
-          <Button onClick={exportCurrent}><FileDown className="w-4 h-4" />Export CSV</Button>
+          <Button onClick={exportAll}><FileDown className="w-4 h-4" />Export Summary</Button>
         </div>
       </div>
 
-      <Card className="no-print"><CardContent className="p-4 flex flex-wrap gap-3 items-end">
-        <div className="space-y-1.5"><Label>From</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>To</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div className="space-y-1.5"><Label>Quick Range</Label>
-          <Select onValueChange={(v) => {
-            const end = new Date();
-            const start = new Date();
-            if (v === "today") {/* keep */ }
-            else if (v === "week") start.setDate(end.getDate() - 7);
-            else if (v === "month") start.setDate(end.getDate() - 30);
-            else if (v === "quarter") start.setDate(end.getDate() - 90);
-            else if (v === "year") start.setFullYear(end.getFullYear() - 1);
-            setFrom(start.toISOString().slice(0, 10)); setTo(end.toISOString().slice(0, 10));
-          }}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">Last 7 days</SelectItem>
-              <SelectItem value="month">Last 30 days</SelectItem>
-              <SelectItem value="quarter">Last 90 days</SelectItem>
-              <SelectItem value="year">Last 1 year</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5"><Label>Report Type</Label>
-          <Select value={reportType} onValueChange={(v) => setReportType(v as ReportType)}>
-            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="revenue">Revenue Report</SelectItem>
-              <SelectItem value="expense">Expense Report</SelectItem>
-              <SelectItem value="profit">Profit / P&L</SelectItem>
-              <SelectItem value="payment">Payment Report</SelectItem>
-              <SelectItem value="aging">Receivables Aging</SelectItem>
-              <SelectItem value="top">Top Clients</SelectItem>
-              <SelectItem value="client">Client Report</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5"><Label>Company</Label>
+      {/* Compact filter bar */}
+      <Card className="no-print">
+        <CardContent className="p-3 flex flex-wrap items-center gap-3">
+          <div className="flex gap-1">
+            {Object.keys(RANGES).map((k) => (
+              <Button key={k} size="sm" variant={range === k ? "default" : "outline"} onClick={() => setQuick(k)}>{k}</Button>
+            ))}
+          </div>
+          <div className="h-6 w-px bg-border" />
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">From</Label>
+            <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setRange(""); }} className="h-8 w-36" />
+            <Label className="text-xs text-muted-foreground">To</Label>
+            <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setRange(""); }} className="h-8 w-36" />
+          </div>
+          <div className="h-6 w-px bg-border" />
           <Select value={companyFilter} onValueChange={setCompanyFilter}>
-            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-8 w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Companies</SelectItem>
-              {companies.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
+              {companies.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
             </SelectContent>
           </Select>
-        </div>
-      </CardContent></Card>
+        </CardContent>
+      </Card>
 
+      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Stat label="Total Billed" value={inr(totBilled)} />
-        <Stat label="Collected" value={inr(totRev)} />
-        <Stat label="Expenses" value={inr(totExp)} />
-        <Stat label="Salaries" value={inr(totSal)} />
+        <Stat label="Collected" value={inr(totRev)} accent="text-green-600" />
+        <Stat label="Expenses" value={inr(totExp)} accent="text-red-600" />
+        <Stat label="Salaries" value={inr(totSal)} accent="text-amber-600" />
         <Stat label="Net Profit" value={inr(netProfit)} accent={netProfit >= 0 ? "text-green-600" : "text-red-600"} />
       </div>
 
-      {(reportType === "revenue" || reportType === "profit") && trend.length > 0 && (
-        <Card><CardHeader><CardTitle>Monthly Trend</CardTitle><CardDescription>Revenue vs Expenses vs Salaries</CardDescription></CardHeader>
+      {/* Trend + Profit line side-by-side */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Monthly Trend</CardTitle><CardDescription>Revenue vs Expense vs Salary</CardDescription></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={240}>
               <BarChart data={trend}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="month" fontSize={12} />
@@ -246,101 +197,13 @@ function ReportsPage() {
                 <Bar dataKey="salary" fill="#f59e0b" name="Salary" />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent></Card>
-      )}
-
-      {(reportType === "revenue" || reportType === "profit") && (
-        <Card><CardHeader><CardTitle>Invoice Summary</CardTitle><CardDescription>{invoices.length} invoices</CardDescription></CardHeader>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Net Profit</CardTitle><CardDescription>Month-over-month</CardDescription></CardHeader>
           <CardContent>
-            <ReportTable headers={["Date", "Number", "Client", "Total", "Paid", "Status"]}
-              rows={invoices.map((i) => {
-                const cl = i.clients as { client_name: string; business_name: string | null } | null;
-                return [formatDate(i.invoice_date), i.invoice_number, cl?.business_name || cl?.client_name || "", inr(Number(i.total)), inr(Number(i.amount_paid)), i.status];
-              })} />
-          </CardContent></Card>
-      )}
-
-      {reportType === "expense" && (
-        <>
-          {topExpenseCats.length > 0 && (
-            <Card><CardHeader><CardTitle>By Category</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={topExpenseCats} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis type="number" fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <YAxis type="category" dataKey="category" fontSize={12} width={110} />
-                    <Tooltip formatter={(v: number) => inr(v)} />
-                    <Bar dataKey="amount" fill="#ef4444" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent></Card>
-          )}
-          <Card><CardHeader><CardTitle>Expense Breakdown</CardTitle></CardHeader>
-            <CardContent>
-              <ReportTable headers={["Date", "Category", "Vendor", "Amount", "Description"]}
-                rows={expenses.map((e) => [formatDate(e.expense_date), e.category, e.vendor || "—", inr(Number(e.amount)), e.description || "—"])} />
-            </CardContent></Card>
-        </>
-      )}
-
-      {reportType === "payment" && (
-        <Card><CardHeader><CardTitle>Payments</CardTitle></CardHeader>
-          <CardContent>
-            <ReportTable headers={["Date", "Invoice", "Client", "Method", "Amount"]}
-              rows={payments.map((p) => {
-                const inv = p.invoices as { invoice_number: string; clients: { client_name: string; business_name: string | null } | null } | null;
-                return [formatDate(p.payment_date), inv?.invoice_number || "", inv?.clients?.business_name || inv?.clients?.client_name || "", p.method, inr(Number(p.amount))];
-              })} />
-          </CardContent></Card>
-      )}
-
-      {reportType === "aging" && (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Stat label="Current" value={inr(aging.buckets.current)} />
-            <Stat label="1–30 days" value={inr(aging.buckets.d30)} accent="text-yellow-600" />
-            <Stat label="31–60 days" value={inr(aging.buckets.d60)} accent="text-orange-600" />
-            <Stat label="61–90 days" value={inr(aging.buckets.d90)} accent="text-red-600" />
-            <Stat label="90+ days" value={inr(aging.buckets.d90p)} accent="text-red-900" />
-          </div>
-          <Card><CardHeader><CardTitle>Outstanding Invoices</CardTitle><CardDescription>{aging.rows.length} open · sorted by most overdue</CardDescription></CardHeader>
-            <CardContent>
-              <ReportTable headers={["Client", "Invoice", "Due Date", "Days Overdue", "Balance"]}
-                rows={aging.rows.map((r) => [r.client, r.invoice, formatDate(r.due) || "—", r.days > 0 ? `${r.days}d` : "—", inr(r.balance)])} />
-            </CardContent></Card>
-        </>
-      )}
-
-      {reportType === "top" && (
-        <>
-          {topClients.length > 0 && (
-            <Card><CardHeader><CardTitle>Top Clients by Revenue</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={Math.max(220, topClients.length * 32)}>
-                  <BarChart data={topClients} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis type="number" fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <YAxis type="category" dataKey="name" fontSize={12} width={140} />
-                    <Tooltip formatter={(v: number) => inr(v)} />
-                    <Bar dataKey="revenue" fill="#16a34a" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent></Card>
-          )}
-          <Card><CardHeader><CardTitle>Ranking</CardTitle></CardHeader>
-            <CardContent>
-              <ReportTable headers={["#", "Client", "Payments", "Revenue"]}
-                rows={topClients.map((c, i) => [String(i + 1), c.name, String(c.count), inr(c.revenue)])} />
-            </CardContent></Card>
-        </>
-      )}
-
-      {reportType === "profit" && trend.length > 0 && (
-        <Card><CardHeader><CardTitle>Net Profit Trend</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={trend.map((t) => ({ month: t.month, profit: t.revenue - t.expense - t.salary }))}>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={trend}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="month" fontSize={12} />
                 <YAxis fontSize={12} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
@@ -348,25 +211,56 @@ function ReportsPage() {
                 <Line type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent></Card>
-      )}
+          </CardContent>
+        </Card>
+      </div>
 
-      {reportType === "client" && (
-        <Card><CardHeader><CardTitle>Clients</CardTitle></CardHeader>
+      {/* Aging */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-base">Receivables Aging</CardTitle><CardDescription>{aging.totalOpen} open invoices</CardDescription></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Stat label="Current" value={inr(aging.buckets.current)} small />
+            <Stat label="1–30d" value={inr(aging.buckets.d30)} accent="text-yellow-600" small />
+            <Stat label="31–60d" value={inr(aging.buckets.d60)} accent="text-orange-600" small />
+            <Stat label="61–90d" value={inr(aging.buckets.d90)} accent="text-red-600" small />
+            <Stat label="90+d" value={inr(aging.buckets.d90p)} accent="text-red-900" small />
+          </div>
+          {aging.rows.length > 0 && (
+            <ReportTable headers={["Client", "Invoice", "Due", "Overdue", "Balance"]}
+              rows={aging.rows.map((r) => [r.client, r.invoice, formatDate(r.due) || "—", r.days > 0 ? `${r.days}d` : "—", inr(r.balance)])} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Top clients + Top expenses */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Top 5 Clients</CardTitle><CardDescription>By collected revenue</CardDescription></CardHeader>
           <CardContent>
-            <ReportTable headers={["Company", "Client", "Business", "Status", "Mobile", "Email"]}
-              rows={clients.map((c) => [companies.find((co) => co.id === c.company_id)?.name || "", c.client_name, c.business_name || "—", c.status, c.mobile || "—", c.email || "—"])} />
-          </CardContent></Card>
-      )}
+            {topClients.length === 0 ? <p className="text-sm text-muted-foreground py-4">No payments in range.</p> :
+              <ReportTable headers={["Client", "Payments", "Revenue"]}
+                rows={topClients.map((c) => [c.name, String(c.count), inr(c.revenue)])} />}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Top 5 Expense Categories</CardTitle></CardHeader>
+          <CardContent>
+            {topExpenseCats.length === 0 ? <p className="text-sm text-muted-foreground py-4">No expenses in range.</p> :
+              <ReportTable headers={["Category", "Amount"]}
+                rows={topExpenseCats.map((c) => [c.category, inr(c.amount)])} />}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function Stat({ label, value, accent, small }: { label: string; value: string; accent?: string; small?: boolean }) {
   return (
-    <Card><CardContent className="p-4">
+    <Card><CardContent className={small ? "p-3" : "p-4"}>
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${accent ?? ""}`}>{value}</p>
+      <p className={`${small ? "text-lg" : "text-2xl"} font-bold mt-1 ${accent ?? ""}`}>{value}</p>
     </CardContent></Card>
   );
 }

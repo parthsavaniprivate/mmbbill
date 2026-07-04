@@ -204,15 +204,21 @@
   color: #111 !important;
 }
 .leaflet-popup-content button,
-.leaflet-popup-content a[role="button"],
+.leaflet-popup-content a[href],
 .leaflet-popup-content .lp-btn {
   background: #fff !important;
   color: #111 !important;
   border: 1px solid #e5e7eb !important;
 }
 .leaflet-popup-content button:hover,
-.leaflet-popup-content a[role="button"]:hover,
+.leaflet-popup-content a[href]:hover,
 .leaflet-popup-content .lp-btn:hover {
   background: #f3f4f6 !important;
+}
+.leaflet-popup-content button svg,
+.leaflet-popup-content a[href] svg,
+.leaflet-popup-content .lp-btn svg {
+  color: #111 !important;
+  stroke: #111 !important;
 }
 

@@ -369,12 +369,12 @@ function CollectionMapPage() {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-1 pt-1">
-                          <Button variant="outline" size="sm" onClick={() => callClient(e.client.mobile)}><Phone className="w-3 h-3" /> Call</Button>
-                          <Button variant="outline" size="sm" onClick={() => waClient(e.client.whatsapp || e.client.mobile)}><MessageCircle className="w-3 h-3" /> WhatsApp</Button>
-                          <Button variant="outline" size="sm" asChild><Link to="/clients/$id" params={{ id: e.client.id }}><User className="w-3 h-3" /> Profile</Link></Button>
-                          {e.latest && <Button variant="outline" size="sm" asChild><Link to="/invoices/$id" params={{ id: e.latest.id }}><FileText className="w-3 h-3" /> Invoice</Link></Button>}
+                          <Button variant="outline" size="sm" onClick={() => callClient(e.client.mobile)}><Phone className="w-4 h-4 shrink-0" /> Call</Button>
+                          <Button variant="outline" size="sm" onClick={() => waClient(e.client.whatsapp || e.client.mobile)}><MessageCircle className="w-4 h-4 shrink-0" /> WhatsApp</Button>
+                          <Button variant="outline" size="sm" asChild><Link to="/clients/$id" params={{ id: e.client.id }}><User className="w-4 h-4 shrink-0" /> Profile</Link></Button>
+                          {e.latest && <Button variant="outline" size="sm" asChild><Link to="/invoices/$id" params={{ id: e.latest.id }}><FileText className="w-4 h-4 shrink-0" /> Invoice</Link></Button>}
                           <Button variant="outline" size="sm" className="col-span-2" onClick={() => navTo(Number(e.client.latitude), Number(e.client.longitude))}>
-                            <Navigation className="w-3 h-3" /> Navigate
+                            <Navigation className="w-4 h-4 shrink-0" /> Navigate
                           </Button>
                         </div>
                       </div>

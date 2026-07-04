@@ -38,7 +38,6 @@ const NAV = [
   { to: "/billing", label: "Billing", icon: BadgeIndianRupee },
   { to: "/expenses", label: "Expenses", icon: TrendingDown },
   { to: "/renewals", label: "Renewals", icon: RefreshCw },
-  { to: "/meta", label: "Meta Ads", icon: Facebook },
   { to: "/salary", label: "Salary Slips", icon: BadgeIndianRupee },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },

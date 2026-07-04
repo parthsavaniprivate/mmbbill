@@ -151,9 +151,10 @@ function CollectionMapPage() {
       const today = new Date(); today.setHours(0,0,0,0);
       if (due && due < today && pendAmt > 0) e.overdue += pendAmt;
       e.count += 1;
-      // Latest "open" invoice = most recent unpaid; fallback most recent
-      const openUnpaid = !e.latest || (pendAmt > 0 && (!e.latest || new Date(inv.invoice_date) > new Date(e.latest.invoice_date)));
-      if (!e.latest || openUnpaid) e.latest = inv;
+      // Latest unpaid invoice preferred; fallback to most recent
+      const isUnpaid = pendAmt > 0;
+      const isNewer = !e.latest || new Date(inv.invoice_date) > new Date(e.latest.invoice_date);
+      if (!e.latest || (isUnpaid && isNewer)) e.latest = inv;
       map.set(inv.client_id, e);
     }
     return map;
@@ -181,7 +182,7 @@ function CollectionMapPage() {
 
   const enriched = useMemo(() => clients.map(c => {
     const agg = byClient.get(c.id);
-    const status = computeStatus(agg?.latest);
+    const status = computeStatus(agg);
     return { client: c, agg, status, latest: agg?.latest };
   }), [clients, byClient]);
 

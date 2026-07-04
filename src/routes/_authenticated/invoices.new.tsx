@@ -169,8 +169,6 @@ function NewInvoicePage() {
           <div className="space-y-1.5"><Label>Terms & Conditions</Label><Textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={3} /></div>
         </div>
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
-          {billableSpend > 0 && <Row label="Meta Ad Spend" value={inr(billableSpend)} />}
-          {managementFee > 0 && <Row label="Management Fee" value={inr(managementFee)} />}
           <Row label="Subtotal" value={inr(totals.subtotal)} />
           {Number(discount) > 0 && <Row label="Discount" value={`- ${inr(Number(discount))}`} />}
           {totals.gstAmount > 0 && <Row label={`GST (${gstRate}%)`} value={inr(totals.gstAmount)} />}

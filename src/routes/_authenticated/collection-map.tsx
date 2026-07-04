@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import { Phone, MessageCircle, Navigation, FileText, User, Route as RouteIcon, Search } from "lucide-react";

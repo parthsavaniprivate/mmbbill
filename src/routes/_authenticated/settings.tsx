@@ -89,16 +89,16 @@ function CompanyForm({ company }: { company: Company }) {
 
       <Card><CardHeader><CardTitle>Branding</CardTitle><CardDescription>Logo & authorised signature appear on invoices and quotations.</CardDescription></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <AssetUpload label="Logo" companyId={form.id} url={form.logo_url} onChange={(u) => upd("logo_url", u)} />
-          <AssetUpload label="Signature" companyId={form.id} url={form.signature_url} onChange={(u) => upd("signature_url", u)} />
+          <AssetUpload label="Logo" companyId={form.id} url={form.logo_url} onChange={(u) => upd({ logo_url: u })} />
+          <AssetUpload label="Signature" companyId={form.id} url={form.signature_url} onChange={(u) => upd({ signature_url: u })} />
         </CardContent>
       </Card>
 
       <Card><CardHeader><CardTitle>Invoice Defaults</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-3">
           <F label="Invoice Prefix" value={form.invoice_prefix} onChange={(v) => updStr("invoice_prefix", v)} />
-          <F label="Default GST Rate (%)" type="number" value={String(form.default_gst_rate ?? "")} onChange={(v) => upd("default_gst_rate", v === "" ? null : Number(v))} />
-          <F label="Default Due Days" type="number" value={String(form.default_due_days ?? "")} onChange={(v) => upd("default_due_days", v === "" ? null : Number(v))} />
+          <F label="Default GST Rate (%)" type="number" value={String(form.default_gst_rate ?? "")} onChange={(v) => upd({ default_gst_rate: v === "" ? null : Number(v) })} />
+          <F label="Default Due Days" type="number" value={String(form.default_due_days ?? "")} onChange={(v) => upd({ default_due_days: v === "" ? null : Number(v) })} />
           <div className="space-y-1.5"><Label>Currency</Label>
             <Select value={form.currency ?? "INR"} onValueChange={(v) => updStr("currency", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -122,7 +122,7 @@ function CompanyForm({ company }: { company: Company }) {
               </SelectContent>
             </Select>
           </div>
-          <F label="Reminder Days Before Renewal" type="number" value={String(form.renewal_reminder_days ?? "")} onChange={(v) => upd("renewal_reminder_days", v === "" ? null : Number(v))} />
+          <F label="Reminder Days Before Renewal" type="number" value={String(form.renewal_reminder_days ?? "")} onChange={(v) => upd({ renewal_reminder_days: v === "" ? 0 : Number(v) })} />
           <div className="space-y-1.5 md:col-span-3"><Label>Default Invoice Terms</Label>
             <Textarea value={form.invoice_terms ?? ""} onChange={(e) => updStr("invoice_terms", e.target.value)} rows={3} />
           </div>

@@ -39,15 +39,16 @@ function RenewalsPage() {
     return true;
   });
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const in30 = new Date(today.getTime() + 30 * 86400000);
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+  const in30Date = new Date(); in30Date.setDate(in30Date.getDate() + 30);
+  const in30Str = in30Date.toLocaleDateString("en-CA");
 
   const upcoming = filtered.filter((p) => {
-    const d = new Date(p.renewal_date!);
-    return d >= today && d <= in30;
+    const d = p.renewal_date!;
+    return d >= todayStr && d <= in30Str && p.status !== "cancelled";
   });
-  const overdue = filtered.filter((p) => new Date(p.renewal_date!) < today && p.status === "active");
-  const later = filtered.filter((p) => new Date(p.renewal_date!) > in30);
+  const overdue = filtered.filter((p) => p.renewal_date! < todayStr && p.status !== "cancelled");
+  const later = filtered.filter((p) => p.renewal_date! > in30Str && p.status !== "cancelled");
 
   const markRenewed = useMutation({
     mutationFn: async (pkg: { id: string; renewal_date: string | null }) => {

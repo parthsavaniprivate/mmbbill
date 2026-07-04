@@ -249,7 +249,7 @@ function ClientDetail() {
           <TabsTrigger value="ledger">Ledger</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="files">Files ({files.length})</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          
         </TabsList>
 
         <TabsContent value="packages" className="space-y-3">

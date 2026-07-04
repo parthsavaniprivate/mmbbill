@@ -145,10 +145,18 @@
 
 @layer base {
   * { border-color: var(--color-border); }
+  html { font-family: var(--font-sans); }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, .font-serif, .font-display {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
   }
 }
 

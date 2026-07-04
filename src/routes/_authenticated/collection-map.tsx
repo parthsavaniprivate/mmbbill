@@ -58,7 +58,7 @@ function computeStatus(agg: { pending: number; overdue: number; paid: number; to
 const SURAT: [number, number] = [21.1940, 72.7710];
 const RADIUS_KM = 100;
 // Nominatim viewbox ~1.2deg around center (~130km) to bias geocoding
-const SURAT_VIEWBOX = `${SURAT[1] - 1.2},${SURAT[0] + 1.2},${SURAT[1] + 1.2},${SURAT[0] - 1.2}`;
+
 
 function haversineKm(a: [number, number], b: [number, number]) {
   const toRad = (d: number) => (d * Math.PI) / 180;
@@ -167,7 +167,7 @@ function CollectionMapPage() {
         if (res) {
           await supabase.from("clients").update({ latitude: res.lat, longitude: res.lng, geocoded_at: new Date().toISOString() }).eq("id", c.id);
         }
-        await new Promise(r => setTimeout(r, 1100));
+        await new Promise(r => setTimeout(r, 150));
       }
       setGeocoding(false);
       refetchClients();

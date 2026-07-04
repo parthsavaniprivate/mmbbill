@@ -284,7 +284,7 @@ function BillingDashboard() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="ghost">
-                          <Link to="/invoices/new" search={{ client_id: r.client.id }}><Plus className="w-3.5 h-3.5" />Invoice</Link>
+                          <Link to="/invoices/new" search={{ client: r.client.id }}><Plus className="w-3.5 h-3.5" />Invoice</Link>
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -98,44 +98,6 @@ function ClientDetail() {
     },
   });
 
-  const { data: availableMetaAccounts = [] } = useQuery({
-    queryKey: ["meta-accounts-available", id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("meta_accounts")
-        .select("id, ad_account_id, ad_account_name, business_name, client_id, status")
-        .in("status", ["active", "pending_account_select"])
-        .order("created_at", { ascending: false });
-      return data ?? [];
-    },
-  });
-
-  const linkMeta = useMutation({
-    mutationFn: async (metaAccountId: string | null) => {
-      // Unlink: clear client_id on whatever was linked. Link: set client_id on selected row.
-      if (metaAccountId === null) {
-        const linked = availableMetaAccounts.find(m => m.client_id === id);
-        if (!linked) return;
-        const { error } = await supabase.from("meta_accounts").update({ client_id: null }).eq("id", linked.id);
-        if (error) throw error;
-        return;
-      }
-      // Clear any prior link to this client first (single-link semantics on UI side)
-      await supabase.from("meta_accounts").update({ client_id: null }).eq("client_id", id);
-      const { error } = await supabase.from("meta_accounts").update({ client_id: id }).eq("id", metaAccountId);
-      if (error) throw error;
-      await supabase.rpc("record_client_activity", {
-        _client_id: id, _kind: "meta_linked", _ref_id: metaAccountId, _summary: {},
-      });
-    },
-    onSuccess: () => {
-      toast.success("Meta account updated");
-      qc.invalidateQueries({ queryKey: ["client-meta-summary", id] });
-      qc.invalidateQueries({ queryKey: ["meta-accounts-available", id] });
-      qc.invalidateQueries({ queryKey: ["client-activity", id] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const exportLedgerCSV = () => {
     const rows = [

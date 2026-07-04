@@ -84,20 +84,15 @@ function FitBounds({ points }: { points: [number, number][] }) {
   return null;
 }
 
+import { geocodeAddress } from "@/lib/geocode.functions";
 
-// Nominatim throttled geocoder (1 req/sec). Updates DB cache. Biased to Surat region.
+// Google Maps geocoder (via server function). Biased to India.
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const q = /surat|gujarat|india/i.test(address) ? address : `${address}, Surat, Gujarat, India`;
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&viewbox=${SURAT_VIEWBOX}&bounded=1&q=${encodeURIComponent(q)}`,
-      { headers: { "Accept-Language": "en" } },
-    );
-    const j = await r.json();
-    if (Array.isArray(j) && j[0]) {
-      const lat = parseFloat(j[0].lat);
-      const lng = parseFloat(j[0].lon);
-      if (haversineKm([lat, lng], SURAT) <= RADIUS_KM + 30) return { lat, lng };
+    const res = await geocodeAddress({ data: { address: q } });
+    if (res.lat != null && res.lng != null) {
+      if (haversineKm([res.lat, res.lng], SURAT) <= RADIUS_KM + 50) return { lat: res.lat, lng: res.lng };
     }
   } catch {/* ignore */}
   return null;

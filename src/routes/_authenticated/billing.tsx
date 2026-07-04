@@ -260,7 +260,7 @@ function BillingDashboard() {
                     <SortHead label="Outstanding" k="outstanding" sortKey={sortKey} sortDesc={sortDesc} onClick={toggleSort} align="right" />
                     <SortHead label="Overdue" k="overdue" sortKey={sortKey} sortDesc={sortDesc} onClick={toggleSort} align="right" />
                     <TableHead className="text-right">Credit Left</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    
                   </TableRow>
                 </TableHeader>
                 <TableBody>

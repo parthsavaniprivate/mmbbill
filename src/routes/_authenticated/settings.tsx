@@ -63,8 +63,8 @@ function CompanyForm({ company }: { company: Company }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const upd = <K extends keyof Company>(k: K, v: Company[K]) => setForm({ ...form, [k]: v });
-  const updStr = (k: keyof Company, v: string) => setForm({ ...form, [k]: (v || null) as Company[keyof Company] });
+  const upd = (patch: Partial<Company>) => setForm({ ...form, ...patch });
+  const updStr = (k: keyof Company, v: string) => setForm({ ...form, [k]: (v || null) });
 
   return (
     <div className="space-y-4">

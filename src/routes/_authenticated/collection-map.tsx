@@ -47,11 +47,11 @@ function pinIcon(color: string, selected = false) {
   return L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size/2, size] });
 }
 
-function computeStatus(agg: { pending: number; overdue: number; count: number } | undefined): Status {
+function computeStatus(agg: { pending: number; overdue: number; paid: number; total: number; count: number } | undefined): Status {
   if (!agg || agg.count === 0) return "none";
   if (agg.pending <= 0) return "paid";
   if (agg.overdue > 0) return "overdue";
-  if (agg.pending < (agg as unknown as { total: number }).total) return "partial";
+  if (agg.paid > 0) return "partial";
   return "pending";
 }
 

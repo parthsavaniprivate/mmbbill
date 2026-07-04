@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { inr, downloadCSV } from "@/lib/format";
-import { FileDown, AlertTriangle, TrendingUp, Wallet, Receipt, Percent, Search, Plus, ArrowUpDown } from "lucide-react";
+import { FileDown, AlertTriangle, TrendingUp, Wallet, Receipt, Percent, Search, ArrowUpDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/billing")({ component: BillingDashboard });
 
@@ -260,7 +260,7 @@ function BillingDashboard() {
                     <SortHead label="Outstanding" k="outstanding" sortKey={sortKey} sortDesc={sortDesc} onClick={toggleSort} align="right" />
                     <SortHead label="Overdue" k="overdue" sortKey={sortKey} sortDesc={sortDesc} onClick={toggleSort} align="right" />
                     <TableHead className="text-right">Credit Left</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -281,11 +281,6 @@ function BillingDashboard() {
                       </TableCell>
                       <TableCell className={`text-right ${r.creditLeft != null && r.creditLeft < 0 ? "text-destructive font-semibold" : ""}`}>
                         {r.creditLeft == null ? "—" : inr(r.creditLeft)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button asChild size="sm" variant="ghost">
-                          <Link to="/invoices/new" search={{ client: r.client.id }}><Plus className="w-3.5 h-3.5" />Invoice</Link>
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

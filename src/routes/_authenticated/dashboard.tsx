@@ -187,12 +187,13 @@ function Dashboard() {
     return inDateRange(p.payment_date);
   });
 
-  // Collection: billed = invoices raised in range; cleared = payments received in range.
+  // Collection: billed = invoices raised in range; cleared = payments received in range (by payment_date).
   const monthTotalBilled = monthInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
   const monthCleared = rangePayments.reduce((s, p) => s + Number(p.amount || 0), 0);
-  const monthInvoicesPaid = monthInvoices.reduce((s, i) => s + Number(i.amount_paid || 0), 0);
-  const monthDue = Math.max(0, monthTotalBilled - monthInvoicesPaid);
-  const collectionPct = monthTotalBilled > 0 ? (monthInvoicesPaid / monthTotalBilled) * 100 : 0;
+  const monthInvoicesPaid = monthCleared;
+  const monthDue = Math.max(0, monthTotalBilled - monthCleared);
+  const collectionPct = monthTotalBilled > 0 ? (monthCleared / monthTotalBilled) * 100 : 0;
+
 
   // Projected fixed expenses (active recurring whose next_due_date falls in the selected range,
   // but no expense row was generated yet for that schedule in this range).

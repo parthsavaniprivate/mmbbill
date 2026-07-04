@@ -334,11 +334,11 @@ function Dashboard() {
 
       {/* HERO: Collection · Expenses · Balance */}
       <div className="grid gap-4 md:grid-cols-3">
-        <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Selected range" accent="primary" icon={IndianRupee}>
+        <HeroKpi title="Total Bill Collection" value={inr(monthCleared)} sub="Payments received in range" accent="primary" icon={IndianRupee}>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
-              <p className="text-muted-foreground">Cleared</p>
-              <p className="font-semibold text-emerald-500">{inr(monthCleared)}</p>
+              <p className="text-muted-foreground">Billed</p>
+              <p className="font-semibold text-blue-500">{inr(monthTotalBilled)}</p>
             </div>
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Due</p>
@@ -346,6 +346,7 @@ function Dashboard() {
             </div>
           </div>
         </HeroKpi>
+
 
         <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub={projectedFixed > 0 ? `Incl. ${inr(projectedFixed)} projected fixed` : "Selected range"} accent="expense" icon={TrendingDown}>
           <div className="grid grid-cols-2 gap-2 text-xs">

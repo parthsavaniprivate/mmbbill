@@ -47,13 +47,11 @@ function pinIcon(color: string, selected = false) {
   return L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size/2, size] });
 }
 
-function computeStatus(inv: InvoiceRow | undefined): Status {
-  if (!inv) return "none";
-  const due = inv.due_date ? new Date(inv.due_date) : null;
-  const today = new Date(); today.setHours(0,0,0,0);
-  if (inv.amount_paid >= inv.total && inv.total > 0) return "paid";
-  if (due && due < today && inv.amount_paid < inv.total) return "overdue";
-  if (inv.amount_paid > 0 && inv.amount_paid < inv.total) return "partial";
+function computeStatus(agg: { pending: number; overdue: number; count: number } | undefined): Status {
+  if (!agg || agg.count === 0) return "none";
+  if (agg.pending <= 0) return "paid";
+  if (agg.overdue > 0) return "overdue";
+  if (agg.pending < (agg as unknown as { total: number }).total) return "partial";
   return "pending";
 }
 

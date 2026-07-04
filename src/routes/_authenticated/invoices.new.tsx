@@ -192,12 +192,4 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   );
 }
 
-function KV({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 font-medium ${highlight ? "text-primary" : ""}`}>{value}</p>
-    </div>
-  );
-}
 

@@ -244,7 +244,11 @@ function Dashboard() {
   const variableRows = [...catBreakdown.entries()].filter(([c]) => !FIXED_CATS.has(c)).sort((a, b) => b[1] - a[1]);
 
   // ----- Analytics chart (uses global company filter) -----
-  const chartInvoices = invoices;
+  // Revenue = payments received in month (by payment_date), matching "Cleared" KPI.
+  const chartPayments = data.payments.filter((p) => {
+    const inv = p.invoices as { company_id: string } | null;
+    return isAll ? true : inv?.company_id === selected;
+  });
   const chartExpenses = expenses;
 
 
@@ -255,7 +259,7 @@ function Dashboard() {
       dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59);
   };
 
-  const rangedInvoices = chartInvoices.filter((i) => inRange(i.invoice_date));
+  const rangedPayments = chartPayments.filter((p) => inRange(p.payment_date));
   const rangedExpenses = chartExpenses.filter((e) => inRange(e.expense_date));
 
   const startMonth = from ?? new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1);
@@ -269,12 +273,13 @@ function Dashboard() {
   }
 
   const chartData = chartMonths.map((m) => {
-    const rev = rangedInvoices.filter((i) => monthKey(i.invoice_date) === m)
-      .reduce((s, i) => s + Number(i.amount_paid || 0), 0);
+    const rev = rangedPayments.filter((p) => monthKey(p.payment_date) === m)
+      .reduce((s, p) => s + Number(p.amount || 0), 0);
     const exp = rangedExpenses.filter((e) => monthKey(e.expense_date) === m)
       .reduce((s, e) => s + Number(e.amount || 0), 0);
     return { month: m.slice(5) + "/" + m.slice(2, 4), revenue: rev, expenses: exp, balance: rev - exp };
   });
+
 
   const chartTotals = chartData.reduce(
     (acc, d) => ({ revenue: acc.revenue + d.revenue, expenses: acc.expenses + d.expenses, balance: acc.balance + d.balance }),

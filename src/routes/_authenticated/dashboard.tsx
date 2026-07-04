@@ -24,8 +24,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
-type RangeKey = "tm" | "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
+type RangeKey = "today" | "tm" | "1m" | "3m" | "6m" | "12m" | "2y" | "3y" | "custom";
 const RANGE_PRESETS: { key: RangeKey; label: string; months: number }[] = [
+  { key: "today", label: "Today", months: 0 },
   { key: "tm", label: "This Month", months: 0 },
   { key: "3m", label: "3M", months: 3 },
   { key: "6m", label: "6M", months: 6 },
@@ -146,6 +147,9 @@ function Dashboard() {
   const { from, to } = useMemo(() => {
     const end = new Date();
     if (rangeKey === "custom") return { from: customFrom, to: customTo ?? end };
+    if (rangeKey === "today") {
+      return { from: end, to: end };
+    }
     if (rangeKey === "tm") {
       const start = new Date(end.getFullYear(), end.getMonth(), 1);
       const last = new Date(end.getFullYear(), end.getMonth() + 1, 0);

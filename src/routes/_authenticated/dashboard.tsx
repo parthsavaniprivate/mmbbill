@@ -147,6 +147,9 @@ function Dashboard() {
   const { from, to } = useMemo(() => {
     const end = new Date();
     if (rangeKey === "custom") return { from: customFrom, to: customTo ?? end };
+    if (rangeKey === "today") {
+      return { from: end, to: end };
+    }
     if (rangeKey === "tm") {
       const start = new Date(end.getFullYear(), end.getMonth(), 1);
       const last = new Date(end.getFullYear(), end.getMonth() + 1, 0);

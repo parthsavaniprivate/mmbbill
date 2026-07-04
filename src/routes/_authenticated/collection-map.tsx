@@ -348,6 +348,8 @@ function CollectionMapPage() {
             <FitBounds points={points} />
             {mapPoints.map(e => {
               const selected = routeMode && routeSel.includes(e.client.id);
+              const pendingAmt = e.agg?.pending ?? 0;
+              const daysOverdue = e.latest?.due_date ? Math.max(0, Math.floor((Date.now() - new Date(e.latest.due_date).getTime())/86400000)) : 0;
               return (
                 <Marker
                   key={e.client.id}
@@ -356,10 +358,44 @@ function CollectionMapPage() {
                   eventHandlers={{
                     click: () => {
                       if (routeMode) toggleRoute(e.client.id);
-                      else setActiveId(e.client.id);
                     },
                   }}
-                />
+                >
+                  {!routeMode && (
+                    <Popup minWidth={260} maxWidth={300}>
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-semibold text-sm leading-tight">{e.client.business_name || e.client.client_name}</div>
+                          <Badge style={{ background: STATUS_COLORS[e.status], color: "white" }}>{STATUS_LABEL[e.status]}</Badge>
+                        </div>
+                        {e.client.business_name && <div className="text-xs text-muted-foreground">{e.client.client_name}</div>}
+                        {e.client.contact_person && <div className="text-xs">{e.client.contact_person}</div>}
+                        {e.client.mobile && <div className="text-xs">{e.client.mobile}</div>}
+                        {e.client.address && <div className="text-xs text-muted-foreground">{e.client.address}</div>}
+                        <div className="grid grid-cols-3 gap-1 pt-1">
+                          <Stat label="Total" value={inr(e.agg?.total ?? 0)} />
+                          <Stat label="Paid" value={inr(e.agg?.paid ?? 0)} color="text-green-600" />
+                          <Stat label="Pending" value={inr(pendingAmt)} color="text-red-600" />
+                        </div>
+                        {e.latest && (
+                          <div className="text-xs flex justify-between border-t pt-1">
+                            <span>{e.latest.invoice_number}</span>
+                            <span className="text-muted-foreground">Due {formatDate(e.latest.due_date)} {daysOverdue > 0 && `· ${daysOverdue}d`}</span>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-1 pt-1">
+                          <Button variant="outline" size="sm" onClick={() => callClient(e.client.mobile)}><Phone className="w-3 h-3" /> Call</Button>
+                          <Button variant="outline" size="sm" onClick={() => waClient(e.client.whatsapp || e.client.mobile)}><MessageCircle className="w-3 h-3" /> WhatsApp</Button>
+                          <Button variant="outline" size="sm" asChild><Link to="/clients/$id" params={{ id: e.client.id }}><User className="w-3 h-3" /> Profile</Link></Button>
+                          {e.latest && <Button variant="outline" size="sm" asChild><Link to="/invoices/$id" params={{ id: e.latest.id }}><FileText className="w-3 h-3" /> Invoice</Link></Button>}
+                          <Button variant="outline" size="sm" className="col-span-2" onClick={() => navTo(Number(e.client.latitude), Number(e.client.longitude))}>
+                            <Navigation className="w-3 h-3" /> Navigate
+                          </Button>
+                        </div>
+                      </div>
+                    </Popup>
+                  )}
+                </Marker>
               );
             })}
           </MapContainer>

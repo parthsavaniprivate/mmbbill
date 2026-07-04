@@ -111,42 +111,6 @@ function ClientDetail() {
     a.href = url; a.download = `ledger-${id}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
-  const { data: metaSummary } = useQuery({
-    queryKey: ["client-meta-summary", id],
-    queryFn: async () => {
-      const { data: account } = await supabase
-        .from("meta_accounts")
-        .select("id, ad_account_id, ad_account_name, business_name, currency, last_synced_at, status")
-        .eq("client_id", id).maybeSingle();
-      if (!account) return null;
-      const [{ count: campCount }, { count: activeCount }, { data: ins }, { data: hist }] = await Promise.all([
-        supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id),
-        supabase.from("meta_campaigns").select("id", { count: "exact", head: true }).eq("meta_account_id", account.id).eq("status", "ACTIVE"),
-        supabase.from("meta_campaign_insights").select("spend, leads, reach, impressions, clicks").eq("meta_account_id", account.id),
-        supabase.from("meta_ad_spend_history").select("spend, leads, reach, impressions, clicks, date").eq("meta_account_id", account.id),
-      ]);
-      const sum = (arr: { [k: string]: unknown }[] | null, k: string) =>
-        (arr ?? []).reduce((a, r) => a + Number((r as Record<string, unknown>)[k] ?? 0), 0);
-      const insightsHave = (ins ?? []).length > 0;
-      const today = new Date().toISOString().slice(0, 10);
-      const last7Cut = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-      const last30Cut = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-      const todaySpend = (hist ?? []).filter(r => r.date === today).reduce((a, r) => a + Number(r.spend ?? 0), 0);
-      const last7 = (hist ?? []).filter(r => r.date >= last7Cut).reduce((a, r) => a + Number(r.spend ?? 0), 0);
-      const last30 = (hist ?? []).filter(r => r.date >= last30Cut).reduce((a, r) => a + Number(r.spend ?? 0), 0);
-      return {
-        account,
-        totalCampaigns: campCount ?? 0,
-        activeCampaigns: activeCount ?? 0,
-        spend: insightsHave ? sum(ins, "spend") : sum(hist, "spend"),
-        leads: insightsHave ? sum(ins, "leads") : sum(hist, "leads"),
-        reach: insightsHave ? sum(ins, "reach") : sum(hist, "reach"),
-        impressions: insightsHave ? sum(ins, "impressions") : sum(hist, "impressions"),
-        clicks: insightsHave ? sum(ins, "clicks") : sum(hist, "clicks"),
-        todaySpend, last7, last30,
-      };
-    },
-  });
 
 
   const uploadFile = async (file: File, category: string): Promise<void> => {

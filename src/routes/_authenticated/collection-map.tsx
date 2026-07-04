@@ -9,11 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Navigation, FileText, User, MapPin, Route as RouteIcon, Search } from "lucide-react";
+import { Phone, MessageCircle, Navigation, FileText, User, Route as RouteIcon, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/collection-map")({
   component: CollectionMapPage,

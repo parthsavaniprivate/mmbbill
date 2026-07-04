@@ -468,38 +468,6 @@ function ClientDetail() {
           </CardContent></Card>
         </TabsContent>
 
-        <TabsContent value="settings" className="space-y-3">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Meta Ad Account Link</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-wrap gap-2 items-end">
-                <div className="space-y-1.5 flex-1 min-w-[260px]">
-                  <Label>Linked Meta Account</Label>
-                  <Select
-                    value={availableMetaAccounts.find(m => m.client_id === id)?.id ?? "__none__"}
-                    onValueChange={(v) => linkMeta.mutate(v === "__none__" ? null : v)}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Not linked</SelectItem>
-                      {availableMetaAccounts.map(m => (
-                        <SelectItem key={m.id} value={m.id} disabled={!!m.client_id && m.client_id !== id}>
-                          {m.ad_account_name || m.ad_account_id || m.business_name || m.id}
-                          {m.client_id && m.client_id !== id ? " (linked elsewhere)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button variant="outline" asChild><Link to="/meta">Manage Meta Accounts</Link></Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                When linked, invoices generated for this client can auto-fetch billable ad spend.
-                Each new invoice bills only the spend accrued since the previous one.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

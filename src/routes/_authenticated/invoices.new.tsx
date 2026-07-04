@@ -68,8 +68,7 @@ function NewInvoicePage() {
       if (!companyId || !clientId) throw new Error("Select company and client");
       const userItems = items.filter(i => i.description || i.quantity || i.rate);
       if (userItems.some((i) => !i.description)) throw new Error("All items need a description");
-      if (!userItems.length && billableSpend <= 0 && managementFee <= 0)
-        throw new Error("Add at least one line item or enable Meta billing");
+      if (!userItems.length) throw new Error("Add at least one line item");
 
       const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", {
         _company_id: companyId, _type: "gst",
@@ -83,22 +82,13 @@ function NewInvoicePage() {
         due_date: dueDate || null,
         gst_rate: Number(gstRate || 0),
         discount: Number(discount || 0),
-        meta_spend_billed: billableSpend,
-        meta_spend_cumulative_at_invoice: cumulativeSpend,
-        management_fee: managementFee,
         notes: notes.trim() || null, terms: terms.trim() || null,
       }).select().single();
       if (error) throw error;
 
-      // Compose item rows: Meta spend → Management fee → user-entered items
       let pos = 0;
-      const allItems: { description: string; quantity: number; rate: number }[] = [];
-      if (billableSpend > 0) allItems.push({ description: "Meta Ad Spend (new since last invoice)", quantity: 1, rate: billableSpend });
-      if (managementFee > 0) allItems.push({ description: "Agency Management Fee", quantity: 1, rate: managementFee });
-      for (const it of userItems) allItems.push(it);
-
       const { error: itErr } = await supabase.from("invoice_items").insert(
-        allItems.map((it) => ({
+        userItems.map((it) => ({
           invoice_id: inv.id, description: it.description,
           quantity: it.quantity, rate: it.rate,
           amount: +(it.quantity * it.rate).toFixed(2), position: pos++,
@@ -106,18 +96,13 @@ function NewInvoicePage() {
       );
       if (itErr) throw itErr;
 
-      // Update client's cumulative billed spend so the next invoice only bills new spend.
-      if (includeMeta && billableSpend > 0) {
-        await supabase.from("clients").update({
-          last_billed_spend: cumulativeSpend,
-          last_invoice_date: date,
-        }).eq("id", clientId);
-      }
+      await supabase.from("clients").update({ last_invoice_date: date }).eq("id", clientId);
       return inv.id;
     },
     onSuccess: (id) => { toast.success("Invoice created"); navigate({ to: "/invoices/$id", params: { id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   return (
     <div className="space-y-4 max-w-5xl">

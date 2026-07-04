@@ -1,0 +1,8 @@
+
+ALTER TABLE public.companies
+  ADD COLUMN IF NOT EXISTS default_gst_rate NUMERIC(5,2) DEFAULT 18,
+  ADD COLUMN IF NOT EXISTS default_due_days INTEGER DEFAULT 15,
+  ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'INR',
+  ADD COLUMN IF NOT EXISTS date_format TEXT DEFAULT 'dd-MM-yyyy',
+  ADD COLUMN IF NOT EXISTS invoice_email_template TEXT,
+  ADD COLUMN IF NOT EXISTS invoice_footer_note TEXT;

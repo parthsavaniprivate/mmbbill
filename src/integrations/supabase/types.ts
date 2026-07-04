@@ -203,9 +203,15 @@ export type Database = {
           bank_name: string | null
           city: string | null
           created_at: string
+          currency: string | null
+          date_format: string | null
+          default_due_days: number | null
+          default_gst_rate: number | null
           email: string | null
           gst_number: string | null
           id: string
+          invoice_email_template: string | null
+          invoice_footer_note: string | null
           invoice_prefix: string
           invoice_terms: string | null
           legal_name: string | null
@@ -228,9 +234,15 @@ export type Database = {
           bank_name?: string | null
           city?: string | null
           created_at?: string
+          currency?: string | null
+          date_format?: string | null
+          default_due_days?: number | null
+          default_gst_rate?: number | null
           email?: string | null
           gst_number?: string | null
           id?: string
+          invoice_email_template?: string | null
+          invoice_footer_note?: string | null
           invoice_prefix?: string
           invoice_terms?: string | null
           legal_name?: string | null
@@ -253,9 +265,15 @@ export type Database = {
           bank_name?: string | null
           city?: string | null
           created_at?: string
+          currency?: string | null
+          date_format?: string | null
+          default_due_days?: number | null
+          default_gst_rate?: number | null
           email?: string | null
           gst_number?: string | null
           id?: string
+          invoice_email_template?: string | null
+          invoice_footer_note?: string | null
           invoice_prefix?: string
           invoice_terms?: string | null
           legal_name?: string | null

@@ -174,7 +174,7 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
     service_charge_amount: String(initial?.service_charge_amount ?? ""),
     credit_limit: initial?.credit_limit != null ? String(initial.credit_limit) : "",
     billing_cycle: (initial?.billing_cycle ?? "monthly") as "monthly" | "weekly" | "custom",
-    auto_sync_meta: initial?.auto_sync_meta ?? true,
+    
   });
 
 
@@ -257,10 +257,6 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
             </SelectContent>
           </Select>
         </div>
-        <label className="flex items-center gap-2 col-span-2 text-sm">
-          <input type="checkbox" checked={form.auto_sync_meta} onChange={(e) => setForm({ ...form, auto_sync_meta: e.target.checked })} />
-          Auto-sync Meta spend for this client
-        </label>
 
         <div className="space-y-1.5 col-span-2">
           <Label>Address</Label>

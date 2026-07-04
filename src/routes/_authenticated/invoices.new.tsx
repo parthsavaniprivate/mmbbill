@@ -36,7 +36,6 @@ function NewInvoicePage() {
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days.");
   const [items, setItems] = useState<Item[]>([{ description: "", quantity: 1, rate: 0 }]);
-  const [includeMeta, setIncludeMeta] = useState(true);
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
@@ -45,7 +44,7 @@ function NewInvoicePage() {
     enabled: !!companyId,
     queryFn: async () => {
       const { data, error } = await supabase.from("clients")
-        .select("id, client_name, business_name, company_id, service_charge_type, service_charge_amount, last_billed_spend")
+        .select("id, client_name, business_name, company_id")
         .eq("company_id", companyId)
         .order("business_name", { ascending: true });
       if (error) throw error;
@@ -54,47 +53,14 @@ function NewInvoicePage() {
   });
 
   const filteredClients = clients.filter((c) => c.company_id === companyId);
-  const selectedClient = clients.find((c) => c.id === clientId);
-
-  // Meta billing preview — cumulative lifetime spend minus already-billed.
-  const { data: metaBilling } = useQuery({
-    enabled: !!clientId,
-    queryKey: ["meta-billable", clientId],
-    queryFn: async () => {
-      const { data: acc } = await supabase.from("meta_accounts")
-        .select("id, ad_account_name, ad_account_id, last_synced_at, currency")
-        .eq("client_id", clientId!).maybeSingle();
-      if (!acc) return null;
-      const [{ data: hist }, { data: ins }] = await Promise.all([
-        supabase.from("meta_ad_spend_history").select("spend").eq("meta_account_id", acc.id),
-        supabase.from("meta_campaign_insights").select("spend").eq("meta_account_id", acc.id),
-      ]);
-      const histSum = (hist ?? []).reduce((a, r) => a + Number(r.spend ?? 0), 0);
-      const insSum = (ins ?? []).reduce((a, r) => a + Number(r.spend ?? 0), 0);
-      const cumulative = histSum > 0 ? histSum : insSum;
-      return { account: acc, cumulative };
-    },
-  });
-
-  const lastBilled = Number(selectedClient?.last_billed_spend ?? 0);
-  const cumulativeSpend = Number(metaBilling?.cumulative ?? 0);
-  const billableSpend = includeMeta ? Math.max(0, cumulativeSpend - lastBilled) : 0;
-  const managementFee = (() => {
-    // Only auto-bill the management fee when a Meta account is linked AND
-    // the user opted in. Otherwise the user enters charges manually as line items.
-    if (!selectedClient || !includeMeta || !metaBilling) return 0;
-    const amt = Number(selectedClient.service_charge_amount ?? 0);
-    if (selectedClient.service_charge_type === "percent_of_spend") return +(billableSpend * amt / 100).toFixed(2);
-    return amt; // fixed_monthly or custom — flat amount
-  })();
 
   const totals = useMemo(() => {
-    const itemsSubtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
-    const subtotal = itemsSubtotal + billableSpend + managementFee;
+    const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
     const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
     return { subtotal, gstAmount, total: afterDisc + gstAmount };
-  }, [items, discount, billableSpend, managementFee, gstRate]);
+  }, [items, discount, gstRate]);
+
 
 
   const create = useMutation({

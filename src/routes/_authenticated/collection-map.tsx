@@ -55,7 +55,7 @@ function computeStatus(agg: { pending: number; overdue: number; paid: number; to
 }
 
 // Make Me Brand HQ (Pal, Surat) — map center
-const SURAT: [number, number] = [21.1959, 72.7933];
+const SURAT: [number, number] = [21.1938, 72.7699];
 const RADIUS_KM = 100;
 // Nominatim viewbox ~1.2deg around center (~130km) to bias geocoding
 const SURAT_VIEWBOX = `${SURAT[1] - 1.2},${SURAT[0] + 1.2},${SURAT[1] + 1.2},${SURAT[0] - 1.2}`;

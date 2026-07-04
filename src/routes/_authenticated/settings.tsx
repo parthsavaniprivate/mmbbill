@@ -177,7 +177,7 @@ function AssetUpload({ label, companyId, url, onChange }: { label: string; compa
 
   useEffect(() => {
     if (!url) { setSigned(null); return; }
-    if (url.startsWith("http")) { setSigned(url); return; }
+    if (url.startsWith("http") || url.startsWith("/")) { setSigned(url); return; }
     supabase.storage.from("company-assets").createSignedUrl(url, 3600).then(({ data }) => setSigned(data?.signedUrl ?? null));
   }, [url]);
 

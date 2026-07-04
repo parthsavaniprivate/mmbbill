@@ -194,5 +194,25 @@
   display: inline-block;
   flex-shrink: 0;
 }
-.leaflet-popup-content a { color: inherit; }
-.leaflet-popup-content { margin: 12px 14px; }
+.leaflet-popup-content a { color: inherit; text-decoration: none; }
+.leaflet-popup-content { margin: 12px 14px; color: #111; }
+
+/* Force light theme inside popup so buttons don't render as black boxes in dark mode */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  background: #fff !important;
+  color: #111 !important;
+}
+.leaflet-popup-content button,
+.leaflet-popup-content a[role="button"],
+.leaflet-popup-content .lp-btn {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #e5e7eb !important;
+}
+.leaflet-popup-content button:hover,
+.leaflet-popup-content a[role="button"]:hover,
+.leaflet-popup-content .lp-btn:hover {
+  background: #f3f4f6 !important;
+}
+

@@ -268,7 +268,7 @@ function CollectionMapPage() {
       <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-semibold">Collection Map</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Pending collections only. {geocoding && <span className="text-amber-600">Geocoding…</span>}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Pending collections only. Showing {mapPoints.length} of {filtered.length} on map{outOfRangeCount > 0 && ` · ${outOfRangeCount} missing address/geocode`}. {geocoding && <span className="text-amber-600">Geocoding…</span>}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant={routeMode ? "default" : "outline"} size="sm" onClick={() => { setRouteMode(v => !v); setRouteSel([]); }}>

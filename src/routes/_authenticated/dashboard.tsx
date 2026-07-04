@@ -258,6 +258,11 @@ function Dashboard() {
 
   const rangedInvoices = chartInvoices.filter((i) => inRange(i.invoice_date));
   const rangedExpenses = chartExpenses.filter((e) => inRange(e.expense_date));
+  const chartPayments = data.payments.filter((p) => {
+    const inv = p.invoices as { company_id: string } | null;
+    if (!isAll && inv?.company_id !== selected) return false;
+    return inRange(p.payment_date);
+  });
 
   const startMonth = from ?? new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1);
   const endMonth = to ?? new Date();
@@ -270,12 +275,13 @@ function Dashboard() {
   }
 
   const chartData = chartMonths.map((m) => {
-    const rev = rangedInvoices.filter((i) => monthKey(i.invoice_date) === m)
-      .reduce((s, i) => s + Number(i.amount_paid || 0), 0);
+    const rev = chartPayments.filter((p) => monthKey(p.payment_date) === m)
+      .reduce((s, p) => s + Number(p.amount || 0), 0);
     const exp = rangedExpenses.filter((e) => monthKey(e.expense_date) === m)
       .reduce((s, e) => s + Number(e.amount || 0), 0);
     return { month: m.slice(5) + "/" + m.slice(2, 4), revenue: rev, expenses: exp, balance: rev - exp };
   });
+
 
   const chartTotals = chartData.reduce(
     (acc, d) => ({ revenue: acc.revenue + d.revenue, expenses: acc.expenses + d.expenses, balance: acc.balance + d.balance }),

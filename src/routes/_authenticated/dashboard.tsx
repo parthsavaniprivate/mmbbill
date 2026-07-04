@@ -256,7 +256,7 @@ function Dashboard() {
       dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59);
   };
 
-  const rangedInvoices = chartInvoices.filter((i) => inRange(i.invoice_date));
+  
   const rangedExpenses = chartExpenses.filter((e) => inRange(e.expense_date));
   const chartPayments = data.payments.filter((p) => {
     const inv = p.invoices as { company_id: string } | null;

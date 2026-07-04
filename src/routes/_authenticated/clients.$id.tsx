@@ -198,38 +198,11 @@ function ClientDetail() {
           } />
           <Stat label="Billing Cycle" value={(client.billing_cycle ?? "monthly").replace(/_/g, " ")} />
           <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
-          <Stat label="Auto Sync Meta" value={client.auto_sync_meta ? "Enabled" : "Disabled"} />
-        </CardContent>
-      </Card>
-
-      {/* Meta Ads Information */}
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Meta Ads</CardTitle>
-          {metaSummary?.account?.id ? (
-            <Button asChild size="sm" variant="outline">
-              <Link to="/meta/$accountId" params={{ accountId: metaSummary.account.id }}>Open Dashboard</Link>
-            </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline"><Link to="/meta">Connect Meta</Link></Button>
-          )}
-        </CardHeader>
-        <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <Stat label="Ad Account" value={metaSummary?.account
-            ? (metaSummary.account.ad_account_name || metaSummary.account.ad_account_id || "—")
-            : "Not linked"} />
-          <Stat label="Active Campaigns" value={metaSummary ? `${metaSummary.activeCampaigns} / ${metaSummary.totalCampaigns}` : "—"} />
-          <Stat label="Total Ad Spend" value={metaSummary ? inr(metaSummary.spend) : "—"} />
-          <Stat label="Last Sync" value={metaSummary?.account?.last_synced_at ? formatDate(metaSummary.account.last_synced_at) : "Never"} />
-          <Stat label="Today's Spend" value={metaSummary ? inr(metaSummary.todaySpend) : "—"} />
-          <Stat label="Last 7 Days" value={metaSummary ? inr(metaSummary.last7) : "—"} />
-          <Stat label="Last 30 Days" value={metaSummary ? inr(metaSummary.last30) : "—"} />
-          <Stat label="Already Billed" value={inr(Number(client.last_billed_spend ?? 0))} />
         </CardContent>
       </Card>
 
       {/* Billing Summary */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
         <Card><CardContent className="p-4">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Billing Summary</p>
           {(() => {
@@ -263,16 +236,8 @@ function ClientDetail() {
             );
           })()}
         </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Performance</p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <Stat label="Leads" value={metaSummary ? metaSummary.leads.toLocaleString() : "—"} />
-            <Stat label="Reach" value={metaSummary ? metaSummary.reach.toLocaleString() : "—"} />
-            <Stat label="Impressions" value={metaSummary ? metaSummary.impressions.toLocaleString() : "—"} />
-            <Stat label="Clicks" value={metaSummary ? metaSummary.clicks.toLocaleString() : "—"} />
-          </div>
-        </CardContent></Card>
       </div>
+
 
 
       <Tabs defaultValue="packages">

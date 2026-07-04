@@ -107,7 +107,7 @@ function CollectionMapPage() {
   const { selected, isAll } = useCompany();
   const [filter, setFilter] = useState<"all" | "pending" | "overdue" | "partial" | "high" | "month">("all");
   const [search, setSearch] = useState("");
-  const [activeId, setActiveId] = useState<string | null>(null);
+  
   const [routeMode, setRouteMode] = useState(false);
   const [routeSel, setRouteSel] = useState<string[]>([]);
   const [geocoding, setGeocoding] = useState(false);
@@ -248,20 +248,6 @@ function CollectionMapPage() {
     },
   });
 
-  const active = enriched.find(e => e.client.id === activeId) ?? null;
-
-  // Payment history for active
-  const { data: activePayments = [] } = useQuery({
-    queryKey: ["cmap-active-pay", activeId],
-    enabled: !!activeId,
-    queryFn: async () => {
-      const invIds = active?.agg?.invoices.map(i => i.id) ?? [];
-      if (!invIds.length) return [];
-      const { data, error } = await supabase.from("payments").select("id,invoice_id,amount,payment_date,method").in("invoice_id", invIds).order("payment_date",{ascending:false});
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const toggleRoute = (id: string) => {
     setRouteSel(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
@@ -353,7 +339,7 @@ function CollectionMapPage() {
                 <Marker
                   key={e.client.id}
                   position={[Number(e.client.latitude), Number(e.client.longitude)]}
-                  icon={pinIcon(STATUS_COLORS[e.status], selected || activeId === e.client.id)}
+                  icon={pinIcon(STATUS_COLORS[e.status], selected)}
                   eventHandlers={{
                     click: () => {
                       if (routeMode) toggleRoute(e.client.id);
@@ -422,17 +408,6 @@ function Stat({ label, value, color = "" }: { label: string; value: string; colo
     <div className="rounded-lg border p-2">
       <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</div>
       <div className={`text-sm font-semibold ${color}`}>{value}</div>
-    </div>
-  );
-}
-function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="text-muted-foreground mt-0.5">{icon}</span>
-      <div className="flex-1">
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <div>{value}</div>
-      </div>
     </div>
   );
 }

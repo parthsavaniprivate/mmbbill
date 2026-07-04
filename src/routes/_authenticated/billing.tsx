@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { inr, downloadCSV } from "@/lib/format";
-import { FileDown, AlertTriangle, TrendingUp, Wallet, Receipt, Percent, Search, Plus, ArrowUpDown } from "lucide-react";
+import { FileDown, AlertTriangle, TrendingUp, Wallet, Receipt, Percent, Search, ArrowUpDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/billing")({ component: BillingDashboard });
 

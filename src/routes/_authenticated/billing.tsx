@@ -282,11 +282,6 @@ function BillingDashboard() {
                       <TableCell className={`text-right ${r.creditLeft != null && r.creditLeft < 0 ? "text-destructive font-semibold" : ""}`}>
                         {r.creditLeft == null ? "—" : inr(r.creditLeft)}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button asChild size="sm" variant="ghost">
-                          <Link to="/invoices/new" search={{ client: r.client.id }}><Plus className="w-3.5 h-3.5" />Invoice</Link>
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

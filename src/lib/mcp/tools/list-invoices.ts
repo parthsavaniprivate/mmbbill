@@ -6,7 +6,7 @@ export default defineTool({
   title: "List invoices",
   description: "List invoices with optional filters for status, client, or date range.",
   inputSchema: {
-    status: z.enum(["draft", "sent", "pending", "paid", "partially_paid", "overdue", "cancelled"]).optional(),
+    status: z.enum(["draft", "pending", "paid", "partially_paid", "overdue", "cancelled"]).optional(),
     client_id: z.string().uuid().optional(),
     from_date: z.string().optional().describe("ISO date (YYYY-MM-DD) — include invoices on/after this date."),
     to_date: z.string().optional().describe("ISO date (YYYY-MM-DD) — include invoices on/before this date."),

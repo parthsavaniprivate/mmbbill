@@ -6,7 +6,7 @@ export default defineTool({
   title: "List invoices",
   description: "List invoices with optional filters for status, client, or date range.",
   inputSchema: {
-    status: z.enum(["draft", "sent", "paid", "partial", "overdue", "cancelled"]).optional(),
+    status: z.enum(["draft", "sent", "pending", "paid", "partially_paid", "overdue", "cancelled"]).optional(),
     client_id: z.string().uuid().optional(),
     from_date: z.string().optional().describe("ISO date (YYYY-MM-DD) — include invoices on/after this date."),
     to_date: z.string().optional().describe("ISO date (YYYY-MM-DD) — include invoices on/before this date."),
@@ -17,7 +17,7 @@ export default defineTool({
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("invoices")
-      .select("id,invoice_number,client_name,client_id,invoice_date,due_date,total,paid_amount,status,company_id")
+      .select("id,invoice_number,client_name,client_id,invoice_date,due_date,total,amount_paid,status,company_id")
       .order("invoice_date", { ascending: false })
       .limit(limit);
     if (status) q = q.eq("status", status);

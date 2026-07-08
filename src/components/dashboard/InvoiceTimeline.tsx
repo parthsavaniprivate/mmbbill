@@ -112,6 +112,8 @@ function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Dat
     return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0) };
   }
   return null;
+}
+
 
 const ROW_H = 56;
 const CLIENT_COL = 240;

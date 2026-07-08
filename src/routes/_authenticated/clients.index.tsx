@@ -61,7 +61,9 @@ function ClientsPage() {
         .toLowerCase().includes(s);
     }
     return true;
-  });
+  }).sort((a, b) =>
+    (a.business_name || a.client_name || "").localeCompare(b.business_name || b.client_name || "", undefined, { sensitivity: "base" })
+  );
 
   return (
     <div className="space-y-4">

@@ -364,22 +364,22 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
         )}
       </CardContent>
 
-      <Sheet open={!!activeId} onOpenChange={(o) => !o && setActiveId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <Dialog open={!!activeId} onOpenChange={(o) => !o && setActiveId(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           {activeInvoice && (
             <>
-              <SheetHeader className="text-left">
+              <DialogHeader className="text-left">
                 <div className="flex items-center justify-between gap-2">
-                  <SheetTitle className="text-xl">{activeInvoice.invoice_number}</SheetTitle>
+                  <DialogTitle className="text-xl">{activeInvoice.invoice_number}</DialogTitle>
                   <Badge className={cn("border-0", STATUS_META[effectiveStatus(activeInvoice, today)].text, "bg-transparent border border-current")}>
                     {STATUS_META[effectiveStatus(activeInvoice, today)].label}
                   </Badge>
                 </div>
-                <SheetDescription>
+                <DialogDescription>
                   {activeClient?.client_name}{activeClient?.business_name ? ` · ${activeClient.business_name}` : ""}
                   {activeCompany ? ` · ${activeCompany.name}` : ""}
-                </SheetDescription>
-              </SheetHeader>
+                </DialogDescription>
+              </DialogHeader>
 
               <div className="mt-6 space-y-5">
                 {/* Summary */}

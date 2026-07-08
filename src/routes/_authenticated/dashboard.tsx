@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 

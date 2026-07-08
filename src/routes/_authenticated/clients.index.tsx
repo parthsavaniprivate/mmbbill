@@ -25,6 +25,16 @@ export const Route = createFileRoute("/_authenticated/clients/")({
   validateSearch: (s: Record<string, unknown>): { q?: string } =>
     typeof s.q === "string" && s.q ? { q: s.q } : {},
   component: ClientsPage,
+  loader: ({ context }) => {
+    context.queryClient.prefetchQuery({
+      queryKey: ["clients"],
+      queryFn: async () => {
+        const { data, error } = await supabase.from("clients").select("*").order("client_name", { ascending: true });
+        if (error) throw error;
+        return data;
+      },
+    });
+  },
 });
 
 const STATUS_COLORS: Record<Status, string> = {

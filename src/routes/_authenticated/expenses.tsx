@@ -47,7 +47,25 @@ const CYCLES: { value: Cycle; label: string; months: number }[] = [
   { value: "yearly", label: "Yearly", months: 12 },
 ];
 
-export const Route = createFileRoute("/_authenticated/expenses")({ component: ExpensesPage });
+export const Route = createFileRoute("/_authenticated/expenses")({
+  component: ExpensesPage,
+  loader: ({ context }) => {
+    context.queryClient.prefetchQuery({
+      queryKey: ["expenses"],
+      queryFn: async () => {
+        const { data } = await supabase.from("expenses").select("*").order("expense_date", { ascending: false });
+        return data ?? [];
+      },
+    });
+    context.queryClient.prefetchQuery({
+      queryKey: ["recurring_expenses"],
+      queryFn: async () => {
+        const { data } = await supabase.from("recurring_expenses").select("*").order("next_due_date", { ascending: true });
+        return data ?? [];
+      },
+    });
+  },
+});
 
 function ExpensesPage() {
   const { selected, isAll, companies } = useCompany();

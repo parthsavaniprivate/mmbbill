@@ -305,7 +305,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                     {ticks.map((t, idx) => (
                       <div
                         key={idx}
-                        className="absolute top-0 flex h-full flex-col justify-center border-l border-border/40 pl-2"
+                        className={cn(
+                          "absolute top-0 flex h-full flex-col items-center justify-center border-l",
+                          idx === 0 ? "border-transparent" : "border-border/60",
+                        )}
                         style={{ left: idx * tickWidth, width: tickWidth }}
                       >
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">

@@ -13,7 +13,36 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id_/edit")({ component: EditInvoicePage });
 
-type Item = { id?: string; description: string; quantity: number; rate: number };
+type Item = { id?: string; description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string };
+
+const fmtMonth = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+const fmtFull = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const monthsInclusive = (from: string, to: string) => {
+  const a = new Date(from), b = new Date(to);
+  const m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) + 1;
+  return Math.max(1, m);
+};
+
+const MONTH_MAP: Record<string, number> = {
+  jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+  may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+  sep: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+};
+const toIso = (mon: string, year: string) => {
+  const m = MONTH_MAP[mon.toLowerCase()];
+  if (m === undefined) return undefined;
+  return `${year}-${String(m + 1).padStart(2, "0")}-01`;
+};
+const parseDescription = (desc: string): { main: string; fromDate?: string; toDate?: string } => {
+  const lines = desc.split("\n");
+  const main = lines[0] ?? "";
+  const rest = lines.slice(1).join(" ").trim();
+  const range = rest.match(/For\s+(\w+)\s+(\d{4})\s*[-–]\s*(\w+)\s+(\d{4})/i);
+  if (range) return { main, fromDate: toIso(range[1], range[2]), toDate: toIso(range[3], range[4]) };
+  const single = rest.match(/For\s+(\w+)\s+(\d{4})/i);
+  if (single) { const iso = toIso(single[1], single[2]); return { main, fromDate: iso, toDate: iso }; }
+  return { main };
+};
 
 function EditInvoicePage() {
   const { id } = Route.useParams();
@@ -46,17 +75,22 @@ function EditInvoicePage() {
     setNotes(data.inv.notes ?? "");
     setTerms(data.inv.terms ?? "");
     setItems(
-      (data.items.length ? data.items : [{ description: "", quantity: 1, rate: 0 }]).map((it) => ({
-        id: (it as { id?: string }).id,
-        description: it.description,
-        quantity: Number(it.quantity),
-        rate: Number(it.rate),
-      })),
+      (data.items.length ? data.items : [{ id: undefined, description: "", quantity: 1, rate: 0 }]).map((it) => {
+        const parsed = parseDescription(it.description);
+        return {
+          id: (it as { id?: string }).id,
+          description: parsed.main,
+          fromDate: parsed.fromDate,
+          toDate: parsed.toDate,
+          quantity: Number(it.quantity),
+          rate: Number(it.rate),
+        };
+      }),
     );
   }, [data]);
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
+    const subtotal = items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.rate || 0), 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
     const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
     return { subtotal, gstAmount, total: afterDisc + gstAmount };
@@ -77,18 +111,26 @@ function EditInvoicePage() {
       }).eq("id", id);
       if (uErr) throw uErr;
 
-      // Replace items: simplest reliable strategy
       const { error: dErr } = await supabase.from("invoice_items").delete().eq("invoice_id", id);
       if (dErr) throw dErr;
       const { error: iErr } = await supabase.from("invoice_items").insert(
-        clean.map((it, idx) => ({
-          invoice_id: id,
-          description: it.description,
-          quantity: it.quantity,
-          rate: it.rate,
-          amount: +(it.quantity * it.rate).toFixed(2),
-          position: idx,
-        })),
+        clean.map((it, idx) => {
+          const q = Number(it.quantity || 0);
+          const r = Number(it.rate || 0);
+          const period = it.fromDate && it.toDate
+            ? (it.fromDate.slice(0, 7) === it.toDate.slice(0, 7)
+                ? `\nFor ${fmtFull(it.fromDate)}`
+                : `\nFor ${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)}`)
+            : "";
+          return {
+            invoice_id: id,
+            description: it.description + period,
+            quantity: q,
+            rate: r,
+            amount: +(q * r).toFixed(2),
+            position: idx,
+          };
+        }),
       );
       if (iErr) throw iErr;
     },
@@ -124,27 +166,80 @@ function EditInvoicePage() {
 
       <Card>
         <CardHeader><CardTitle>Items</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          {items.map((it, idx) => (
-            <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-6 space-y-1"><Label className="text-xs">Description</Label>
-                <Input value={it.description} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
+        <CardContent className="space-y-3">
+          {items.map((it, idx) => {
+            const updateRange = (from?: string, to?: string) => {
+              setItems(items.map((x, i) => {
+                if (i !== idx) return x;
+                const next = { ...x, fromDate: from, toDate: to };
+                if (from && to) next.quantity = monthsInclusive(from, to);
+                return next;
+              }));
+            };
+            const months = it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
+            return (
+              <div key={idx} className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-muted/30 p-4 space-y-3 shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item #{idx + 1}</span>
+                  {months > 0 && (
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                      {months} Month{months > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Service / Description</Label>
+                  <Input
+                    placeholder="e.g. Social Media Management"
+                    value={it.description}
+                    onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3 space-y-1.5">
+                    <Label className="text-xs font-medium">From Month</Label>
+                    <Input
+                      type="month"
+                      className="[color-scheme:light] dark:[color-scheme:dark]"
+                      value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
+                      onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
+                    />
+                  </div>
+                  <div className="col-span-3 space-y-1.5">
+                    <Label className="text-xs font-medium">To Month</Label>
+                    <Input
+                      type="month"
+                      className="[color-scheme:light] dark:[color-scheme:dark]"
+                      value={it.toDate ? it.toDate.slice(0, 7) : ""}
+                      onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
+                    />
+                  </div>
+                  <div className="col-span-1 space-y-1.5">
+                    <Label className="text-xs font-medium">Qty</Label>
+                    <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
+                  </div>
+                  <div className="col-span-2 space-y-1.5">
+                    <Label className="text-xs font-medium">Rate</Label>
+                    <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
+                  </div>
+                  <div className="col-span-2 space-y-1.5">
+                    <Label className="text-xs font-medium">Amount</Label>
+                    <div className="h-9 flex items-center justify-end px-3 rounded-md bg-primary/5 border border-primary/20 text-sm font-bold text-primary">
+                      {inr(Number(it.quantity || 0) * Number(it.rate || 0))}
+                    </div>
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <div className="col-span-2 space-y-1"><Label className="text-xs">Months / Qty</Label>
-                <Input type="number" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))} />
-              </div>
-              <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
-                <Input type="number" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: Number(e.target.value) } : x))} />
-              </div>
-              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(it.quantity * it.rate)}</div>
-              <div className="col-span-1">
-                <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: 1, rate: 0 }])}>
+            );
+          })}
+          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: "", rate: "" }])}>
             <Plus className="w-4 h-4" />Add Item
           </Button>
         </CardContent>

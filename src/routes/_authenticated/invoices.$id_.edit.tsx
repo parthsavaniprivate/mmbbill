@@ -187,7 +187,24 @@ function EditInvoicePage() {
       <h1 className="text-3xl font-bold tracking-tight">Edit Invoice {data.inv.invoice_number}</h1>
 
       <Card>
-        <CardContent className="p-5 grid md:grid-cols-2 gap-3">
+        <CardContent className="p-5 grid md:grid-cols-3 gap-3">
+          <div className="space-y-1.5"><Label>Invoice Number</Label>
+            <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
+          </div>
+          <div className="space-y-1.5"><Label>Company</Label>
+            <Select value={companyId} onValueChange={(v) => { setCompanyId(v); setClientId(""); }}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5"><Label>Client</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
+              <SelectContent>
+                {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5"><Label>Invoice Date</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>

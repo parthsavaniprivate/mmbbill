@@ -231,9 +231,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>
-              <SelectItem value="partially_paid">Partial</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>

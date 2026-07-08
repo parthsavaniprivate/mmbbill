@@ -409,11 +409,6 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
 
                           return (
                             <div key={inv.id}>
-                              {/* Connector */}
-                              <div
-                                className="pointer-events-none absolute w-px bg-blue-400/30 shadow-[0_0_4px_rgba(96,165,250,0.4)]"
-                                style={{ left: monthCenter, top: 0, height: top }}
-                              />
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button

@@ -413,7 +413,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                             : addUnit(s, "day", Math.max(1, Math.round(spanDays / 30)));
                           const left = xFor(s);
                           const right = xFor(e < s ? addUnit(s, "day", 1) : e);
-                          const width = Math.max(170, right - left);
+                          const width = Math.max(96, right - left);
                           const total = Number(inv.total || 0);
                           const paid = Number(inv.amount_paid || 0);
                           const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
@@ -421,6 +421,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           const daysLeft = inv.due_date
                             ? Math.round((+new Date(inv.due_date) - +today) / 86400000)
                             : null;
+                          const lane = row.laneOf.get(inv.id) ?? 0;
+                          const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - 34) / 2;
 
                           return (
                             <Tooltip key={inv.id}>
@@ -433,22 +435,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     meta.grad, meta.ring,
                                     activeId === inv.id && "ring-2 ring-primary/70",
                                   )}
-                                  style={{ left, width, top: 10, height: 36 }}
+                                  style={{ left, width, top, height: 34 }}
                                 >
-                                  {/* progress fill overlay */}
                                   <span
-                                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/20 transition-[width] duration-500 ease-out group-hover/bar:bg-white/25"
+                                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"
                                     style={{ width: `${pct}%` }}
                                   />
-                                  <div className="relative z-10 flex w-full min-w-0 items-center gap-1.5 px-2">
+                                  <div className="relative z-10 flex w-full min-w-0 items-center px-2.5">
                                     <span className="min-w-0 flex-1 truncate text-[11px] font-semibold tracking-tight">
                                       {inv.invoice_number}
-                                    </span>
-                                    <span className="shrink-0 text-[11px] font-medium tabular-nums opacity-95">
-                                      {inr(total)}
-                                    </span>
-                                    <span className="shrink-0 rounded bg-black/30 px-1 py-0.5 text-[10px] font-semibold tabular-nums leading-none">
-                                      {pct}%
                                     </span>
                                   </div>
                                 </button>

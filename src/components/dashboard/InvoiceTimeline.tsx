@@ -183,9 +183,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       const dt = startOf(d, granularity);
       return (dt.getFullYear() - gStart.getFullYear()) * 12 + (dt.getMonth() - gStart.getMonth());
     };
-    const rows = [...groups.entries()].map(([cid, invs]) => {
+    // Include ALL clients (respecting company/client filters), even without invoices.
+    const allClients = clients.filter((c) => {
+      if (companyFilter !== "all" && c.company_id && c.company_id !== companyFilter) return false;
+      if (clientFilter !== "all" && c.id !== clientFilter) return false;
+      return true;
+    });
+    const rows = allClients.map((client) => {
+      const invs = groups.get(client.id) ?? [];
       const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
-      // Lane per month: within one client-row, each month has its own vertical stack.
       const monthOf = new Map<string, number>();
       const laneOf = new Map<string, number>();
       const perMonthCount = new Map<number, number>();
@@ -198,7 +204,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       }
       const laneCount = Math.max(1, ...Array.from(perMonthCount.values()));
       return {
-        client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
+        client: byId.get(client.id) ?? client,
         invoices: sorted,
         monthOf,
         laneOf,
@@ -208,7 +214,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return rows
       .filter((r) => !clientSearch || (r.client.client_name + " " + (r.client.business_name ?? "")).toLowerCase().includes(clientSearch.toLowerCase()))
       .sort((a, b) => a.client.client_name.localeCompare(b.client.client_name));
-  }, [filtered, clients, clientSearch]);
+  }, [filtered, clients, clientSearch, companyFilter, clientFilter]);
 
   const activeInvoice = activeId ? invoices.find((i) => i.id === activeId) ?? null : null;
   const activeClient = activeInvoice ? clients.find((c) => c.id === activeInvoice.client_id) ?? null : null;
@@ -358,8 +364,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           <div
                             key={idx}
                             className={cn(
-                              "absolute top-0 bottom-0 border-l-2",
-                              idx === 0 ? "border-transparent" : "border-border/80",
+                              "absolute top-0 bottom-0 border-l",
+                              idx === 0 ? "border-transparent" : "border-border/20",
                             )}
                             style={{ left: idx * tickWidth }}
                           />

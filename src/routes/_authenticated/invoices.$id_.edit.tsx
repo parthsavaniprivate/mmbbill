@@ -171,6 +171,8 @@ function EditInvoicePage() {
       qc.invalidateQueries({ queryKey: ["invoice", id] });
       qc.invalidateQueries({ queryKey: ["invoice-edit", id] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      // Invalidate every client-scoped cache so both the old and the new client refresh.
+      qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("client-") });
       navigate({ to: "/invoices/$id", params: { id } });
     },
     onError: (e: Error) => toast.error(e.message),

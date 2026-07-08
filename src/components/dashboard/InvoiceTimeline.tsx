@@ -243,15 +243,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     });
     const rows = allClients.map((client) => {
       const invs = groups.get(client.id) ?? [];
-      const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
+      const sorted = invs.sort((a, b) => +startFor(a) - +startFor(b));
       // Lane assignment based on month-span overlap.
       const startOf_ = new Map<string, number>();
       const endOf_ = new Map<string, number>();
       const laneOf = new Map<string, number>();
       const laneEnds: number[] = []; // last endMonth used per lane
       for (const inv of sorted) {
-        const sIdx = monthIndexOf(new Date(inv.invoice_date));
-        const eIdx = inv.due_date ? monthIndexOf(new Date(inv.due_date)) : sIdx;
+        const sIdx = monthIndexOf(startFor(inv));
+        const eIdx = monthIndexOf(endFor(inv));
         const s = Math.max(0, Math.min(ticks.length - 1, Math.min(sIdx, eIdx)));
         const e = Math.max(0, Math.min(ticks.length - 1, Math.max(sIdx, eIdx)));
         startOf_.set(inv.id, s);

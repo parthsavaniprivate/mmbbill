@@ -177,10 +177,29 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       arr.push(inv);
       groups.set(inv.client_id, arr);
     }
-    const rows = [...groups.entries()].map(([cid, invs]) => ({
-      client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
-      invoices: invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date)),
-    }));
+    const rows = [...groups.entries()].map(([cid, invs]) => {
+      const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
+      // Greedy lane assignment so overlapping invoices stack instead of overlap.
+      const laneEnds: number[] = [];
+      const laneOf = new Map<string, number>();
+      for (const inv of sorted) {
+        const s = +new Date(inv.invoice_date);
+        const e = inv.due_date ? +new Date(inv.due_date) : s + 86400000;
+        let placed = -1;
+        for (let li = 0; li < laneEnds.length; li++) {
+          if (laneEnds[li] <= s) { placed = li; break; }
+        }
+        if (placed === -1) { laneEnds.push(e); placed = laneEnds.length - 1; }
+        else { laneEnds[placed] = e; }
+        laneOf.set(inv.id, placed);
+      }
+      return {
+        client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
+        invoices: sorted,
+        laneOf,
+        laneCount: Math.max(1, laneEnds.length),
+      };
+    });
     return rows
       .filter((r) => !clientSearch || (r.client.client_name + " " + (r.client.business_name ?? "")).toLowerCase().includes(clientSearch.toLowerCase()))
       .sort((a, b) => a.client.client_name.localeCompare(b.client.client_name));
@@ -210,7 +229,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return { pendAmt, pendCount, overAmt, overCount, paidAmt, paidCount, rate };
   }, [filtered, today]);
 
-  const bodyHeight = Math.max(240, clientRows.length * ROW_H + 8);
+  const LANE_H = 42;
+  const ROW_PAD = 8;
+  const rowHeightOf = (laneCount: number) => Math.max(ROW_H, laneCount * LANE_H + ROW_PAD);
+  const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 
   return (
     <Card className="overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">
@@ -349,7 +371,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         rowIdx % 2 === 1 && "bg-muted/10",
                         "hover:bg-primary/[0.04]",
                       )}
-                      style={{ height: ROW_H }}
+                      style={{ height: rowHeightOf(row.laneCount) }}
                     >
                       <div
                         className="sticky left-0 z-10 flex items-center gap-3 border-r border-border/60 bg-card/90 px-4 backdrop-blur-md"
@@ -391,7 +413,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                             : addUnit(s, "day", Math.max(1, Math.round(spanDays / 30)));
                           const left = xFor(s);
                           const right = xFor(e < s ? addUnit(s, "day", 1) : e);
-                          const width = Math.max(170, right - left);
+                          const width = Math.max(96, right - left);
                           const total = Number(inv.total || 0);
                           const paid = Number(inv.amount_paid || 0);
                           const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
@@ -399,6 +421,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           const daysLeft = inv.due_date
                             ? Math.round((+new Date(inv.due_date) - +today) / 86400000)
                             : null;
+                          const lane = row.laneOf.get(inv.id) ?? 0;
+                          const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - 34) / 2;
 
                           return (
                             <Tooltip key={inv.id}>
@@ -411,22 +435,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     meta.grad, meta.ring,
                                     activeId === inv.id && "ring-2 ring-primary/70",
                                   )}
-                                  style={{ left, width, top: 10, height: 36 }}
+                                  style={{ left, width, top, height: 34 }}
                                 >
-                                  {/* progress fill overlay */}
                                   <span
-                                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/20 transition-[width] duration-500 ease-out group-hover/bar:bg-white/25"
+                                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"
                                     style={{ width: `${pct}%` }}
                                   />
-                                  <div className="relative z-10 flex w-full min-w-0 items-center gap-1.5 px-2">
+                                  <div className="relative z-10 flex w-full min-w-0 items-center px-2.5">
                                     <span className="min-w-0 flex-1 truncate text-[11px] font-semibold tracking-tight">
                                       {inv.invoice_number}
-                                    </span>
-                                    <span className="shrink-0 text-[11px] font-medium tabular-nums opacity-95">
-                                      {inr(total)}
-                                    </span>
-                                    <span className="shrink-0 rounded bg-black/30 px-1 py-0.5 text-[10px] font-semibold tabular-nums leading-none">
-                                      {pct}%
                                     </span>
                                   </div>
                                 </button>

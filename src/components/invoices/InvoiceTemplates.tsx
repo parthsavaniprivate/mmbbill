@@ -147,7 +147,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
   return (
     <div className="bg-white text-slate-800">
       {/* Purple header */}
-      <div className="p-8 text-white flex justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
+      <div className="p-5 sm:p-8 text-white flex flex-wrap gap-4 justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
         <div>
           <h1 className="text-2xl font-extrabold uppercase tracking-wide">{heading}</h1>
           {co?.pan_number && <p className="text-xs mt-1 opacity-90">PAN: {co.pan_number}</p>}

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/invoices/new")({
   component: NewInvoicePage,
 });
 
-type Item = { description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string };
+type Item = { description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
 
 const fmtMonth = (s: string) => {
   const d = new Date(s);
@@ -103,7 +103,7 @@ function NewInvoicePage() {
           const q = Number(it.quantity || 0);
           const r = Number(it.rate || 0);
           const fmtFull = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-          const period = it.fromDate && it.toDate
+          const period = !it.oneTime && it.fromDate && it.toDate
             ? (it.fromDate.slice(0, 7) === it.toDate.slice(0, 7)
                 ? `\nFor ${fmtFull(it.fromDate)}`
                 : `\nFor ${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)}`)
@@ -169,11 +169,22 @@ function NewInvoicePage() {
               <div key={idx} className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-muted/30 p-4 space-y-3 shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item #{idx + 1}</span>
-                  {months > 0 && (
-                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                      {months} Month{months > 1 ? "s" : ""}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!it.oneTime && months > 0 && (
+                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                        {months} Month{months > 1 ? "s" : ""}
+                      </span>
+                    )}
+                    <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="rounded border-border"
+                        checked={!!it.oneTime}
+                        onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, oneTime: e.target.checked, fromDate: e.target.checked ? undefined : x.fromDate, toDate: e.target.checked ? undefined : x.toDate, quantity: e.target.checked ? 1 : x.quantity } : x))}
+                      />
+                      One-time
+                    </label>
+                  </div>
                 </div>
 
                 {/* Row 1: Service / Description */}
@@ -188,24 +199,28 @@ function NewInvoicePage() {
 
                 {/* Row 2 */}
                 <div className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-3 space-y-1.5">
-                    <Label className="text-xs font-medium">From Month</Label>
-                    <Input
-                      type="month"
-                      className="[color-scheme:light] dark:[color-scheme:dark]"
-                      value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
-                      onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
-                    />
-                  </div>
-                  <div className="col-span-3 space-y-1.5">
-                    <Label className="text-xs font-medium">To Month</Label>
-                    <Input
-                      type="month"
-                      className="[color-scheme:light] dark:[color-scheme:dark]"
-                      value={it.toDate ? it.toDate.slice(0, 7) : ""}
-                      onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
-                    />
-                  </div>
+                  {!it.oneTime && (
+                    <>
+                      <div className="col-span-3 space-y-1.5">
+                        <Label className="text-xs font-medium">From Month</Label>
+                        <Input
+                          type="month"
+                          className="[color-scheme:light] dark:[color-scheme:dark]"
+                          value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
+                          onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
+                        />
+                      </div>
+                      <div className="col-span-3 space-y-1.5">
+                        <Label className="text-xs font-medium">To Month</Label>
+                        <Input
+                          type="month"
+                          className="[color-scheme:light] dark:[color-scheme:dark]"
+                          value={it.toDate ? it.toDate.slice(0, 7) : ""}
+                          onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="col-span-1 space-y-1.5">
                     <Label className="text-xs font-medium">Qty</Label>
                     <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />

@@ -47,7 +47,7 @@ function NewInvoicePage() {
   const [gstRate, setGstRate] = useState("18");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days.");
-  const [items, setItems] = useState<Item[]>([{ description: "", quantity: 1, rate: 0 }]);
+  const [items, setItems] = useState<Item[]>([{ description: "", quantity: "", rate: "" }]);
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 

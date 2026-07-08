@@ -21,7 +21,17 @@ export const Route = createFileRoute("/_authenticated/invoices/new")({
   component: NewInvoicePage,
 });
 
-type Item = { description: string; quantity: number; rate: number };
+type Item = { description: string; quantity: number; rate: number; fromDate?: string; toDate?: string };
+
+const fmtMonth = (s: string) => {
+  const d = new Date(s);
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+};
+const monthsInclusive = (from: string, to: string) => {
+  const a = new Date(from), b = new Date(to);
+  const m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) + 1;
+  return Math.max(1, m);
+};
 
 function NewInvoicePage() {
   const { client: presetClient } = Route.useSearch();

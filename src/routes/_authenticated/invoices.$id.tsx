@@ -62,7 +62,7 @@ function InvoiceDetail() {
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
-      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
         <Link to="/invoices" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Link>

@@ -195,7 +195,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Items */}
-      <div className="px-8 pb-2">
+      <div className="px-5 sm:px-8 pb-2">
         <div className="rounded-t-xl bg-slate-900 text-white px-5 py-3 flex justify-between text-sm">
           <span className="font-semibold">📄 Items &amp; Services</span>
           <span className="opacity-80 text-xs">{items.length} line item{items.length !== 1 ? "s" : ""}</span>

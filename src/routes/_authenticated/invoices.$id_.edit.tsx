@@ -133,6 +133,7 @@ function EditInvoicePage() {
         }),
       );
       if (iErr) throw iErr;
+      await supabase.rpc("recalc_invoice_totals", { _invoice_id: id });
     },
     onSuccess: () => {
       toast.success("Invoice updated");

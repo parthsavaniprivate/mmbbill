@@ -182,24 +182,41 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const endFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.to ?? (inv.due_date ? new Date(inv.due_date) : addUnit(new Date(inv.invoice_date), "day", 1));
 
 
-  // Monthly Gantt scale: Indian Fiscal Year (April → March). Always show
-  // all 12 months of the FY that contains the latest invoice (or today).
+  // Monthly Gantt scale. If parent supplies from/to (dashboard filter), honor
+  // that range. Otherwise span from the earliest invoice/item start to the
+  // latest end so older invoices (e.g. first-item period in 2025) always show.
   const granularity: Granularity = "month";
   const now = new Date();
-  const invoiceDates = invoices.map((i) => +new Date(i.invoice_date)).filter((n) => !Number.isNaN(n));
-  const lastInvoice = invoiceDates.length ? new Date(Math.max(...invoiceDates)) : now;
-  const anchor = lastInvoice > now ? lastInvoice : now;
-  const fyStartYear = anchor.getMonth() >= 3 ? anchor.getFullYear() : anchor.getFullYear() - 1;
-  const gStart = new Date(fyStartYear, 3, 1); // April 1
-  const monthCount = 12;
-  const gEnd = new Date(fyStartYear + 1, 2, 1); // March 1 next year
-  void gEnd;
+
+  const allStarts: number[] = [];
+  const allEnds: number[] = [];
+  for (const inv of invoices) {
+    const s = periodByInvoice.get(inv.id)?.from ?? new Date(inv.invoice_date);
+    const e = periodByInvoice.get(inv.id)?.to
+      ?? (inv.due_date ? new Date(inv.due_date) : new Date(inv.invoice_date));
+    if (!Number.isNaN(+s)) allStarts.push(+s);
+    if (!Number.isNaN(+e)) allEnds.push(+e);
+  }
+  const earliest = allStarts.length ? new Date(Math.min(...allStarts)) : now;
+  const latest = allEnds.length ? new Date(Math.max(...allEnds)) : now;
+
+  const rangeStart = _from ?? earliest;
+  const rangeEnd = to ?? latest;
+
+  const gStart = startOf(rangeStart, "month");
+  const endMonth = startOf(rangeEnd, "month");
+  const monthCount = Math.max(
+    1,
+    (endMonth.getFullYear() - gStart.getFullYear()) * 12
+      + (endMonth.getMonth() - gStart.getMonth()) + 1,
+  );
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
   const tickWidth = 110;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
   const spanDays = Math.max(1, Math.round(totalMs / 86400000));
+
 
   const xFor = (d: Date) => {
     const ms = Math.max(0, +d - +gStart);

@@ -177,10 +177,29 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       arr.push(inv);
       groups.set(inv.client_id, arr);
     }
-    const rows = [...groups.entries()].map(([cid, invs]) => ({
-      client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
-      invoices: invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date)),
-    }));
+    const rows = [...groups.entries()].map(([cid, invs]) => {
+      const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
+      // Greedy lane assignment so overlapping invoices stack instead of overlap.
+      const laneEnds: number[] = [];
+      const laneOf = new Map<string, number>();
+      for (const inv of sorted) {
+        const s = +new Date(inv.invoice_date);
+        const e = inv.due_date ? +new Date(inv.due_date) : s + 86400000;
+        let placed = -1;
+        for (let li = 0; li < laneEnds.length; li++) {
+          if (laneEnds[li] <= s) { placed = li; break; }
+        }
+        if (placed === -1) { laneEnds.push(e); placed = laneEnds.length - 1; }
+        else { laneEnds[placed] = e; }
+        laneOf.set(inv.id, placed);
+      }
+      return {
+        client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
+        invoices: sorted,
+        laneOf,
+        laneCount: Math.max(1, laneEnds.length),
+      };
+    });
     return rows
       .filter((r) => !clientSearch || (r.client.client_name + " " + (r.client.business_name ?? "")).toLowerCase().includes(clientSearch.toLowerCase()))
       .sort((a, b) => a.client.client_name.localeCompare(b.client.client_name));

@@ -67,7 +67,7 @@ function NewInvoicePage() {
   const filteredClients = clients.filter((c) => c.company_id === companyId);
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
+    const subtotal = items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.rate || 0), 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
     const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
     return { subtotal, gstAmount, total: afterDisc + gstAmount };

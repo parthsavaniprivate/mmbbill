@@ -425,7 +425,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                       meta.grad, meta.ring,
                                       isActive && "shadow-[0_0_0_2px_rgba(96,165,250,0.9),0_10px_30px_-6px_rgba(96,165,250,0.55)] ring-blue-400/70 brightness-110",
                                     )}
-                                    style={{ left, top, width: BAR_W, height: BAR_H, borderRadius: 18 }}
+                                    style={{ left, top, width, height: BAR_H, borderRadius: 18 }}
                                   >
                                     <span
                                       className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"

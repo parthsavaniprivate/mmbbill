@@ -132,7 +132,7 @@ function EditInvoicePage() {
       const { error: uErr } = await supabase.from("invoices").update({
         invoice_number: invoiceNumber.trim(),
         company_id: companyId,
-        client_id: clientId || undefined,
+        client_id: clientId || null,
         invoice_date: date,
         due_date: dueDate || null,
         discount: Number(discount || 0),

@@ -239,9 +239,9 @@
 @utility it-bar {
   animation: it-enter 300ms ease-out both, it-float 4s ease-in-out 300ms infinite;
   will-change: transform;
-}
-@utility it-bar:hover {
-  animation-play-state: paused;
+  &:hover {
+    animation-play-state: paused;
+  }
 }
 @utility it-today {
   animation: it-today-glow 2.4s ease-in-out infinite;

@@ -520,8 +520,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
               )}
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

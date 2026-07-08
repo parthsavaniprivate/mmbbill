@@ -302,7 +302,9 @@ function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Financial Overview</h1>
           <p className="text-muted-foreground">
-            {isAll ? "All companies" : companies.find((c) => c.id === selected)?.name}
+            <span className="font-sf-display text-foreground">
+              {isAll ? "All companies" : companies.find((c) => c.id === selected)?.name}
+            </span>
             {from && to ? ` · ${formatDate(from)} – ${formatDate(to)}` : ""}
           </p>
         </div>

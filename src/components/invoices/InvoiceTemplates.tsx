@@ -55,7 +55,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
           <div className="w-28 h-28 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
         )}
         <div className="flex-1">
-          <h2 className="text-3xl font-extrabold uppercase tracking-wide">{co?.name}</h2>
+          <h2 className="font-sf-display text-3xl uppercase tracking-wide">{co?.name}</h2>
           {co?.address && <p className="text-sm mt-1 text-gray-700 whitespace-pre-line">{co.address}</p>}
           {co?.phone && <p className="text-sm mt-1"><span className="font-semibold">Mobile:</span> {co.phone}</p>}
         </div>
@@ -149,7 +149,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       {/* Purple header */}
       <div className="p-5 sm:p-8 text-white flex flex-wrap gap-4 justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
         <div>
-          <h1 className="text-2xl font-extrabold uppercase tracking-wide">{heading}</h1>
+          <h1 className="font-sf-display text-2xl uppercase tracking-wide">{heading}</h1>
           {co?.pan_number && <p className="text-xs mt-1 opacity-90">PAN: {co.pan_number}</p>}
           {co?.address && <p className="text-xs mt-2 opacity-90">📍 {co.address}</p>}
           {co?.phone && <p className="text-xs mt-1 opacity-90">📞 {co.phone}</p>}

@@ -50,9 +50,9 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
       </div>
       <div className="flex items-center gap-6 pt-2">
         {co?.logo_url ? (
-          <img src={co.logo_url} alt={co.name} className="w-28 h-28 object-contain shrink-0" />
+          <img src={co.logo_url} alt={co.name} className="w-40 h-40 object-contain shrink-0" />
         ) : (
-          <div className="w-28 h-28 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
+          <div className="w-40 h-40 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
         )}
         <div className="flex-1">
           <h2 className="font-sf-display text-3xl uppercase tracking-wide">{co?.name}</h2>

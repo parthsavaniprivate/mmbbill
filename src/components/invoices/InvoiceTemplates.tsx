@@ -43,7 +43,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
   const { invoice: inv, items, company: co, client: cl } = data;
   const pending = Number(inv.total) - Number(inv.amount_paid);
   return (
-    <div className="p-10 space-y-6 bg-white text-black">
+    <div className="p-5 sm:p-8 md:p-10 space-y-5 sm:space-y-6 bg-white text-black">
       <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
         <span className="uppercase">{inv.invoice_type === "proforma" ? "Proforma Invoice" : "Bill of Supply"}</span>
         <span className="border border-gray-300 text-gray-500 px-2 py-0.5 rounded uppercase">Original for Recipient</span>

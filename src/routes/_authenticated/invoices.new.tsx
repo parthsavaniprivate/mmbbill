@@ -191,12 +191,12 @@ function NewInvoicePage() {
                 </Popover>
               </div>
               <div className="col-span-2 space-y-1"><Label className="text-xs">Months / Qty</Label>
-                <Input type="number" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))} />
+                <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
               </div>
               <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
-                <Input type="number" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: Number(e.target.value) } : x))} />
+                <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
               </div>
-              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(it.quantity * it.rate)}</div>
+              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(Number(it.quantity || 0) * Number(it.rate || 0))}</div>
               <div className="col-span-1">
                 <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                   <Trash2 className="w-4 h-4" />
@@ -205,7 +205,7 @@ function NewInvoicePage() {
             </div>
             );
           })}
-          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: 1, rate: 0 }])}>
+          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: "", rate: "" }])}>
             <Plus className="w-4 h-4" />Add Item
           </Button>
         </CardContent>

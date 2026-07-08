@@ -423,7 +423,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                             : addUnit(s, "day", Math.max(1, Math.round(spanDays / 30)));
                           const left = xFor(s);
                           const right = xFor(e < s ? addUnit(s, "day", 1) : e);
-                          const width = Math.max(90, right - left);
+                          const width = Math.max(170, right - left);
                           const total = Number(inv.total || 0);
                           const paid = Number(inv.amount_paid || 0);
                           const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
@@ -450,14 +450,14 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     className="pointer-events-none absolute inset-y-0 left-0 bg-white/20 transition-[width] duration-500 ease-out group-hover/bar:bg-white/25"
                                     style={{ width: `${pct}%` }}
                                   />
-                                  <div className="relative z-10 flex w-full items-center gap-2 px-2.5">
-                                    <span className="truncate text-[11px] font-semibold tracking-tight">
+                                  <div className="relative z-10 flex w-full min-w-0 items-center gap-1.5 px-2">
+                                    <span className="min-w-0 flex-1 truncate text-[11px] font-semibold tracking-tight">
                                       {inv.invoice_number}
                                     </span>
-                                    <span className="ml-auto shrink-0 text-[11px] font-medium opacity-95">
+                                    <span className="shrink-0 text-[11px] font-medium tabular-nums opacity-95">
                                       {inr(total)}
                                     </span>
-                                    <span className="shrink-0 rounded-md bg-black/25 px-1.5 py-0.5 text-[10px] font-semibold">
+                                    <span className="shrink-0 rounded bg-black/30 px-1 py-0.5 text-[10px] font-semibold tabular-nums leading-none">
                                       {pct}%
                                     </span>
                                   </div>

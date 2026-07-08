@@ -215,10 +215,17 @@ function NewInvoicePage() {
                     <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
                   <div className="col-span-2 space-y-1.5">
-                    <Label className="text-xs font-medium">Amount</Label>
-                    <div className="h-9 flex items-center justify-end px-3 rounded-md bg-primary/5 border border-primary/20 text-sm font-bold text-primary">
-                      {inr(Number(it.quantity || 0) * Number(it.rate || 0))}
-                    </div>
+                    <Label className="text-xs font-medium">Total (÷ months)</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={Number(it.quantity || 0) * Number(it.rate || 0) || ""}
+                      onChange={(e) => {
+                        const total = Number(e.target.value || 0);
+                        const q = Number(it.quantity || 0) || 1;
+                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: x.quantity || q, rate: q ? +(total / q).toFixed(2) : total } : x));
+                      }}
+                    />
                   </div>
                   <div className="col-span-1 flex justify-end">
                     <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>

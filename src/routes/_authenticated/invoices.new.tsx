@@ -103,8 +103,11 @@ function NewInvoicePage() {
         userItems.map((it) => {
           const q = Number(it.quantity || 0);
           const r = Number(it.rate || 0);
+          const period = it.fromDate && it.toDate
+            ? `\n${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)} (${monthsInclusive(it.fromDate, it.toDate)} Months)`
+            : "";
           return {
-            invoice_id: inv.id, description: it.description,
+            invoice_id: inv.id, description: it.description + period,
             quantity: q, rate: r,
             amount: +(q * r).toFixed(2), position: pos++,
           };
@@ -155,54 +158,73 @@ function NewInvoicePage() {
               setItems(items.map((x, i) => {
                 if (i !== idx) return x;
                 const next = { ...x, fromDate: from, toDate: to };
-                if (from && to) {
-                  next.quantity = monthsInclusive(from, to);
-                  const suffix = ` (${fmtMonth(from)} - ${fmtMonth(to)})`;
-                  const base = x.description.replace(/\s*\([A-Za-z]{3}\s\d{4}\s-\s[A-Za-z]{3}\s\d{4}\)\s*$/, "");
-                  next.description = base + suffix;
-                }
+                if (from && to) next.quantity = monthsInclusive(from, to);
                 return next;
               }));
             };
+            const months = it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
             return (
-            <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-6 space-y-1"><Label className="text-xs">Description</Label>
-                <Input value={it.description} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal h-8", !it.fromDate && "text-muted-foreground")}>
-                      <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                      {it.fromDate && it.toDate ? `${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)} (${monthsInclusive(it.fromDate, it.toDate)} mo)` : "Pick billing period"}
+              <div key={idx} className="rounded-lg border p-3 space-y-2 bg-muted/20">
+                {/* Row 1: Service / Description */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Service / Description</Label>
+                  <Input
+                    placeholder="e.g. Social Media Management"
+                    value={it.description}
+                    onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                  />
+                </div>
+
+                {/* Row 2: Month range + total + qty + rate + amount + delete */}
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-4 space-y-1">
+                    <Label className="text-xs">Billing Period</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal h-9", !it.fromDate && "text-muted-foreground")}>
+                          <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                          {it.fromDate && it.toDate ? `${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)}` : "Pick months"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3 space-y-2" align="start">
+                        <div className="space-y-1"><Label className="text-xs">From month</Label>
+                          <Input type="month" value={it.fromDate ? it.fromDate.slice(0, 7) : ""} onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)} />
+                        </div>
+                        <div className="space-y-1"><Label className="text-xs">To month</Label>
+                          <Input type="month" value={it.toDate ? it.toDate.slice(0, 7) : ""} onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)} />
+                        </div>
+                        {months > 0 && (
+                          <div className="text-xs text-muted-foreground pt-1 border-t">
+                            Total: {months} month{months > 1 ? "s" : ""}
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <Label className="text-xs">Total Months</Label>
+                    <div className="h-9 flex items-center px-3 rounded-md border bg-background text-sm font-medium">
+                      {months > 0 ? `${months} Month${months > 1 ? "s" : ""}` : "—"}
+                    </div>
+                  </div>
+                  <div className="col-span-1 space-y-1"><Label className="text-xs">Qty</Label>
+                    <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
+                  </div>
+                  <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
+                    <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
+                  </div>
+                  <div className="col-span-2 space-y-1"><Label className="text-xs">Amount</Label>
+                    <div className="h-9 flex items-center justify-end px-3 text-sm font-semibold">
+                      {inr(Number(it.quantity || 0) * Number(it.rate || 0))}
+                    </div>
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3 space-y-2" align="start">
-                    <div className="space-y-1"><Label className="text-xs">From month</Label>
-                      <Input type="month" value={it.fromDate ? it.fromDate.slice(0, 7) : ""} onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)} />
-                    </div>
-                    <div className="space-y-1"><Label className="text-xs">To month</Label>
-                      <Input type="month" value={it.toDate ? it.toDate.slice(0, 7) : ""} onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)} />
-                    </div>
-                    {it.fromDate && it.toDate && (
-                      <div className="text-xs text-muted-foreground pt-1 border-t">
-                        {monthsInclusive(it.fromDate, it.toDate)} months
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                </div>
               </div>
-              <div className="col-span-2 space-y-1"><Label className="text-xs">Months / Qty</Label>
-                <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
-              </div>
-              <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
-                <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
-              </div>
-              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(Number(it.quantity || 0) * Number(it.rate || 0))}</div>
-              <div className="col-span-1">
-                <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
             );
           })}
           <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: "", rate: "" }])}>

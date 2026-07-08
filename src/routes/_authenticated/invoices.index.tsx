@@ -21,7 +21,20 @@ import { toast } from "sonner";
 type Status = Database["public"]["Enums"]["invoice_status"];
 type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };
 
-export const Route = createFileRoute("/_authenticated/invoices/")({ component: InvoicesPage });
+export const Route = createFileRoute("/_authenticated/invoices/")({
+  component: InvoicesPage,
+  loader: ({ context }) => {
+    context.queryClient.prefetchQuery({
+      queryKey: ["invoices"],
+      queryFn: async () => {
+        const { data } = await supabase.from("invoices")
+          .select("*, clients(client_name, business_name, whatsapp, mobile)")
+          .order("invoice_date", { ascending: false });
+        return data ?? [];
+      },
+    });
+  },
+});
 
 const STATUS_COLORS: Record<Status, string> = {
   draft: "bg-muted text-muted-foreground",

@@ -103,8 +103,11 @@ function NewInvoicePage() {
         userItems.map((it) => {
           const q = Number(it.quantity || 0);
           const r = Number(it.rate || 0);
+          const period = it.fromDate && it.toDate
+            ? `\n${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)} (${monthsInclusive(it.fromDate, it.toDate)} Months)`
+            : "";
           return {
-            invoice_id: inv.id, description: it.description,
+            invoice_id: inv.id, description: it.description + period,
             quantity: q, rate: r,
             amount: +(q * r).toFixed(2), position: pos++,
           };

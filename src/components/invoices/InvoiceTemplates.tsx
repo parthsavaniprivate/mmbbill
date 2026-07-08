@@ -260,7 +260,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {(inv.notes?.trim() || inv.terms?.trim()) && (
-        <div className="px-8 pb-4 text-sm space-y-2">
+        <div className="px-5 sm:px-8 pb-4 text-sm space-y-2">
           {inv.notes?.trim() && <div><p className="font-bold">Notes</p><p className="text-slate-600 whitespace-pre-line">{inv.notes}</p></div>}
           {inv.terms?.trim() && <div><p className="font-bold">Terms &amp; Conditions</p><p className="text-slate-600 whitespace-pre-line">{inv.terms}</p></div>}
         </div>

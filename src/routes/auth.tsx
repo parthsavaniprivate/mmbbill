@@ -10,10 +10,21 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
+  component: AuthPage,
+});
+
+function isSafeRelative(path: string | undefined): path is string {
+  return !!path && path.startsWith("/") && !path.startsWith("//");
+}
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const target = isSafeRelative(next) ? next : "/dashboard";
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,8 +32,11 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: "/dashboard", replace: true });
-  }, [user, navigate]);
+    if (user) {
+      if (isSafeRelative(next)) window.location.replace(next);
+      else navigate({ to: "/dashboard", replace: true });
+    }
+  }, [user, navigate, next]);
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +45,8 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
-    navigate({ to: "/dashboard", replace: true });
+    if (isSafeRelative(next)) window.location.replace(next);
+    else navigate({ to: target as "/dashboard", replace: true });
   };
 
   const onReset = async (e: React.FormEvent) => {

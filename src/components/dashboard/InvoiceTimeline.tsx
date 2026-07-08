@@ -154,6 +154,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
       if (clientFilter !== "all" && i.client_id !== clientFilter) return false;
       if (invoiceSearch && !i.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase())) return false;
       const eff = effectiveStatus(i, today);
+      if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
       // Range: keep invoices that overlap the window
       const s = new Date(i.invoice_date);

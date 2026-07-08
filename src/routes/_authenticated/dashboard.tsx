@@ -474,6 +474,18 @@ function Dashboard() {
 
 
 
+      {/* Invoice Timeline (primary widget) */}
+      <InvoiceTimeline
+        invoices={invoices}
+        clients={data.clients}
+        companies={data.companies}
+        payments={data.payments as unknown as { id: string; invoice_id: string; amount: number; payment_date: string; method: string | null }[]}
+        from={from}
+        to={to}
+        selectedCompany={selected}
+        isAll={isAll}
+      />
+
       {/* Analytics chart */}
       <Card className="shadow-card">
 

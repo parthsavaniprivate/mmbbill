@@ -371,7 +371,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         rowIdx % 2 === 1 && "bg-muted/10",
                         "hover:bg-primary/[0.04]",
                       )}
-                      style={{ height: ROW_H }}
+                      style={{ height: rowHeightOf(row.laneCount) }}
                     >
                       <div
                         className="sticky left-0 z-10 flex items-center gap-3 border-r border-border/60 bg-card/90 px-4 backdrop-blur-md"

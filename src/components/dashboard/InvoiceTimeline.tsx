@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,31 @@ function tickLabel(d: Date, g: Granularity): string {
   if (g === "week") return `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("en-IN", { month: "short" })}`;
   return d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
 }
+
+const MONTH_MAP: Record<string, number> = {
+  jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+  may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+  sep: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+};
+function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Date } | null {
+  if (!desc) return null;
+  const rest = desc.split("\n").slice(1).join(" ").trim();
+  const range = rest.match(/For\s+(\w+)\s+(\d{4})\s*[-\u2013]\s*(\w+)\s+(\d{4})/i);
+  if (range) {
+    const fm = MONTH_MAP[range[1].toLowerCase()]; const tm = MONTH_MAP[range[3].toLowerCase()];
+    if (fm === undefined || tm === undefined) return null;
+    const from = new Date(+range[2], fm, 1);
+    const to = new Date(+range[4], tm + 1, 0); // last day of month
+    return { from, to };
+  }
+  const single = rest.match(/For\s+(\w+)\s+(\d{4})/i);
+  if (single) {
+    const m = MONTH_MAP[single[1].toLowerCase()];
+    if (m === undefined) return null;
+    const y = +single[2];
+    return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0) };
+  }
+  return null;
 
 const ROW_H = 56;
 const CLIENT_COL = 240;

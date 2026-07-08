@@ -46,7 +46,7 @@ function ClientsPage() {
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("clients").select("*").order("client_name", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -61,7 +61,9 @@ function ClientsPage() {
         .toLowerCase().includes(s);
     }
     return true;
-  });
+  }).sort((a, b) =>
+    (a.business_name || a.client_name || "").localeCompare(b.business_name || b.client_name || "", undefined, { sensitivity: "base" })
+  );
 
   return (
     <div className="space-y-4">

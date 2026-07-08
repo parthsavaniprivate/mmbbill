@@ -157,6 +157,31 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     };
   }, [qc]);
 
+  // First-item period per invoice (drives bar start/end)
+  const invoiceIds = useMemo(() => invoices.map((i) => i.id), [invoices]);
+  const { data: firstItems = [] } = useQuery({
+    queryKey: ["timeline-first-items", invoiceIds.length, invoiceIds[0] ?? ""],
+    enabled: invoiceIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("invoice_items")
+        .select("invoice_id, description, position")
+        .in("invoice_id", invoiceIds)
+        .eq("position", 0);
+      return data ?? [];
+    },
+  });
+  const periodByInvoice = useMemo(() => {
+    const m = new Map<string, { from: Date; to: Date }>();
+    for (const it of firstItems) {
+      const p = parseItemPeriod(it.description);
+      if (p) m.set(it.invoice_id, p);
+    }
+    return m;
+  }, [firstItems]);
+  const startFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.from ?? new Date(inv.invoice_date);
+  const endFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.to ?? (inv.due_date ? new Date(inv.due_date) : addUnit(new Date(inv.invoice_date), "day", 1));
+
+
   // Monthly Gantt scale: Indian Fiscal Year (April → March). Always show
   // all 12 months of the FY that contains the latest invoice (or today).
   const granularity: Granularity = "month";
@@ -189,13 +214,13 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       const eff = effectiveStatus(i, today);
       if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
-      const s = new Date(i.invoice_date);
-      const e = i.due_date ? new Date(i.due_date) : addUnit(s, "day", 1);
+      const s = startFor(i);
+      const e = endFor(i);
       const winEnd = addUnit(gStart, granularity, ticks.length);
       if (e < gStart || s > winEnd) return false;
       return true;
     });
-  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length]);
+  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
 
   const clientRows = useMemo(() => {
     const byId = new Map<string, Client>();

@@ -394,10 +394,13 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           const daysLeft = inv.due_date
                             ? Math.round((+new Date(inv.due_date) - +today) / 86400000)
                             : null;
-                          const mi = row.monthOf.get(inv.id) ?? 0;
+                          const sMi = row.startOf.get(inv.id) ?? 0;
+                          const eMi = row.endOf.get(inv.id) ?? sMi;
                           const lane = row.laneOf.get(inv.id) ?? 0;
-                          const monthCenter = mi * tickWidth + tickWidth / 2;
-                          const left = monthCenter - BAR_W / 2;
+                          const pad = 6;
+                          const left = sMi * tickWidth + pad;
+                          const width = Math.max(48, (eMi - sMi + 1) * tickWidth - pad * 2);
+                          const monthCenter = left + width / 2;
                           const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - BAR_H) / 2;
                           const isActive = activeId === inv.id;
                           const label = inv.invoice_number.length > 14

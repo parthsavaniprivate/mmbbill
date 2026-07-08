@@ -100,11 +100,15 @@ function NewInvoicePage() {
 
       let pos = 0;
       const { error: itErr } = await supabase.from("invoice_items").insert(
-        userItems.map((it) => ({
-          invoice_id: inv.id, description: it.description,
-          quantity: it.quantity, rate: it.rate,
-          amount: +(it.quantity * it.rate).toFixed(2), position: pos++,
-        }))
+        userItems.map((it) => {
+          const q = Number(it.quantity || 0);
+          const r = Number(it.rate || 0);
+          return {
+            invoice_id: inv.id, description: it.description,
+            quantity: q, rate: r,
+            amount: +(q * r).toFixed(2), position: pos++,
+          };
+        })
       );
       if (itErr) throw itErr;
 

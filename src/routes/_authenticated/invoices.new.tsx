@@ -222,7 +222,7 @@ function NewInvoicePage() {
                     </>
                   )}
                   <div className="col-span-1 space-y-1.5">
-                    <Label className="text-xs font-medium">Qty</Label>
+                    <Label className="text-xs font-medium">{it.oneTime ? "Unit" : "Qty"}</Label>
                     <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
                   <div className="col-span-2 space-y-1.5">

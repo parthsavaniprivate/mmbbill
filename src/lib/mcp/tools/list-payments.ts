@@ -12,7 +12,8 @@ export default defineTool({
     limit: z.number().int().min(1).max(200).default(50),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ invoice_id, from_date, to_date, limit }) => {
+  handler: async ({ invoice_id, from_date, to_date, limit }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("payments")

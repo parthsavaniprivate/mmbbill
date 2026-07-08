@@ -10,7 +10,8 @@ export default defineTool({
     invoice_number: z.string().optional().describe("Human invoice number, e.g. MMB-26-0001."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ id, invoice_number }) => {
+  handler: async ({ id, invoice_number }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     if (!id && !invoice_number) {
       return { content: [{ type: "text", text: "Provide id or invoice_number." }], isError: true };
     }

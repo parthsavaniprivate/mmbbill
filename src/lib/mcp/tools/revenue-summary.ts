@@ -11,7 +11,8 @@ export default defineTool({
     to_date: z.string().optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ company_id, from_date, to_date }) => {
+  handler: async ({ company_id, from_date, to_date }, ctx) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin.from("invoices").select("total,amount_paid,status,company_id,invoice_date");
     if (company_id) q = q.eq("company_id", company_id);

@@ -191,9 +191,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
   const legend: Array<{ key: string; label: string; cls: string }> = [
     { key: "pending", label: "Pending", cls: "bg-amber-500" },
     { key: "overdue", label: "Overdue", cls: "bg-red-500" },
-    { key: "partially_paid", label: "Partial", cls: "bg-blue-500" },
     { key: "paid", label: "Paid", cls: "bg-emerald-500" },
-    { key: "cancelled", label: "Cancelled", cls: "bg-zinc-500" },
   ];
 
   const bodyHeight = Math.max(240, clientRows.length * ROW_H + 8);

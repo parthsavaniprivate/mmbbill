@@ -136,15 +136,16 @@ function ClientsPage() {
                       {!c.mobile && !c.email && <div className="text-xs italic">No contact info</div>}
                     </div>
 
-                    {c.whatsapp && (
-                      <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="pt-1">
+                    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="pt-1 flex items-center gap-2">
+                      {c.whatsapp && (
                         <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex">
                           <Button size="sm" variant="outline" className="gap-1.5 h-8">
                             <MessageCircle className="w-3.5 h-3.5 text-success" /> WhatsApp
                           </Button>
                         </a>
-                      </div>
-                    )}
+                      )}
+                      <DeleteClientButton client={c} allClients={clients} />
+                    </div>
                   </CardContent>
                 </Card>
               </Link>

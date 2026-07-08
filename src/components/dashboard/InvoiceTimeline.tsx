@@ -229,7 +229,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return { pendAmt, pendCount, overAmt, overCount, paidAmt, paidCount, rate };
   }, [filtered, today]);
 
-  const bodyHeight = Math.max(240, clientRows.length * ROW_H + 8);
+  const LANE_H = 42;
+  const ROW_PAD = 8;
+  const rowHeightOf = (laneCount: number) => Math.max(ROW_H, laneCount * LANE_H + ROW_PAD);
+  const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 
   return (
     <Card className="overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">

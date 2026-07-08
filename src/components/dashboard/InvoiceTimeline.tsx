@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,33 @@ function tickLabel(d: Date, g: Granularity): string {
   return d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
 }
 
+const MONTH_MAP: Record<string, number> = {
+  jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+  may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+  sep: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+};
+function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Date } | null {
+  if (!desc) return null;
+  const rest = desc.split("\n").slice(1).join(" ").trim();
+  const range = rest.match(/For\s+(\w+)\s+(\d{4})\s*[-\u2013]\s*(\w+)\s+(\d{4})/i);
+  if (range) {
+    const fm = MONTH_MAP[range[1].toLowerCase()]; const tm = MONTH_MAP[range[3].toLowerCase()];
+    if (fm === undefined || tm === undefined) return null;
+    const from = new Date(+range[2], fm, 1);
+    const to = new Date(+range[4], tm + 1, 0); // last day of month
+    return { from, to };
+  }
+  const single = rest.match(/For\s+(\w+)\s+(\d{4})/i);
+  if (single) {
+    const m = MONTH_MAP[single[1].toLowerCase()];
+    if (m === undefined) return null;
+    const y = +single[2];
+    return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0) };
+  }
+  return null;
+}
+
+
 const ROW_H = 56;
 const CLIENT_COL = 240;
 
@@ -130,6 +157,31 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     };
   }, [qc]);
 
+  // First-item period per invoice (drives bar start/end)
+  const invoiceIds = useMemo(() => invoices.map((i) => i.id), [invoices]);
+  const { data: firstItems = [] } = useQuery({
+    queryKey: ["timeline-first-items", invoiceIds.length, invoiceIds[0] ?? ""],
+    enabled: invoiceIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("invoice_items")
+        .select("invoice_id, description, position")
+        .in("invoice_id", invoiceIds)
+        .eq("position", 0);
+      return data ?? [];
+    },
+  });
+  const periodByInvoice = useMemo(() => {
+    const m = new Map<string, { from: Date; to: Date }>();
+    for (const it of firstItems) {
+      const p = parseItemPeriod(it.description);
+      if (p) m.set(it.invoice_id, p);
+    }
+    return m;
+  }, [firstItems]);
+  const startFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.from ?? new Date(inv.invoice_date);
+  const endFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.to ?? (inv.due_date ? new Date(inv.due_date) : addUnit(new Date(inv.invoice_date), "day", 1));
+
+
   // Monthly Gantt scale: Indian Fiscal Year (April → March). Always show
   // all 12 months of the FY that contains the latest invoice (or today).
   const granularity: Granularity = "month";
@@ -162,13 +214,13 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       const eff = effectiveStatus(i, today);
       if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
-      const s = new Date(i.invoice_date);
-      const e = i.due_date ? new Date(i.due_date) : addUnit(s, "day", 1);
+      const s = startFor(i);
+      const e = endFor(i);
       const winEnd = addUnit(gStart, granularity, ticks.length);
       if (e < gStart || s > winEnd) return false;
       return true;
     });
-  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length]);
+  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
 
   const clientRows = useMemo(() => {
     const byId = new Map<string, Client>();
@@ -191,15 +243,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     });
     const rows = allClients.map((client) => {
       const invs = groups.get(client.id) ?? [];
-      const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
+      const sorted = invs.sort((a, b) => +startFor(a) - +startFor(b));
       // Lane assignment based on month-span overlap.
       const startOf_ = new Map<string, number>();
       const endOf_ = new Map<string, number>();
       const laneOf = new Map<string, number>();
       const laneEnds: number[] = []; // last endMonth used per lane
       for (const inv of sorted) {
-        const sIdx = monthIndexOf(new Date(inv.invoice_date));
-        const eIdx = inv.due_date ? monthIndexOf(new Date(inv.due_date)) : sIdx;
+        const sIdx = monthIndexOf(startFor(inv));
+        const eIdx = monthIndexOf(endFor(inv));
         const s = Math.max(0, Math.min(ticks.length - 1, Math.min(sIdx, eIdx)));
         const e = Math.max(0, Math.min(ticks.length - 1, Math.max(sIdx, eIdx)));
         startOf_.set(inv.id, s);

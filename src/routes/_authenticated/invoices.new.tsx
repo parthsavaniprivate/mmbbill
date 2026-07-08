@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/invoices/new")({
   component: NewInvoicePage,
 });
 
-type Item = { description: string; quantity: number; rate: number; fromDate?: string; toDate?: string };
+type Item = { description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string };
 
 const fmtMonth = (s: string) => {
   const d = new Date(s);
@@ -47,7 +47,7 @@ function NewInvoicePage() {
   const [gstRate, setGstRate] = useState("18");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment due within 30 days.");
-  const [items, setItems] = useState<Item[]>([{ description: "", quantity: 1, rate: 0 }]);
+  const [items, setItems] = useState<Item[]>([{ description: "", quantity: "", rate: "" }]);
 
   useEffect(() => { if (!companyId && companies[0]) setCompanyId(companies[0].id); }, [companies, companyId]);
 
@@ -67,7 +67,7 @@ function NewInvoicePage() {
   const filteredClients = clients.filter((c) => c.company_id === companyId);
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + it.quantity * it.rate, 0);
+    const subtotal = items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.rate || 0), 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
     const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
     return { subtotal, gstAmount, total: afterDisc + gstAmount };
@@ -100,11 +100,15 @@ function NewInvoicePage() {
 
       let pos = 0;
       const { error: itErr } = await supabase.from("invoice_items").insert(
-        userItems.map((it) => ({
-          invoice_id: inv.id, description: it.description,
-          quantity: it.quantity, rate: it.rate,
-          amount: +(it.quantity * it.rate).toFixed(2), position: pos++,
-        }))
+        userItems.map((it) => {
+          const q = Number(it.quantity || 0);
+          const r = Number(it.rate || 0);
+          return {
+            invoice_id: inv.id, description: it.description,
+            quantity: q, rate: r,
+            amount: +(q * r).toFixed(2), position: pos++,
+          };
+        })
       );
       if (itErr) throw itErr;
 
@@ -187,12 +191,12 @@ function NewInvoicePage() {
                 </Popover>
               </div>
               <div className="col-span-2 space-y-1"><Label className="text-xs">Months / Qty</Label>
-                <Input type="number" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))} />
+                <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
               </div>
               <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
-                <Input type="number" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: Number(e.target.value) } : x))} />
+                <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
               </div>
-              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(it.quantity * it.rate)}</div>
+              <div className="col-span-1 text-right text-sm font-medium pb-2">{inr(Number(it.quantity || 0) * Number(it.rate || 0))}</div>
               <div className="col-span-1">
                 <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                   <Trash2 className="w-4 h-4" />
@@ -201,7 +205,7 @@ function NewInvoicePage() {
             </div>
             );
           })}
-          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: 1, rate: 0 }])}>
+          <Button variant="outline" size="sm" onClick={() => setItems([...items, { description: "", quantity: "", rate: "" }])}>
             <Plus className="w-4 h-4" />Add Item
           </Button>
         </CardContent>

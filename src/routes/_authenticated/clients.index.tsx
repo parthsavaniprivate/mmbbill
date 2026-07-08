@@ -46,7 +46,7 @@ function ClientsPage() {
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("clients").select("*").order("client_name", { ascending: true });
       if (error) throw error;
       return data;
     },

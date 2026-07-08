@@ -88,7 +88,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
               <div className="uppercase">{main}</div>
               {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
             </div>
-            <div className="col-span-2 text-right">{it.quantity} UOM</div>
+            <div className="col-span-2 text-right">{it.quantity} {sub ? (Number(it.quantity) === 1 ? "Month" : "Months") : (Number(it.quantity) === 1 ? "Unit" : "Units")}</div>
             <div className="col-span-2 text-right">{Number(it.rate).toLocaleString("en-IN")}</div>
             <div className="col-span-2 text-right">{Number(it.amount).toLocaleString("en-IN")}</div>
           </div>

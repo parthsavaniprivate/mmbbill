@@ -192,21 +192,29 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     const rows = allClients.map((client) => {
       const invs = groups.get(client.id) ?? [];
       const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
-      const monthOf = new Map<string, number>();
+      // Lane assignment based on month-span overlap.
+      const startOf_ = new Map<string, number>();
+      const endOf_ = new Map<string, number>();
       const laneOf = new Map<string, number>();
-      const perMonthCount = new Map<number, number>();
+      const laneEnds: number[] = []; // last endMonth used per lane
       for (const inv of sorted) {
-        const mi = Math.max(0, Math.min(ticks.length - 1, monthIndexOf(new Date(inv.invoice_date))));
-        const lane = perMonthCount.get(mi) ?? 0;
-        perMonthCount.set(mi, lane + 1);
-        monthOf.set(inv.id, mi);
+        const sIdx = monthIndexOf(new Date(inv.invoice_date));
+        const eIdx = inv.due_date ? monthIndexOf(new Date(inv.due_date)) : sIdx;
+        const s = Math.max(0, Math.min(ticks.length - 1, Math.min(sIdx, eIdx)));
+        const e = Math.max(0, Math.min(ticks.length - 1, Math.max(sIdx, eIdx)));
+        startOf_.set(inv.id, s);
+        endOf_.set(inv.id, e);
+        let lane = laneEnds.findIndex((last) => last < s);
+        if (lane === -1) { lane = laneEnds.length; laneEnds.push(e); }
+        else laneEnds[lane] = e;
         laneOf.set(inv.id, lane);
       }
-      const laneCount = Math.max(1, ...Array.from(perMonthCount.values()));
+      const laneCount = Math.max(1, laneEnds.length);
       return {
         client: byId.get(client.id) ?? client,
         invoices: sorted,
-        monthOf,
+        startOf: startOf_,
+        endOf: endOf_,
         laneOf,
         laneCount,
       };

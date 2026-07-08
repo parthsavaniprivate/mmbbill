@@ -163,10 +163,19 @@ function NewInvoicePage() {
             };
             const months = it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
             return (
-              <div key={idx} className="rounded-lg border p-3 space-y-2 bg-muted/20">
+              <div key={idx} className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-muted/30 p-4 space-y-3 shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item #{idx + 1}</span>
+                  {months > 0 && (
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                      {months} Month{months > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+
                 {/* Row 1: Service / Description */}
-                <div className="space-y-1">
-                  <Label className="text-xs">Service / Description</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Service / Description</Label>
                   <Input
                     placeholder="e.g. Social Media Management"
                     value={it.description}
@@ -174,43 +183,42 @@ function NewInvoicePage() {
                   />
                 </div>
 
-                {/* Row 2: Month range + total + qty + rate + amount + delete */}
+                {/* Row 2 */}
                 <div className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-3 space-y-1">
-                    <Label className="text-xs">From Month</Label>
+                  <div className="col-span-3 space-y-1.5">
+                    <Label className="text-xs font-medium">From Month</Label>
                     <Input
                       type="month"
+                      className="[color-scheme:light] dark:[color-scheme:dark]"
                       value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
                       onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
                     />
                   </div>
-                  <div className="col-span-3 space-y-1">
-                    <Label className="text-xs">To Month</Label>
+                  <div className="col-span-3 space-y-1.5">
+                    <Label className="text-xs font-medium">To Month</Label>
                     <Input
                       type="month"
+                      className="[color-scheme:light] dark:[color-scheme:dark]"
                       value={it.toDate ? it.toDate.slice(0, 7) : ""}
                       onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
                     />
                   </div>
-                  <div className="col-span-1 space-y-1">
-                    <Label className="text-xs">Months</Label>
-                    <div className="h-9 flex items-center justify-center px-2 rounded-md border bg-background text-sm font-medium">
-                      {months > 0 ? months : "—"}
-                    </div>
-                  </div>
-                  <div className="col-span-1 space-y-1"><Label className="text-xs">Qty</Label>
+                  <div className="col-span-1 space-y-1.5">
+                    <Label className="text-xs font-medium">Qty</Label>
                     <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
-                  <div className="col-span-2 space-y-1"><Label className="text-xs">Rate</Label>
+                  <div className="col-span-2 space-y-1.5">
+                    <Label className="text-xs font-medium">Rate</Label>
                     <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
-                  <div className="col-span-2 space-y-1"><Label className="text-xs">Amount</Label>
-                    <div className="h-9 flex items-center justify-end px-3 text-sm font-semibold">
+                  <div className="col-span-2 space-y-1.5">
+                    <Label className="text-xs font-medium">Amount</Label>
+                    <div className="h-9 flex items-center justify-end px-3 rounded-md bg-primary/5 border border-primary/20 text-sm font-bold text-primary">
                       {inr(Number(it.quantity || 0) * Number(it.rate || 0))}
                     </div>
                   </div>
                   <div className="col-span-1 flex justify-end">
-                    <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
+                    <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
 import {
   Eye, Pencil, Wallet, Download, MessageCircle, Mail, Search, FileText,
@@ -130,24 +130,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
     };
   }, [qc]);
 
-  // Timeline granularity: derive from range length.
-  const rangeStart = from ?? (invoices.length ? new Date(Math.min(...invoices.map((i) => +new Date(i.invoice_date)))) : new Date());
+  // Fixed 12-month Gantt scale ending at the range end (or current month).
+  const granularity: Granularity = "month";
   const rangeEnd = to ?? new Date();
-  const spanDays = Math.max(1, Math.round((+rangeEnd - +rangeStart) / 86400000) + 1);
-  const granularity: Granularity = spanDays <= 45 ? "day" : spanDays <= 180 ? "week" : "month";
-
-  const gStart = startOf(rangeStart, granularity);
   const gEnd = startOf(rangeEnd, granularity);
+  const gStart = addUnit(gEnd, granularity, -11);
+  const spanDays = Math.max(1, Math.round((+addUnit(gEnd, granularity, 1) - +gStart) / 86400000));
   const ticks: Date[] = [];
-  {
-    const cur = new Date(gStart);
-    while (cur <= gEnd) {
-      ticks.push(new Date(cur));
-      cur.setTime(+addUnit(cur, granularity, 1));
-    }
-    if (ticks.length === 0) ticks.push(new Date(gStart));
-  }
-  const tickWidth = granularity === "day" ? 56 : granularity === "week" ? 90 : 120;
+  for (let i = 0; i < 12; i++) ticks.push(addUnit(gStart, granularity, i));
+  const tickWidth = 120;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
 
@@ -214,7 +205,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
           <div>
             <CardTitle>Invoice Timeline</CardTitle>
             <CardDescription>
-              Gantt-style view · {granularity === "day" ? "Daily" : granularity === "week" ? "Weekly" : "Monthly"} scale · live updates
+              Gantt-style view · 12-month scale · live updates
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -364,22 +355,22 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
         )}
       </CardContent>
 
-      <Sheet open={!!activeId} onOpenChange={(o) => !o && setActiveId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+      <Dialog open={!!activeId} onOpenChange={(o) => !o && setActiveId(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           {activeInvoice && (
             <>
-              <SheetHeader className="text-left">
+              <DialogHeader className="text-left">
                 <div className="flex items-center justify-between gap-2">
-                  <SheetTitle className="text-xl">{activeInvoice.invoice_number}</SheetTitle>
+                  <DialogTitle className="text-xl">{activeInvoice.invoice_number}</DialogTitle>
                   <Badge className={cn("border-0", STATUS_META[effectiveStatus(activeInvoice, today)].text, "bg-transparent border border-current")}>
                     {STATUS_META[effectiveStatus(activeInvoice, today)].label}
                   </Badge>
                 </div>
-                <SheetDescription>
+                <DialogDescription>
                   {activeClient?.client_name}{activeClient?.business_name ? ` · ${activeClient.business_name}` : ""}
                   {activeCompany ? ` · ${activeCompany.name}` : ""}
-                </SheetDescription>
-              </SheetHeader>
+                </DialogDescription>
+              </DialogHeader>
 
               <div className="mt-6 space-y-5">
                 {/* Summary */}
@@ -520,8 +511,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
               )}
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

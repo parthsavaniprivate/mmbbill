@@ -222,3 +222,27 @@
   stroke: #111 !important;
 }
 
+
+/* Invoice Timeline animations */
+@keyframes it-float {
+  0%, 100% { transform: translateY(-2px); }
+  50%      { transform: translateY(2px); }
+}
+@keyframes it-enter {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes it-today-glow {
+  0%, 100% { opacity: 0.75; box-shadow: 0 0 8px 1px rgba(96,165,250,0.55); }
+  50%      { opacity: 1;    box-shadow: 0 0 16px 3px rgba(96,165,250,0.85); }
+}
+@utility it-bar {
+  animation: it-enter 300ms ease-out both, it-float 4s ease-in-out 300ms infinite;
+  will-change: transform;
+  &:hover {
+    animation-play-state: paused;
+  }
+}
+@utility it-today {
+  animation: it-today-glow 2.4s ease-in-out infinite;
+}

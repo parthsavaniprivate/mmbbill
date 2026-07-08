@@ -142,7 +142,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const monthCount = Math.max(1, (gEnd.getFullYear() - gStart.getFullYear()) * 12 + (gEnd.getMonth() - gStart.getMonth()) + 1);
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
-  const tickWidth = 140;
+  const tickWidth = 200;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
   const spanDays = Math.max(1, Math.round(totalMs / 86400000));
@@ -177,27 +177,30 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       arr.push(inv);
       groups.set(inv.client_id, arr);
     }
+    const monthIndexOf = (d: Date) => {
+      const dt = startOf(d, granularity);
+      return (dt.getFullYear() - gStart.getFullYear()) * 12 + (dt.getMonth() - gStart.getMonth());
+    };
     const rows = [...groups.entries()].map(([cid, invs]) => {
       const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
-      // Greedy lane assignment so overlapping invoices stack instead of overlap.
-      const laneEnds: number[] = [];
+      // Lane per month: within one client-row, each month has its own vertical stack.
+      const monthOf = new Map<string, number>();
       const laneOf = new Map<string, number>();
+      const perMonthCount = new Map<number, number>();
       for (const inv of sorted) {
-        const s = +new Date(inv.invoice_date);
-        const e = inv.due_date ? +new Date(inv.due_date) : s + 86400000;
-        let placed = -1;
-        for (let li = 0; li < laneEnds.length; li++) {
-          if (laneEnds[li] <= s) { placed = li; break; }
-        }
-        if (placed === -1) { laneEnds.push(e); placed = laneEnds.length - 1; }
-        else { laneEnds[placed] = e; }
-        laneOf.set(inv.id, placed);
+        const mi = Math.max(0, Math.min(ticks.length - 1, monthIndexOf(new Date(inv.invoice_date))));
+        const lane = perMonthCount.get(mi) ?? 0;
+        perMonthCount.set(mi, lane + 1);
+        monthOf.set(inv.id, mi);
+        laneOf.set(inv.id, lane);
       }
+      const laneCount = Math.max(1, ...Array.from(perMonthCount.values()));
       return {
         client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
         invoices: sorted,
+        monthOf,
         laneOf,
-        laneCount: Math.max(1, laneEnds.length),
+        laneCount,
       };
     });
     return rows
@@ -229,8 +232,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return { pendAmt, pendCount, overAmt, overCount, paidAmt, paidCount, rate };
   }, [filtered, today]);
 
-  const LANE_H = 42;
-  const ROW_PAD = 8;
+  const LANE_H = 52;
+  const ROW_PAD = 12;
+  const BAR_W = 150;
+  const BAR_H = 36;
   const rowHeightOf = (laneCount: number) => Math.max(ROW_H, laneCount * LANE_H + ROW_PAD);
   const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 
@@ -300,7 +305,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                     {ticks.map((t, idx) => (
                       <div
                         key={idx}
-                        className="absolute top-0 flex h-full flex-col justify-center border-l border-border/40 pl-2"
+                        className={cn(
+                          "absolute top-0 flex h-full flex-col items-center justify-center border-l",
+                          idx === 0 ? "border-transparent" : "border-border/60",
+                        )}
                         style={{ left: idx * tickWidth, width: tickWidth }}
                       >
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
@@ -347,26 +355,22 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         {ticks.map((_, idx) => (
                           <div
                             key={idx}
-                            className="absolute top-0 bottom-0 border-l border-border/25"
+                            className={cn(
+                              "absolute top-0 bottom-0 border-l",
+                              idx === 0 ? "border-transparent" : "border-border/50",
+                            )}
                             style={{ left: idx * tickWidth }}
                           />
                         ))}
                         {today >= gStart && today <= addUnit(gStart, granularity, ticks.length) && (
                           <div
-                            className="pointer-events-none absolute top-0 bottom-0 w-px bg-blue-400/70 shadow-[0_0_10px_2px_rgba(96,165,250,0.55)]"
-                            style={{ left: xFor(today) }}
+                            className="it-today pointer-events-none absolute top-0 bottom-0 w-[2px] rounded-full bg-blue-400"
+                            style={{ left: xFor(today) - 1 }}
                           />
                         )}
                         {row.invoices.map((inv) => {
                           const eff = effectiveStatus(inv, today);
                           const meta = STATUS_META[eff];
-                          const s = new Date(inv.invoice_date);
-                          const e = inv.due_date
-                            ? new Date(inv.due_date)
-                            : addUnit(s, "day", Math.max(1, Math.round(spanDays / 30)));
-                          const left = xFor(s);
-                          const right = xFor(e < s ? addUnit(s, "day", 1) : e);
-                          const width = Math.max(96, right - left - 4);
                           const total = Number(inv.total || 0);
                           const paid = Number(inv.amount_paid || 0);
                           const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
@@ -374,33 +378,47 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           const daysLeft = inv.due_date
                             ? Math.round((+new Date(inv.due_date) - +today) / 86400000)
                             : null;
+                          const mi = row.monthOf.get(inv.id) ?? 0;
                           const lane = row.laneOf.get(inv.id) ?? 0;
-                          const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - 34) / 2;
+                          const monthCenter = mi * tickWidth + tickWidth / 2;
+                          const left = monthCenter - BAR_W / 2;
+                          const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - BAR_H) / 2;
+                          const isActive = activeId === inv.id;
+                          const label = inv.invoice_number.length > 14
+                            ? inv.invoice_number.slice(0, 12) + "…"
+                            : inv.invoice_number;
 
                           return (
-                            <Tooltip key={inv.id}>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() => setActiveId(inv.id)}
-                                  className={cn(
-                                    "group/bar absolute flex items-center overflow-hidden rounded-xl text-left text-white shadow-md ring-1 ring-inset transition-all duration-200",
-                                    "bg-gradient-to-r hover:-translate-y-0.5 hover:shadow-lg",
-                                    meta.grad, meta.ring,
-                                    activeId === inv.id && "ring-2 ring-primary/70",
-                                  )}
-                                  style={{ left, width, top, height: 34 }}
-                                >
-                                  <span
-                                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                  <div className="relative z-10 flex w-full min-w-0 items-center px-2.5">
-                                    <span className="min-w-0 flex-1 truncate text-[11px] font-semibold tracking-tight">
-                                      {inv.invoice_number}
-                                    </span>
-                                  </div>
-                                </button>
-                              </TooltipTrigger>
+                            <div key={inv.id}>
+                              {/* Connector */}
+                              <div
+                                className="pointer-events-none absolute w-px bg-blue-400/30 shadow-[0_0_4px_rgba(96,165,250,0.4)]"
+                                style={{ left: monthCenter, top: 0, height: top }}
+                              />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => setActiveId(inv.id)}
+                                    className={cn(
+                                      "it-bar group/bar absolute flex items-center overflow-hidden text-left text-white transition-[transform,box-shadow,filter] duration-200",
+                                      "bg-gradient-to-r shadow-[0_4px_14px_-6px_rgba(0,0,0,0.55)] ring-1 ring-inset",
+                                      "hover:scale-[1.03] hover:shadow-[0_10px_28px_-8px_rgba(0,0,0,0.65)] hover:brightness-110",
+                                      meta.grad, meta.ring,
+                                      isActive && "shadow-[0_0_0_2px_rgba(96,165,250,0.9),0_10px_30px_-6px_rgba(96,165,250,0.55)] ring-blue-400/70 brightness-110",
+                                    )}
+                                    style={{ left, top, width: BAR_W, height: BAR_H, borderRadius: 18 }}
+                                  >
+                                    <span
+                                      className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                    <div className="relative z-10 flex w-full min-w-0 items-center justify-center px-3">
+                                      <span className="truncate text-[12px] font-semibold tracking-tight">
+                                        {label}
+                                      </span>
+                                    </div>
+                                  </button>
+                                </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs border border-border/60 bg-popover/95 p-3 shadow-xl backdrop-blur">
                                 <div className="space-y-1.5 text-xs">
                                   <div className="flex items-center justify-between gap-3">
@@ -432,8 +450,9 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     )}
                                   </div>
                                 </div>
-                              </TooltipContent>
-                            </Tooltip>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                           );
                         })}
                       </div>

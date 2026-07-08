@@ -61,7 +61,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
         </div>
       </div>
       <div className="h-1 bg-black" />
-      <div className="bg-gray-100 flex justify-between px-5 py-3 text-sm">
+      <div className="bg-gray-100 flex flex-wrap gap-x-6 gap-y-1 justify-between px-4 sm:px-5 py-3 text-sm">
         <div><span className="font-bold">Invoice No.:</span> {inv.invoice_number}</div>
         <div><span className="font-bold">Invoice Date:</span> {formatDate(inv.invoice_date)}</div>
       </div>

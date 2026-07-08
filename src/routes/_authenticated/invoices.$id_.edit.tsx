@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { inr } from "@/lib/format";
 import { toast } from "sonner";
@@ -58,6 +59,9 @@ function EditInvoicePage() {
     },
   });
 
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [companyId, setCompanyId] = useState("");
+  const [clientId, setClientId] = useState("");
   const [date, setDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [discount, setDiscount] = useState("0");
@@ -66,8 +70,31 @@ function EditInvoicePage() {
   const [terms, setTerms] = useState("");
   const [items, setItems] = useState<Item[]>([]);
 
+  const { data: companies = [] } = useQuery({
+    queryKey: ["all-companies-edit"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("companies").select("id, name").order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const { data: clients = [] } = useQuery({
+    queryKey: ["all-clients-edit", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients")
+        .select("id, client_name, business_name")
+        .eq("company_id", companyId).order("business_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   useEffect(() => {
     if (!data?.inv) return;
+    setInvoiceNumber(data.inv.invoice_number ?? "");
+    setCompanyId(data.inv.company_id ?? "");
+    setClientId(data.inv.client_id ?? "");
     setDate(data.inv.invoice_date);
     setDueDate(data.inv.due_date ?? "");
     setDiscount(String(data.inv.discount ?? 0));
@@ -103,6 +130,9 @@ function EditInvoicePage() {
       if (!clean.length) throw new Error("Add at least one line item");
 
       const { error: uErr } = await supabase.from("invoices").update({
+        invoice_number: invoiceNumber.trim(),
+        company_id: companyId,
+        client_id: clientId || null,
         invoice_date: date,
         due_date: dueDate || null,
         discount: Number(discount || 0),

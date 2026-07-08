@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/invoices/")({ component: I
 
 const STATUS_COLORS: Record<Status, string> = {
   draft: "bg-muted text-muted-foreground",
-  pending: "bg-warning/15 text-warning-foreground border-warning/30",
+  pending: "bg-warning/15 text-warning border-warning/30",
   partially_paid: "bg-primary/15 text-primary border-primary/30",
   paid: "bg-success/15 text-success border-success/30",
   overdue: "bg-destructive/15 text-destructive border-destructive/30",

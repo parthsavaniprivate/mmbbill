@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
@@ -472,6 +473,18 @@ function Dashboard() {
 
 
 
+
+      {/* Invoice Timeline (primary widget) */}
+      <InvoiceTimeline
+        invoices={invoices}
+        clients={data.clients}
+        companies={data.companies}
+        payments={data.payments as unknown as { id: string; invoice_id: string; amount: number; payment_date: string; method: string | null }[]}
+        from={from}
+        to={to}
+        selectedCompany={selected}
+        isAll={isAll}
+      />
 
       {/* Analytics chart */}
       <Card className="shadow-card">

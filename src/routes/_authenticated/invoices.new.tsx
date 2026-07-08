@@ -103,7 +103,7 @@ function NewInvoicePage() {
           const q = Number(it.quantity || 0);
           const r = Number(it.rate || 0);
           const fmtFull = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-          const period = it.fromDate && it.toDate
+          const period = !it.oneTime && it.fromDate && it.toDate
             ? (it.fromDate.slice(0, 7) === it.toDate.slice(0, 7)
                 ? `\nFor ${fmtFull(it.fromDate)}`
                 : `\nFor ${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)}`)

@@ -130,16 +130,18 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     };
   }, [qc]);
 
-  // Monthly Gantt scale: start from the earliest invoice month, end at the latest
-  // invoice month (or current month, whichever is later). No empty leading months.
+  // Monthly Gantt scale: Indian Fiscal Year (April → March). Always show
+  // all 12 months of the FY that contains the latest invoice (or today).
   const granularity: Granularity = "month";
   const now = new Date();
   const invoiceDates = invoices.map((i) => +new Date(i.invoice_date)).filter((n) => !Number.isNaN(n));
-  const firstInvoice = invoiceDates.length ? new Date(Math.min(...invoiceDates)) : now;
   const lastInvoice = invoiceDates.length ? new Date(Math.max(...invoiceDates)) : now;
-  const gStart = startOf(firstInvoice, granularity);
-  const gEnd = startOf(lastInvoice > now ? lastInvoice : now, granularity);
-  const monthCount = Math.max(1, (gEnd.getFullYear() - gStart.getFullYear()) * 12 + (gEnd.getMonth() - gStart.getMonth()) + 1);
+  const anchor = lastInvoice > now ? lastInvoice : now;
+  const fyStartYear = anchor.getMonth() >= 3 ? anchor.getFullYear() : anchor.getFullYear() - 1;
+  const gStart = new Date(fyStartYear, 3, 1); // April 1
+  const monthCount = 12;
+  const gEnd = new Date(fyStartYear + 1, 2, 1); // March 1 next year
+  void gEnd;
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
   const tickWidth = 200;

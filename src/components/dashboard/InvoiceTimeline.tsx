@@ -177,27 +177,30 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       arr.push(inv);
       groups.set(inv.client_id, arr);
     }
+    const monthIndexOf = (d: Date) => {
+      const dt = startOf(d, granularity);
+      return (dt.getFullYear() - gStart.getFullYear()) * 12 + (dt.getMonth() - gStart.getMonth());
+    };
     const rows = [...groups.entries()].map(([cid, invs]) => {
       const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
-      // Greedy lane assignment so overlapping invoices stack instead of overlap.
-      const laneEnds: number[] = [];
+      // Lane per month: within one client-row, each month has its own vertical stack.
+      const monthOf = new Map<string, number>();
       const laneOf = new Map<string, number>();
+      const perMonthCount = new Map<number, number>();
       for (const inv of sorted) {
-        const s = +new Date(inv.invoice_date);
-        const e = inv.due_date ? +new Date(inv.due_date) : s + 86400000;
-        let placed = -1;
-        for (let li = 0; li < laneEnds.length; li++) {
-          if (laneEnds[li] <= s) { placed = li; break; }
-        }
-        if (placed === -1) { laneEnds.push(e); placed = laneEnds.length - 1; }
-        else { laneEnds[placed] = e; }
-        laneOf.set(inv.id, placed);
+        const mi = Math.max(0, Math.min(ticks.length - 1, monthIndexOf(new Date(inv.invoice_date))));
+        const lane = perMonthCount.get(mi) ?? 0;
+        perMonthCount.set(mi, lane + 1);
+        monthOf.set(inv.id, mi);
+        laneOf.set(inv.id, lane);
       }
+      const laneCount = Math.max(1, ...Array.from(perMonthCount.values()));
       return {
         client: byId.get(cid) ?? ({ id: cid, client_name: "Unknown" } as Client),
         invoices: sorted,
+        monthOf,
         laneOf,
-        laneCount: Math.max(1, laneEnds.length),
+        laneCount,
       };
     });
     return rows

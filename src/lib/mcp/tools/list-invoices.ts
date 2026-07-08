@@ -1,4 +1,4 @@
-import { defineTool } from "@lovable.dev/mcp-js";
+import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 
 export default defineTool({
@@ -13,7 +13,8 @@ export default defineTool({
     limit: z.number().int().min(1).max(200).default(50),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, client_id, from_date, to_date, limit }) => {
+  handler: async ({ status, client_id, from_date, to_date, limit }, ctx: ToolContext) => {
+    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("invoices")

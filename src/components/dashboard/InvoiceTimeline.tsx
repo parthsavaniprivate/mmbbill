@@ -154,6 +154,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
       if (clientFilter !== "all" && i.client_id !== clientFilter) return false;
       if (invoiceSearch && !i.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase())) return false;
       const eff = effectiveStatus(i, today);
+      if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
       // Range: keep invoices that overlap the window
       const s = new Date(i.invoice_date);
@@ -191,9 +192,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
   const legend: Array<{ key: string; label: string; cls: string }> = [
     { key: "pending", label: "Pending", cls: "bg-amber-500" },
     { key: "overdue", label: "Overdue", cls: "bg-red-500" },
-    { key: "partially_paid", label: "Partial", cls: "bg-blue-500" },
     { key: "paid", label: "Paid", cls: "bg-emerald-500" },
-    { key: "cancelled", label: "Cancelled", cls: "bg-zinc-500" },
   ];
 
   const bodyHeight = Math.max(240, clientRows.length * ROW_H + 8);
@@ -233,9 +232,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>
-              <SelectItem value="partially_paid">Partial</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>

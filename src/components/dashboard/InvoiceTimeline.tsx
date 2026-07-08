@@ -331,8 +331,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                       key={row.client.id}
                       className={cn(
                         "group/row flex border-b border-border/40 transition-colors",
-                        rowIdx % 2 === 1 && "bg-muted/10",
-                        "hover:bg-primary/[0.04]",
+                        rowIdx % 2 === 1 ? "bg-muted/40" : "bg-background/20",
+                        "hover:bg-primary/[0.06]",
                       )}
                       style={{ height: rowHeightOf(row.laneCount) }}
                     >

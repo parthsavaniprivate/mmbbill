@@ -300,7 +300,7 @@ function InvoicesPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    </>
+                    </Fragment>
                   );
                 })}
               </TableBody>

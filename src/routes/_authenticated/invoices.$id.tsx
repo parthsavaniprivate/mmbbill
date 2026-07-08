@@ -66,7 +66,7 @@ function InvoiceDetail() {
         <Link to="/invoices" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Link>
-        <div className="flex gap-2">
+        <div className="col-span-2 flex flex-wrap gap-2 sm:col-auto">
           <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print / PDF</Button>
           {waLink && (
             <AlertDialog open={waOpen} onOpenChange={setWaOpen}>

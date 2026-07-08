@@ -144,7 +144,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   void gEnd;
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
-  const tickWidth = 200;
+  const tickWidth = 110;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
   const spanDays = Math.max(1, Math.round(totalMs / 86400000));

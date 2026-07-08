@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2, Receipt, IndianRupee, AlertCircle } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
@@ -135,6 +135,17 @@ function InvoicesPage() {
 
   const reminderInv = filtered.find((i) => i.id === reminderFor) ?? null;
 
+  const stats = filtered.reduce(
+    (a, i) => {
+      if (i.status === "cancelled") return a;
+      a.total += Number(i.total || 0);
+      a.paid += Number(i.amount_paid || 0);
+      return a;
+    },
+    { total: 0, paid: 0 },
+  );
+  const unpaid = Math.max(0, stats.total - stats.paid);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,6 +158,13 @@ function InvoicesPage() {
           <Button asChild><Link to="/invoices/new"><Plus className="w-4 h-4" />New Invoice</Link></Button>
         </div>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Total Sales" value={inr(stats.total)} icon={<Receipt className="w-4 h-4" />} tone="primary" />
+        <StatCard label="Paid" value={inr(stats.paid)} icon={<IndianRupee className="w-4 h-4" />} tone="success" />
+        <StatCard label="Unpaid" value={inr(unpaid)} icon={<AlertCircle className="w-4 h-4" />} tone="destructive" />
+      </div>
+
 
       <div className="flex flex-wrap gap-2">
         <Input placeholder="Search by number or client…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
@@ -348,5 +366,21 @@ function InvoicesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function StatCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "destructive" }) {
+  const toneMap = {
+    primary: "border-primary/40 bg-primary/5 text-primary",
+    success: "border-success/40 bg-success/5 text-success",
+    destructive: "border-destructive/40 bg-destructive/5 text-destructive",
+  } as const;
+  return (
+    <Card className={`border ${toneMap[tone]}`}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-1.5 text-xs font-medium">{icon}{label}</div>
+        <div className="mt-1 text-2xl font-bold text-foreground">{value}</div>
+      </CardContent>
+    </Card>
   );
 }

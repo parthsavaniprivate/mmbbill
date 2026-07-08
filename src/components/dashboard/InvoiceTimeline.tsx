@@ -232,8 +232,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return { pendAmt, pendCount, overAmt, overCount, paidAmt, paidCount, rate };
   }, [filtered, today]);
 
-  const LANE_H = 42;
-  const ROW_PAD = 8;
+  const LANE_H = 52;
+  const ROW_PAD = 12;
+  const BAR_W = 150;
+  const BAR_H = 36;
   const rowHeightOf = (laneCount: number) => Math.max(ROW_H, laneCount * LANE_H + ROW_PAD);
   const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 

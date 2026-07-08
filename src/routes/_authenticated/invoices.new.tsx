@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Plus, Trash2, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -177,34 +176,26 @@ function NewInvoicePage() {
 
                 {/* Row 2: Month range + total + qty + rate + amount + delete */}
                 <div className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-4 space-y-1">
-                    <Label className="text-xs">Billing Period</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal h-9", !it.fromDate && "text-muted-foreground")}>
-                          <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                          {it.fromDate && it.toDate ? `${fmtMonth(it.fromDate)} - ${fmtMonth(it.toDate)}` : "Pick months"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-3 space-y-2" align="start">
-                        <div className="space-y-1"><Label className="text-xs">From month</Label>
-                          <Input type="month" value={it.fromDate ? it.fromDate.slice(0, 7) : ""} onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)} />
-                        </div>
-                        <div className="space-y-1"><Label className="text-xs">To month</Label>
-                          <Input type="month" value={it.toDate ? it.toDate.slice(0, 7) : ""} onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)} />
-                        </div>
-                        {months > 0 && (
-                          <div className="text-xs text-muted-foreground pt-1 border-t">
-                            Total: {months} month{months > 1 ? "s" : ""}
-                          </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
+                  <div className="col-span-3 space-y-1">
+                    <Label className="text-xs">From Month</Label>
+                    <Input
+                      type="month"
+                      value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
+                      onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
+                    />
                   </div>
-                  <div className="col-span-2 space-y-1">
-                    <Label className="text-xs">Total Months</Label>
-                    <div className="h-9 flex items-center px-3 rounded-md border bg-background text-sm font-medium">
-                      {months > 0 ? `${months} Month${months > 1 ? "s" : ""}` : "—"}
+                  <div className="col-span-3 space-y-1">
+                    <Label className="text-xs">To Month</Label>
+                    <Input
+                      type="month"
+                      value={it.toDate ? it.toDate.slice(0, 7) : ""}
+                      onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
+                    />
+                  </div>
+                  <div className="col-span-1 space-y-1">
+                    <Label className="text-xs">Months</Label>
+                    <div className="h-9 flex items-center justify-center px-2 rounded-md border bg-background text-sm font-medium">
+                      {months > 0 ? months : "—"}
                     </div>
                   </div>
                   <div className="col-span-1 space-y-1"><Label className="text-xs">Qty</Label>

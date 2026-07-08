@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
 import {
-  Eye, Pencil, Wallet, Download, MessageCircle, Mail, Search, FileText,
+  Eye, Pencil, Wallet, Download, MessageCircle, Search, FileText,
 } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";

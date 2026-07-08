@@ -115,7 +115,7 @@ function InvoiceDetail() {
         companyName={co?.name}
       />
 
-      <Card className="shadow-card print:shadow-none overflow-hidden">
+      <Card className="shadow-card print:shadow-none overflow-hidden invoice-scroll">
         {(() => {
           // Fallback: if this invoice has no line items in DB (legacy/imported),
           // synthesize a single row from the invoice subtotal so the template

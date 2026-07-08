@@ -130,17 +130,22 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
     };
   }, [qc]);
 
-  // Fixed 12-month Gantt scale ending at the range end (or current month).
+  // Monthly Gantt scale: start from the earliest invoice month, end at the latest
+  // invoice month (or current month, whichever is later). No empty leading months.
   const granularity: Granularity = "month";
-  const rangeEnd = to ?? new Date();
-  const gEnd = startOf(rangeEnd, granularity);
-  const gStart = addUnit(gEnd, granularity, -11);
-  const spanDays = Math.max(1, Math.round((+addUnit(gEnd, granularity, 1) - +gStart) / 86400000));
+  const now = new Date();
+  const invoiceDates = invoices.map((i) => +new Date(i.invoice_date)).filter((n) => !Number.isNaN(n));
+  const firstInvoice = invoiceDates.length ? new Date(Math.min(...invoiceDates)) : now;
+  const lastInvoice = invoiceDates.length ? new Date(Math.max(...invoiceDates)) : now;
+  const gStart = startOf(firstInvoice, granularity);
+  const gEnd = startOf(lastInvoice > now ? lastInvoice : now, granularity);
+  const monthCount = Math.max(1, (gEnd.getFullYear() - gStart.getFullYear()) * 12 + (gEnd.getMonth() - gStart.getMonth()) + 1);
   const ticks: Date[] = [];
-  for (let i = 0; i < 12; i++) ticks.push(addUnit(gStart, granularity, i));
+  for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
   const tickWidth = 120;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
+  const spanDays = Math.max(1, Math.round(totalMs / 86400000));
 
   const xFor = (d: Date) => {
     const ms = Math.max(0, +d - +gStart);

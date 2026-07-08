@@ -205,7 +205,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
           <div>
             <CardTitle>Invoice Timeline</CardTitle>
             <CardDescription>
-              Gantt-style view · {granularity === "day" ? "Daily" : granularity === "week" ? "Weekly" : "Monthly"} scale · live updates
+              Gantt-style view · 12-month scale · live updates
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">

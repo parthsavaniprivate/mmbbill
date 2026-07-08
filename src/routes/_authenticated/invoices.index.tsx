@@ -209,83 +209,98 @@ function InvoicesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((i) => {
+                {filtered.map((i, idx) => {
                   const cl = i.clients as ClientLite | null;
                   const pending = Number(i.total) - Number(i.amount_paid);
                   const canRemind = REMINDABLE.includes(i.status);
                   const overdueDays = i.due_date && pending > 0 ? daysBetween(i.due_date) : 0;
+                  const companyName = companies.find((c) => c.id === i.company_id)?.name || "—";
+                  const prevCompanyName = idx > 0
+                    ? (companies.find((c) => c.id === filtered[idx - 1].company_id)?.name || "—")
+                    : null;
+                  const showGroup = companyName !== prevCompanyName;
+                  const groupCount = filtered.filter((x) => x.company_id === i.company_id).length;
                   return (
-                    <TableRow key={i.id}>
-                      <TableCell>
-                        <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
-                      </TableCell>
-                      <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
-                      <TableCell className="text-sm">{i.invoice_date ? formatDate(i.invoice_date) : "—"}</TableCell>
-                      <TableCell className="text-sm">
-                        {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}
-                        {pending > 0 && overdueDays > 0 && (
-                          <div className="text-xs text-destructive">{overdueDays}d overdue</div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
-                      <TableCell className="text-right">{inr(pending)}</TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_COLORS[i.status]} variant="outline">{i.status.replace("_", " ")}</Badge>
-                        {(i.reminders_sent ?? 0) > 0 && (
-                          <div className="text-xs text-muted-foreground mt-1">{i.reminders_sent} reminder{i.reminders_sent === 1 ? "" : "s"}</div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end items-center gap-1">
-                          {pending > 0 && i.status !== "cancelled" && (
-                            <MarkAsPaidButton invoiceId={i.id} pending={pending} />
+                    <>
+                      {showGroup && (
+                        <TableRow key={`group-${i.company_id}`} className="bg-muted/40 hover:bg-muted/40">
+                          <TableCell colSpan={8} className="py-2 font-sf-display text-sm uppercase tracking-wide">
+                            {companyName} <span className="text-muted-foreground normal-case font-normal">· {groupCount} invoice{groupCount === 1 ? "" : "s"}</span>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      <TableRow key={i.id}>
+                        <TableCell>
+                          <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
+                        </TableCell>
+                        <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
+                        <TableCell className="text-sm">{i.invoice_date ? formatDate(i.invoice_date) : "—"}</TableCell>
+                        <TableCell className="text-sm">
+                          {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}
+                          {pending > 0 && overdueDays > 0 && (
+                            <div className="text-xs text-destructive">{overdueDays}d overdue</div>
                           )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="ghost" title="More actions">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem asChild>
-                                <Link to="/invoices/$id" params={{ id: i.id }}>
-                                  <Eye className="w-4 h-4" /> View
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link to="/invoices/$id/edit" params={{ id: i.id }}>
-                                  <Pencil className="w-4 h-4" /> Edit
-                                </Link>
-                              </DropdownMenuItem>
-                              {canRemind && (
-                                <DropdownMenuItem onSelect={() => setReminderFor(i.id)}>
-                                  <Bell className="w-4 h-4" /> Send Reminder
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
+                        <TableCell className="text-right">{inr(pending)}</TableCell>
+                        <TableCell>
+                          <Badge className={STATUS_COLORS[i.status]} variant="outline">{i.status.replace("_", " ")}</Badge>
+                          {(i.reminders_sent ?? 0) > 0 && (
+                            <div className="text-xs text-muted-foreground mt-1">{i.reminders_sent} reminder{i.reminders_sent === 1 ? "" : "s"}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end items-center gap-1">
+                            {pending > 0 && i.status !== "cancelled" && (
+                              <MarkAsPaidButton invoiceId={i.id} pending={pending} />
+                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="ghost" title="More actions">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem asChild>
+                                  <Link to="/invoices/$id" params={{ id: i.id }}>
+                                    <Eye className="w-4 h-4" /> View
+                                  </Link>
                                 </DropdownMenuItem>
-                              )}
-                              {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                                <DropdownMenuItem asChild>
+                                  <Link to="/invoices/$id/edit" params={{ id: i.id }}>
+                                    <Pencil className="w-4 h-4" /> Edit
+                                  </Link>
+                                </DropdownMenuItem>
+                                {canRemind && (
+                                  <DropdownMenuItem onSelect={() => setReminderFor(i.id)}>
+                                    <Bell className="w-4 h-4" /> Send Reminder
+                                  </DropdownMenuItem>
+                                )}
+                                {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
+                                      const a = document.createElement("a");
+                                      a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+                                      document.body.appendChild(a); a.click(); a.remove();
+                                    }}
+                                  >
+                                    <MessageCircle className="w-4 h-4" /> WhatsApp
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onSelect={() => {
-                                    const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
-                                    const a = document.createElement("a");
-                                    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
-                                    document.body.appendChild(a); a.click(); a.remove();
-                                  }}
+                                  className="text-destructive focus:text-destructive"
+                                  onSelect={() => setDeleteFor(i.id)}
                                 >
-                                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                                  <Trash2 className="w-4 h-4" /> Delete
                                 </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onSelect={() => setDeleteFor(i.id)}
-                              >
-                                <Trash2 className="w-4 h-4" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </>
                   );
                 })}
               </TableBody>

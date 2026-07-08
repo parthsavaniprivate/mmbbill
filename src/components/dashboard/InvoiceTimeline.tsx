@@ -192,21 +192,29 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     const rows = allClients.map((client) => {
       const invs = groups.get(client.id) ?? [];
       const sorted = invs.sort((a, b) => +new Date(a.invoice_date) - +new Date(b.invoice_date));
-      const monthOf = new Map<string, number>();
+      // Lane assignment based on month-span overlap.
+      const startOf_ = new Map<string, number>();
+      const endOf_ = new Map<string, number>();
       const laneOf = new Map<string, number>();
-      const perMonthCount = new Map<number, number>();
+      const laneEnds: number[] = []; // last endMonth used per lane
       for (const inv of sorted) {
-        const mi = Math.max(0, Math.min(ticks.length - 1, monthIndexOf(new Date(inv.invoice_date))));
-        const lane = perMonthCount.get(mi) ?? 0;
-        perMonthCount.set(mi, lane + 1);
-        monthOf.set(inv.id, mi);
+        const sIdx = monthIndexOf(new Date(inv.invoice_date));
+        const eIdx = inv.due_date ? monthIndexOf(new Date(inv.due_date)) : sIdx;
+        const s = Math.max(0, Math.min(ticks.length - 1, Math.min(sIdx, eIdx)));
+        const e = Math.max(0, Math.min(ticks.length - 1, Math.max(sIdx, eIdx)));
+        startOf_.set(inv.id, s);
+        endOf_.set(inv.id, e);
+        let lane = laneEnds.findIndex((last) => last < s);
+        if (lane === -1) { lane = laneEnds.length; laneEnds.push(e); }
+        else laneEnds[lane] = e;
         laneOf.set(inv.id, lane);
       }
-      const laneCount = Math.max(1, ...Array.from(perMonthCount.values()));
+      const laneCount = Math.max(1, laneEnds.length);
       return {
         client: byId.get(client.id) ?? client,
         invoices: sorted,
-        monthOf,
+        startOf: startOf_,
+        endOf: endOf_,
         laneOf,
         laneCount,
       };
@@ -386,10 +394,13 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           const daysLeft = inv.due_date
                             ? Math.round((+new Date(inv.due_date) - +today) / 86400000)
                             : null;
-                          const mi = row.monthOf.get(inv.id) ?? 0;
+                          const sMi = row.startOf.get(inv.id) ?? 0;
+                          const eMi = row.endOf.get(inv.id) ?? sMi;
                           const lane = row.laneOf.get(inv.id) ?? 0;
-                          const monthCenter = mi * tickWidth + tickWidth / 2;
-                          const left = monthCenter - BAR_W / 2;
+                          const pad = 6;
+                          const left = sMi * tickWidth + pad;
+                          const width = Math.max(48, (eMi - sMi + 1) * tickWidth - pad * 2);
+                          const monthCenter = left + width / 2;
                           const top = ROW_PAD / 2 + lane * LANE_H + (LANE_H - BAR_H) / 2;
                           const isActive = activeId === inv.id;
                           const label = inv.invoice_number.length > 14
@@ -414,7 +425,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                       meta.grad, meta.ring,
                                       isActive && "shadow-[0_0_0_2px_rgba(96,165,250,0.9),0_10px_30px_-6px_rgba(96,165,250,0.55)] ring-blue-400/70 brightness-110",
                                     )}
-                                    style={{ left, top, width: BAR_W, height: BAR_H, borderRadius: 18 }}
+                                    style={{ left, top, width, height: BAR_H, borderRadius: 18 }}
                                   >
                                     <span
                                       className="pointer-events-none absolute inset-y-0 left-0 bg-white/15 transition-[width] duration-500 ease-out group-hover/bar:bg-white/20"

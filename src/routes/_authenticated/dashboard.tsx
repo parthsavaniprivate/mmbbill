@@ -405,7 +405,7 @@ function Dashboard() {
               <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
                 {miniCard("Due", inr(monthDue), "text-amber-500", "border-amber-500/40")}
                 <span className="text-muted-foreground font-bold text-base sm:text-lg">+</span>
-                {miniCard("Cleared", inr(monthCleared), "text-emerald-500", "border-emerald-500/40")}
+                {miniCard("Cleared", inr(monthInvoicesPaid), "text-emerald-500", "border-emerald-500/40")}
                 <span className="text-muted-foreground font-bold text-base sm:text-lg">=</span>
                 {miniCard("Total", inr(totalCollection), "text-blue-500", "border-blue-500/50 bg-blue-500/5")}
               </div>

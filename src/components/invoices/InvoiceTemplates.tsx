@@ -207,15 +207,22 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
           <div className="col-span-2 text-right">Rate</div>
           <div className="col-span-2 text-right">Amount</div>
         </div>
-        {items.map((it, i) => (
+        {items.map((it, i) => {
+          const [main, ...rest] = it.description.split("\n");
+          const sub = rest.join(" ").trim();
+          return (
           <div key={it.id} className="grid grid-cols-12 px-5 py-3 text-sm border-b last:rounded-b-xl">
             <div className="col-span-1 text-slate-500">{String(i + 1).padStart(2, "0")}</div>
-            <div className="col-span-5 font-semibold">{it.description}</div>
+            <div className="col-span-5">
+              <div className="font-semibold">{main}</div>
+              {sub && <div className="text-xs text-slate-500 mt-0.5">{sub}</div>}
+            </div>
             <div className="col-span-2 text-right">{it.quantity}</div>
             <div className="col-span-2 text-right">{inrFmt(Number(it.rate))}</div>
             <div className="col-span-2 text-right font-semibold">{inrFmt(Number(it.amount))}</div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bank + Pricing */}

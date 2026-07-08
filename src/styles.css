@@ -188,6 +188,19 @@
   }
 }
 
+/* Global mobile overflow safety */
+html, body { overflow-x: hidden; }
+body { -webkit-text-size-adjust: 100%; }
+/* Allow long words / URLs / IDs to wrap on narrow screens */
+h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-break: normal; }
+/* Invoice preview: horizontal scroll on small screens instead of clipping */
+.invoice-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.invoice-scroll > * { min-width: 720px; }
+@media print {
+  .invoice-scroll { overflow: visible !important; }
+  .invoice-scroll > * { min-width: 0 !important; }
+}
+
 /* Keep lucide icons at their intended size inside leaflet popups */
 .leaflet-popup-content svg {
   max-width: none !important;

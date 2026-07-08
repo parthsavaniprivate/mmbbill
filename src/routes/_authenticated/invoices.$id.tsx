@@ -62,11 +62,11 @@ function InvoiceDetail() {
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
-      <div className="no-print flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
         <Link to="/invoices" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Link>
-        <div className="flex gap-2">
+        <div className="col-span-2 flex flex-wrap gap-2 sm:col-auto">
           <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print / PDF</Button>
           {waLink && (
             <AlertDialog open={waOpen} onOpenChange={setWaOpen}>
@@ -115,7 +115,7 @@ function InvoiceDetail() {
         companyName={co?.name}
       />
 
-      <Card className="shadow-card print:shadow-none overflow-hidden">
+      <Card className="shadow-card print:shadow-none overflow-hidden invoice-scroll">
         {(() => {
           // Fallback: if this invoice has no line items in DB (legacy/imported),
           // synthesize a single row from the invoice subtotal so the template

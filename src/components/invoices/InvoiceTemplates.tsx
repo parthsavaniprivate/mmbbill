@@ -43,7 +43,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
   const { invoice: inv, items, company: co, client: cl } = data;
   const pending = Number(inv.total) - Number(inv.amount_paid);
   return (
-    <div className="p-10 space-y-6 bg-white text-black">
+    <div className="p-5 sm:p-8 md:p-10 space-y-5 sm:space-y-6 bg-white text-black">
       <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
         <span className="uppercase">{inv.invoice_type === "proforma" ? "Proforma Invoice" : "Bill of Supply"}</span>
         <span className="border border-gray-300 text-gray-500 px-2 py-0.5 rounded uppercase">Original for Recipient</span>
@@ -61,7 +61,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
         </div>
       </div>
       <div className="h-1 bg-black" />
-      <div className="bg-gray-100 flex justify-between px-5 py-3 text-sm">
+      <div className="bg-gray-100 flex flex-wrap gap-x-6 gap-y-1 justify-between px-4 sm:px-5 py-3 text-sm">
         <div><span className="font-bold">Invoice No.:</span> {inv.invoice_number}</div>
         <div><span className="font-bold">Invoice Date:</span> {formatDate(inv.invoice_date)}</div>
       </div>
@@ -147,7 +147,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
   return (
     <div className="bg-white text-slate-800">
       {/* Purple header */}
-      <div className="p-8 text-white flex justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
+      <div className="p-5 sm:p-8 text-white flex flex-wrap gap-4 justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
         <div>
           <h1 className="text-2xl font-extrabold uppercase tracking-wide">{heading}</h1>
           {co?.pan_number && <p className="text-xs mt-1 opacity-90">PAN: {co.pan_number}</p>}
@@ -178,7 +178,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Bill to + Summary */}
-      <div className="grid grid-cols-2 gap-5 p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 sm:p-8">
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-5">
           <p className="text-[10px] tracking-wider text-indigo-600 font-bold uppercase">Bill To</p>
           <p className="text-lg font-bold mt-1">{cl?.business_name || cl?.client_name}</p>
@@ -195,7 +195,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Items */}
-      <div className="px-8 pb-2">
+      <div className="px-5 sm:px-8 pb-2">
         <div className="rounded-t-xl bg-slate-900 text-white px-5 py-3 flex justify-between text-sm">
           <span className="font-semibold">📄 Items &amp; Services</span>
           <span className="opacity-80 text-xs">{items.length} line item{items.length !== 1 ? "s" : ""}</span>
@@ -226,7 +226,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Bank + Pricing */}
-      <div className="grid grid-cols-2 gap-5 p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 sm:p-8">
         <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">🏦</span>
@@ -260,13 +260,13 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {(inv.notes?.trim() || inv.terms?.trim()) && (
-        <div className="px-8 pb-4 text-sm space-y-2">
+        <div className="px-5 sm:px-8 pb-4 text-sm space-y-2">
           {inv.notes?.trim() && <div><p className="font-bold">Notes</p><p className="text-slate-600 whitespace-pre-line">{inv.notes}</p></div>}
           {inv.terms?.trim() && <div><p className="font-bold">Terms &amp; Conditions</p><p className="text-slate-600 whitespace-pre-line">{inv.terms}</p></div>}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-5 px-8 pb-3 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 px-5 sm:px-8 pb-3 text-sm">
         <div className="border-t border-dashed border-slate-300 pt-2 text-slate-500">Customer Signature</div>
         <div className="border-t border-dashed border-slate-300 pt-2 text-right text-slate-500">
           Authorised Signatory · {heading}

@@ -383,7 +383,7 @@ function Dashboard() {
 
       {/* Financial summary: 4 cards bracketed into Total Balance */}
       {(() => {
-        const totalCollection = monthDue + monthCleared;
+        const totalCollection = monthTotalBilled;
         const totalExpenses = monthFixed + monthVariable;
         const totalBalance = totalCollection - totalExpenses;
         const positive = totalBalance >= 0;

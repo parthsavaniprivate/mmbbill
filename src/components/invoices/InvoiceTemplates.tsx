@@ -178,7 +178,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Bill to + Summary */}
-      <div className="grid grid-cols-2 gap-5 p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 sm:p-8">
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-5">
           <p className="text-[10px] tracking-wider text-indigo-600 font-bold uppercase">Bill To</p>
           <p className="text-lg font-bold mt-1">{cl?.business_name || cl?.client_name}</p>

@@ -152,8 +152,8 @@ function ClientDetail() {
 
       <div className="flex flex-wrap justify-between items-start gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{client.business_name || client.client_name}</h1>
-          <p className="text-muted-foreground">{client.contact_person || client.client_name} · {co?.name}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{client.client_name}</h1>
+          <p className="text-muted-foreground">{[client.business_name, client.contact_person, co?.name].filter(Boolean).join(" · ")}</p>
         </div>
         <div className="flex gap-2">
           {client.whatsapp && (

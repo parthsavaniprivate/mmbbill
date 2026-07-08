@@ -122,7 +122,7 @@ function InvoiceDetail() {
           // doesn't render blank service name / qty / rate columns.
           let displayItems = data.items;
           if (!displayItems.length) {
-            const baseAmount = Number(inv.subtotal || 0) + Number(inv.discount || 0);
+            const baseAmount = Number(inv.subtotal || 0);
             displayItems = [{
               id: `synthetic-${inv.id}`,
               invoice_id: inv.id,

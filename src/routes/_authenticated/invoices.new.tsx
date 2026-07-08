@@ -199,24 +199,28 @@ function NewInvoicePage() {
 
                 {/* Row 2 */}
                 <div className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-3 space-y-1.5">
-                    <Label className="text-xs font-medium">From Month</Label>
-                    <Input
-                      type="month"
-                      className="[color-scheme:light] dark:[color-scheme:dark]"
-                      value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
-                      onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
-                    />
-                  </div>
-                  <div className="col-span-3 space-y-1.5">
-                    <Label className="text-xs font-medium">To Month</Label>
-                    <Input
-                      type="month"
-                      className="[color-scheme:light] dark:[color-scheme:dark]"
-                      value={it.toDate ? it.toDate.slice(0, 7) : ""}
-                      onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
-                    />
-                  </div>
+                  {!it.oneTime && (
+                    <>
+                      <div className="col-span-3 space-y-1.5">
+                        <Label className="text-xs font-medium">From Month</Label>
+                        <Input
+                          type="month"
+                          className="[color-scheme:light] dark:[color-scheme:dark]"
+                          value={it.fromDate ? it.fromDate.slice(0, 7) : ""}
+                          onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
+                        />
+                      </div>
+                      <div className="col-span-3 space-y-1.5">
+                        <Label className="text-xs font-medium">To Month</Label>
+                        <Input
+                          type="month"
+                          className="[color-scheme:light] dark:[color-scheme:dark]"
+                          value={it.toDate ? it.toDate.slice(0, 7) : ""}
+                          onChange={(e) => updateRange(it.fromDate, e.target.value ? `${e.target.value}-01` : undefined)}
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="col-span-1 space-y-1.5">
                     <Label className="text-xs font-medium">Qty</Label>
                     <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />

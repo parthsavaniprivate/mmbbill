@@ -114,6 +114,12 @@ function InvoicesPage() {
       return (i.invoice_number + " " + (cl?.business_name || cl?.client_name || "")).toLowerCase().includes(s);
     }
     return true;
+  }).sort((a, b) => {
+    // Group by company (alphabetical), then latest invoice number first within each company
+    const ca = companies.find((c) => c.id === a.company_id)?.name || "";
+    const cb = companies.find((c) => c.id === b.company_id)?.name || "";
+    if (ca !== cb) return ca.localeCompare(cb);
+    return b.invoice_number.localeCompare(a.invoice_number, undefined, { numeric: true });
   });
 
   const exportCSV = () => downloadCSV("invoices.csv", filtered.map((i) => {

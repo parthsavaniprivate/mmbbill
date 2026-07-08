@@ -308,8 +308,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                       <div
                         key={idx}
                         className={cn(
-                          "absolute top-0 flex h-full flex-col items-center justify-center border-l",
-                          idx === 0 ? "border-transparent" : "border-border/60",
+                          "absolute top-0 flex h-full flex-col items-center justify-center border-l-2",
+                          idx === 0 ? "border-transparent" : "border-border",
                         )}
                         style={{ left: idx * tickWidth, width: tickWidth }}
                       >

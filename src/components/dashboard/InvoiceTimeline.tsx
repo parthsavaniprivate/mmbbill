@@ -245,38 +245,6 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
           </div>
         </div>
 
-        {/* SUMMARY CARDS */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard
-            icon={<Clock className="h-4 w-4" />}
-            label="Pending"
-            value={inr(summary.pendAmt)}
-            hint={`${summary.pendCount} invoice${summary.pendCount === 1 ? "" : "s"}`}
-            tone="amber"
-          />
-          <SummaryCard
-            icon={<AlertTriangle className="h-4 w-4" />}
-            label="Overdue"
-            value={inr(summary.overAmt)}
-            hint={`${summary.overCount} invoice${summary.overCount === 1 ? "" : "s"}`}
-            tone="red"
-          />
-          <SummaryCard
-            icon={<CheckCircle2 className="h-4 w-4" />}
-            label="Paid"
-            value={inr(summary.paidAmt)}
-            hint={`${summary.paidCount} invoice${summary.paidCount === 1 ? "" : "s"}`}
-            tone="emerald"
-          />
-          <SummaryCard
-            icon={<TrendingUp className="h-4 w-4" />}
-            label="Collection Rate"
-            value={`${summary.rate.toFixed(1)}%`}
-            hint="of invoiced amount"
-            tone="blue"
-            progress={Math.min(100, summary.rate)}
-          />
-        </div>
 
         {/* FILTER BAR */}
         <div className="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-background/40 p-2 backdrop-blur">

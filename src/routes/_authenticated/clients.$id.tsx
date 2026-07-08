@@ -20,7 +20,27 @@ import { ClientForm } from "./clients.index";
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/clients/$id")({ component: ClientDetail });
+export const Route = createFileRoute("/_authenticated/clients/$id")({
+  component: ClientDetail,
+  loader: ({ context, params }) => {
+    // Prime cache on viewport preload so the page opens instantly on click.
+    context.queryClient.prefetchQuery({
+      queryKey: ["client", params.id],
+      queryFn: async () => {
+        const { data, error } = await supabase.from("clients").select("*, companies(name)").eq("id", params.id).maybeSingle();
+        if (error) throw error;
+        return data;
+      },
+    });
+    context.queryClient.prefetchQuery({
+      queryKey: ["client-invoices", params.id],
+      queryFn: async () => {
+        const { data } = await supabase.from("invoices").select("*").eq("client_id", params.id).order("invoice_date", { ascending: false });
+        return data ?? [];
+      },
+    });
+  },
+});
 
 function ClientDetail() {
   const { id } = Route.useParams();
@@ -140,7 +160,22 @@ function ClientDetail() {
     qc.invalidateQueries({ queryKey: ["client-files", id] });
   };
 
-  if (!client) return <div className="text-muted-foreground">Loading…</div>;
+  if (!client) {
+    return (
+      <div className="space-y-4">
+        <Link to="/clients" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Clients
+        </Link>
+        <div className="h-8 w-64 rounded bg-muted animate-pulse" />
+        <div className="h-4 w-96 rounded bg-muted animate-pulse" />
+        <div className="grid md:grid-cols-3 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const co = client.companies as { name: string } | null;
 

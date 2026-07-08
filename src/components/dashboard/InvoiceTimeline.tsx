@@ -450,8 +450,9 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     )}
                                   </div>
                                 </div>
-                              </TooltipContent>
-                            </Tooltip>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                           );
                         })}
                       </div>

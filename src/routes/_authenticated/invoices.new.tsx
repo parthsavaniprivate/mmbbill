@@ -221,9 +221,10 @@ function NewInvoicePage() {
                       placeholder="0"
                       value={Number(it.quantity || 0) * Number(it.rate || 0) || ""}
                       onChange={(e) => {
-                        const total = Number(e.target.value || 0);
-                        const q = Number(it.quantity || 0) || 1;
-                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: x.quantity || q, rate: q ? +(total / q).toFixed(2) : total } : x));
+                        const total = e.target.value === "" ? 0 : Number(e.target.value);
+                        const m = it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
+                        const q = m || Number(it.quantity || 0) || 1;
+                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: q, rate: +(total / q).toFixed(2) } : x));
                       }}
                     />
                   </div>

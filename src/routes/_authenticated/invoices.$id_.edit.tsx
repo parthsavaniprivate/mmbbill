@@ -137,6 +137,7 @@ function EditInvoicePage() {
     onSuccess: () => {
       toast.success("Invoice updated");
       qc.invalidateQueries({ queryKey: ["invoice", id] });
+      qc.invalidateQueries({ queryKey: ["invoice-edit", id] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
       navigate({ to: "/invoices/$id", params: { id } });
     },

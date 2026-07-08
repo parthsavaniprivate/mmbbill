@@ -130,24 +130,15 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
     };
   }, [qc]);
 
-  // Timeline granularity: derive from range length.
-  const rangeStart = from ?? (invoices.length ? new Date(Math.min(...invoices.map((i) => +new Date(i.invoice_date)))) : new Date());
+  // Fixed 12-month Gantt scale ending at the range end (or current month).
+  const granularity: Granularity = "month";
   const rangeEnd = to ?? new Date();
-  const spanDays = Math.max(1, Math.round((+rangeEnd - +rangeStart) / 86400000) + 1);
-  const granularity: Granularity = spanDays <= 45 ? "day" : spanDays <= 180 ? "week" : "month";
-
-  const gStart = startOf(rangeStart, granularity);
   const gEnd = startOf(rangeEnd, granularity);
+  const gStart = addUnit(gEnd, granularity, -11);
+  const spanDays = Math.max(1, Math.round((+addUnit(gEnd, granularity, 1) - +gStart) / 86400000));
   const ticks: Date[] = [];
-  {
-    const cur = new Date(gStart);
-    while (cur <= gEnd) {
-      ticks.push(new Date(cur));
-      cur.setTime(+addUnit(cur, granularity, 1));
-    }
-    if (ticks.length === 0) ticks.push(new Date(gStart));
-  }
-  const tickWidth = granularity === "day" ? 56 : granularity === "week" ? 90 : 120;
+  for (let i = 0; i < 12; i++) ticks.push(addUnit(gStart, granularity, i));
+  const tickWidth = 120;
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
 

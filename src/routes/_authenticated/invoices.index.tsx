@@ -221,7 +221,7 @@ function InvoicesPage() {
                   const showGroup = companyName !== prevCompanyName;
                   const groupCount = filtered.filter((x) => x.company_id === i.company_id).length;
                   return (
-                    <>
+                    <Fragment key={i.id}>
                       {showGroup && (
                         <TableRow key={`group-${i.company_id}`} className="bg-muted/40 hover:bg-muted/40">
                           <TableCell colSpan={8} className="py-2 font-sf-display text-sm uppercase tracking-wide">

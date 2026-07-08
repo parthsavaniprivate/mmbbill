@@ -55,7 +55,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
           <div className="w-28 h-28 rounded bg-gray-100 flex items-center justify-center text-xs text-gray-400 shrink-0">LOGO</div>
         )}
         <div className="flex-1">
-          <h2 className="text-3xl font-extrabold uppercase tracking-wide">{co?.name}</h2>
+          <h2 className="font-sf-display text-3xl uppercase tracking-wide">{co?.name}</h2>
           {co?.address && <p className="text-sm mt-1 text-gray-700 whitespace-pre-line">{co.address}</p>}
           {co?.phone && <p className="text-sm mt-1"><span className="font-semibold">Mobile:</span> {co.phone}</p>}
         </div>

@@ -12,7 +12,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileDown } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/payments")({ component: PaymentsPage });
+export const Route = createFileRoute("/_authenticated/payments")({
+  component: PaymentsPage,
+  loader: ({ context }) => {
+    context.queryClient.prefetchQuery({
+      queryKey: ["payments-all"],
+      queryFn: async () => {
+        const { data } = await supabase.from("payments")
+          .select("*, invoices(invoice_number, company_id, clients(client_name, business_name))")
+          .order("payment_date", { ascending: false });
+        return data ?? [];
+      },
+    });
+  },
+});
 
 function PaymentsPage() {
   const { selected, isAll } = useCompany();

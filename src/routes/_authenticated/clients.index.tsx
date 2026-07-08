@@ -284,3 +284,111 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
     </div>
   );
 }
+
+function DeleteClientButton({ client, allClients }: { client: Client; allClients: Client[] }) {
+  const [open, setOpen] = useState(false);
+  const [targetId, setTargetId] = useState<string>("");
+  const qc = useQueryClient();
+
+  const { data: counts } = useQuery({
+    queryKey: ["client-refs", client.id],
+    enabled: open,
+    queryFn: async () => {
+      const [inv, quo, pkg, files] = await Promise.all([
+        supabase.from("invoices").select("id", { count: "exact", head: true }).eq("client_id", client.id),
+        supabase.from("quotations").select("id", { count: "exact", head: true }).eq("client_id", client.id),
+        supabase.from("packages").select("id", { count: "exact", head: true }).eq("client_id", client.id),
+        supabase.from("client_files").select("id", { count: "exact", head: true }).eq("client_id", client.id),
+      ]);
+      return {
+        invoices: inv.count ?? 0,
+        quotations: quo.count ?? 0,
+        packages: pkg.count ?? 0,
+        files: files.count ?? 0,
+      };
+    },
+  });
+
+  const hasInvoices = (counts?.invoices ?? 0) > 0;
+  const targets = allClients.filter((c) => c.id !== client.id && c.company_id === client.company_id);
+
+  const del = useMutation({
+    mutationFn: async () => {
+      if (hasInvoices && !targetId) throw new Error("Select a client to transfer invoices to");
+      if (targetId) {
+        // Transfer all related records to target client
+        const updates = await Promise.all([
+          supabase.from("invoices").update({ client_id: targetId }).eq("client_id", client.id),
+          supabase.from("quotations").update({ client_id: targetId }).eq("client_id", client.id),
+          supabase.from("packages").update({ client_id: targetId }).eq("client_id", client.id),
+          supabase.from("client_files").update({ client_id: targetId }).eq("client_id", client.id),
+        ]);
+        const err = updates.find((r) => r.error)?.error;
+        if (err) throw err;
+      }
+      const { error } = await supabase.from("clients").delete().eq("id", client.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(targetId ? "Client deleted and records transferred" : "Client deleted");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="h-8 gap-1.5 ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive">
+          <Trash2 className="w-3.5 h-3.5" /> Delete
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete {client.business_name || client.client_name}?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          {counts ? (
+            <div className="rounded-md border p-3 bg-muted/30 space-y-1">
+              <div>Invoices: <b>{counts.invoices}</b></div>
+              <div>Quotations: <b>{counts.quotations}</b></div>
+              <div>Packages: <b>{counts.packages}</b></div>
+              <div>Files: <b>{counts.files}</b></div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Loading related records…</p>
+          )}
+          <div className="space-y-1.5">
+            <Label>Transfer records to {hasInvoices ? "(required)" : "(optional)"}</Label>
+            <Select value={targetId} onValueChange={setTargetId}>
+              <SelectTrigger><SelectValue placeholder="Select target client" /></SelectTrigger>
+              <SelectContent>
+                {targets.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">No other clients in this company</div>
+                ) : targets.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.business_name || t.client_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              All invoices, quotations, packages & files will move to the selected client. Activity log will be removed.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button
+            variant="destructive"
+            onClick={() => del.mutate()}
+            disabled={del.isPending || (hasInvoices && !targetId)}
+          >
+            {del.isPending ? "Deleting…" : "Delete Client"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

@@ -433,33 +433,41 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                                     </div>
                                   </button>
                                 </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs border border-border/60 bg-popover/95 p-3 shadow-xl backdrop-blur">
-                                <div className="space-y-1.5 text-xs">
-                                  <div className="flex items-center justify-between gap-3">
-                                    <span className="font-semibold">{row.client.client_name}</span>
-                                    <span className={cn("inline-flex items-center gap-1", meta.text)}>
+                              <TooltipContent
+                                side="top"
+                                align="center"
+                                sideOffset={10}
+                                collisionPadding={12}
+                                className="z-[60] w-64 max-w-[280px] rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-2xl"
+                              >
+                                <div className="space-y-2 text-xs">
+                                  <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-2">
+                                    <span className="truncate font-semibold text-foreground">{row.client.client_name}</span>
+                                    <span className={cn("inline-flex shrink-0 items-center gap-1 font-medium", meta.text)}>
                                       <span className={cn("h-1.5 w-1.5 rounded-full", meta.dot)} />
                                       {meta.label}
                                     </span>
                                   </div>
-                                  <div className="text-muted-foreground">{inv.invoice_number}</div>
-                                  <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                                  <div className="font-mono text-[11px] text-muted-foreground">{inv.invoice_number}</div>
+                                  <div className="mt-1 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
                                     <span className="text-muted-foreground">Amount</span>
-                                    <span className="text-right font-medium">{inr(total)}</span>
+                                    <span className="text-right font-semibold text-foreground">{inr(total)}</span>
                                     <span className="text-muted-foreground">Paid</span>
-                                    <span className="text-right font-medium text-emerald-300">{inr(paid)}</span>
+                                    <span className="text-right font-semibold text-emerald-500 dark:text-emerald-400">{inr(paid)}</span>
                                     <span className="text-muted-foreground">Remaining</span>
-                                    <span className="text-right font-medium text-amber-300">{inr(remaining)}</span>
+                                    <span className="text-right font-semibold text-amber-500 dark:text-amber-400">{inr(remaining)}</span>
                                     <span className="text-muted-foreground">Invoice date</span>
-                                    <span className="text-right">{formatDate(inv.invoice_date)}</span>
+                                    <span className="text-right text-foreground">{formatDate(inv.invoice_date)}</span>
                                     <span className="text-muted-foreground">Due date</span>
-                                    <span className="text-right">{inv.due_date ? formatDate(inv.due_date) : "—"}</span>
+                                    <span className="text-right text-foreground">{inv.due_date ? formatDate(inv.due_date) : "—"}</span>
                                     {daysLeft !== null && (
                                       <>
                                         <span className="text-muted-foreground">
                                           {daysLeft < 0 ? "Days overdue" : "Days remaining"}
                                         </span>
-                                        <span className="text-right font-medium">{Math.abs(daysLeft)}</span>
+                                        <span className={cn("text-right font-semibold", daysLeft < 0 ? "text-red-500 dark:text-red-400" : "text-foreground")}>
+                                          {Math.abs(daysLeft)}
+                                        </span>
                                       </>
                                     )}
                                   </div>

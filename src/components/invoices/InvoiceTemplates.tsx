@@ -226,7 +226,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       {/* Bank + Pricing */}
-      <div className="grid grid-cols-2 gap-5 p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 sm:p-8">
         <div className="rounded-xl border p-5">
           <div className="flex items-center gap-2 mb-3">
             <span className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">🏦</span>

@@ -268,53 +268,6 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
         </div>
 
 
-        {/* FILTER BAR */}
-        <div className="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-background/40 p-2 backdrop-blur">
-          <div className="relative min-w-[180px] flex-1">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={clientSearch}
-              onChange={(e) => setClientSearch(e.target.value)}
-              placeholder="Search client…"
-              className="h-9 border-transparent bg-transparent pl-8 focus-visible:ring-1"
-            />
-          </div>
-          <div className="relative min-w-[180px] flex-1">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={invoiceSearch}
-              onChange={(e) => setInvoiceSearch(e.target.value)}
-              placeholder="Search invoice #…"
-              className="h-9 border-transparent bg-transparent pl-8 focus-visible:ring-1"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Client" /></SelectTrigger>
-            <SelectContent className="max-h-72">
-              <SelectItem value="all">All clients</SelectItem>
-              {clients
-                .filter((c) => isAll || c.company_id === selectedCompany)
-                .sort((a, b) => a.client_name.localeCompare(b.client_name))
-                .map((c) => <SelectItem key={c.id} value={c.id}>{c.client_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={companyFilter} onValueChange={setCompanyFilter}>
-            <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Company" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All companies</SelectItem>
-              {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* TIMELINE BODY */}

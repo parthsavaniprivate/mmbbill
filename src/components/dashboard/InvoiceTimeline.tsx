@@ -445,19 +445,6 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from, 
                   <Button variant="outline" size="sm" onClick={() => setReminderOpen(true)}>
                     <MessageCircle className="w-4 h-4 mr-1" /> WhatsApp
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const email = activeClient?.email;
-                      if (!email) return toast.error("Client has no email on file");
-                      const subject = `Reminder: Invoice ${activeInvoice.invoice_number}`;
-                      const body = `Hi ${activeClient?.client_name ?? ""},\n\nThis is a reminder for invoice ${activeInvoice.invoice_number} of ${inr(activeInvoice.total)}.\nPaid: ${inr(activeInvoice.amount_paid)}\nBalance: ${inr(Math.max(0, Number(activeInvoice.total) - Number(activeInvoice.amount_paid)))}\n\nThank you.`;
-                      window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                    }}
-                  >
-                    <Mail className="w-4 h-4 mr-1" /> Email Reminder
-                  </Button>
                 </div>
 
                 {/* Payment history */}

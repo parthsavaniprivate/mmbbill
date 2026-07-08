@@ -160,7 +160,22 @@ function ClientDetail() {
     qc.invalidateQueries({ queryKey: ["client-files", id] });
   };
 
-  if (!client) return <div className="text-muted-foreground">Loading…</div>;
+  if (!client) {
+    return (
+      <div className="space-y-4">
+        <Link to="/clients" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Clients
+        </Link>
+        <div className="h-8 w-64 rounded bg-muted animate-pulse" />
+        <div className="h-4 w-96 rounded bg-muted animate-pulse" />
+        <div className="grid md:grid-cols-3 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const co = client.companies as { name: string } | null;
 

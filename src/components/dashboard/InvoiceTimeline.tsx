@@ -423,7 +423,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                             : addUnit(s, "day", Math.max(1, Math.round(spanDays / 30)));
                           const left = xFor(s);
                           const right = xFor(e < s ? addUnit(s, "day", 1) : e);
-                          const width = Math.max(90, right - left);
+                          const width = Math.max(170, right - left);
                           const total = Number(inv.total || 0);
                           const paid = Number(inv.amount_paid || 0);
                           const pct = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;

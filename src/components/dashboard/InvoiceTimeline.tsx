@@ -225,11 +225,12 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
 
   const filtered = useMemo(() => {
     return invoices.filter((i) => {
+      if (!isAll && i.company_id !== selectedCompany) return false;
       if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
       if (clientFilter !== "all" && i.client_id !== clientFilter) return false;
       if (invoiceSearch && !i.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase())) return false;
       const eff = effectiveStatus(i, today);
-      if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
+      if (eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
       const s = startFor(i);
       const e = endFor(i);
@@ -237,7 +238,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       if (e < gStart || s > winEnd) return false;
       return true;
     });
-  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
+  }, [invoices, isAll, selectedCompany, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
 
   const clientRows = useMemo(() => {
     const byId = new Map<string, Client>();

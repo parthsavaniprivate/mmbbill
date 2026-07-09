@@ -293,7 +293,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return rows
       .filter((r) => !clientSearch || (r.client.client_name + " " + (r.client.business_name ?? "")).toLowerCase().includes(clientSearch.toLowerCase()))
       .sort((a, b) => a.client.client_name.localeCompare(b.client.client_name));
-  }, [filtered, clients, clientSearch, companyFilter, clientFilter]);
+  }, [filtered, clients, clientSearch, companyFilter, clientFilter, isAll, selectedCompany]);
 
   const activeInvoice = activeId ? invoices.find((i) => i.id === activeId) ?? null : null;
   const activeClient = activeInvoice ? clients.find((c) => c.id === activeInvoice.client_id) ?? null : null;

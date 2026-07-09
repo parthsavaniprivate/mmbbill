@@ -253,8 +253,9 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       const dt = startOf(d, granularity);
       return (dt.getFullYear() - gStart.getFullYear()) * 12 + (dt.getMonth() - gStart.getMonth());
     };
-    // Include ALL clients (respecting company/client filters), even without invoices.
+    // Include ALL clients (respecting top-switcher company + local filters), even without invoices.
     const allClients = clients.filter((c) => {
+      if (!isAll && c.company_id !== selectedCompany) return false;
       if (companyFilter !== "all" && c.company_id && c.company_id !== companyFilter) return false;
       if (clientFilter !== "all" && c.id !== clientFilter) return false;
       return true;

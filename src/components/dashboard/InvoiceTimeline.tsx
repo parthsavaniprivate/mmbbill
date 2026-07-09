@@ -225,11 +225,12 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
 
   const filtered = useMemo(() => {
     return invoices.filter((i) => {
+      if (!isAll && i.company_id !== selectedCompany) return false;
       if (companyFilter !== "all" && i.company_id !== companyFilter) return false;
       if (clientFilter !== "all" && i.client_id !== clientFilter) return false;
       if (invoiceSearch && !i.invoice_number.toLowerCase().includes(invoiceSearch.toLowerCase())) return false;
       const eff = effectiveStatus(i, today);
-      if (eff === "partially_paid" || eff === "cancelled" || eff === "draft") return false;
+      if (eff === "cancelled" || eff === "draft") return false;
       if (statusFilter !== "all" && eff !== statusFilter) return false;
       const s = startFor(i);
       const e = endFor(i);
@@ -237,7 +238,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       if (e < gStart || s > winEnd) return false;
       return true;
     });
-  }, [invoices, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
+  }, [invoices, isAll, selectedCompany, companyFilter, clientFilter, invoiceSearch, statusFilter, today, gStart, granularity, ticks.length, periodByInvoice]);
 
   const clientRows = useMemo(() => {
     const byId = new Map<string, Client>();
@@ -252,8 +253,9 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       const dt = startOf(d, granularity);
       return (dt.getFullYear() - gStart.getFullYear()) * 12 + (dt.getMonth() - gStart.getMonth());
     };
-    // Include ALL clients (respecting company/client filters), even without invoices.
+    // Include ALL clients (respecting top-switcher company + local filters), even without invoices.
     const allClients = clients.filter((c) => {
+      if (!isAll && c.company_id !== selectedCompany) return false;
       if (companyFilter !== "all" && c.company_id && c.company_id !== companyFilter) return false;
       if (clientFilter !== "all" && c.id !== clientFilter) return false;
       return true;
@@ -291,7 +293,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     return rows
       .filter((r) => !clientSearch || (r.client.client_name + " " + (r.client.business_name ?? "")).toLowerCase().includes(clientSearch.toLowerCase()))
       .sort((a, b) => a.client.client_name.localeCompare(b.client.client_name));
-  }, [filtered, clients, clientSearch, companyFilter, clientFilter]);
+  }, [filtered, clients, clientSearch, companyFilter, clientFilter, isAll, selectedCompany]);
 
   const activeInvoice = activeId ? invoices.find((i) => i.id === activeId) ?? null : null;
   const activeClient = activeInvoice ? clients.find((c) => c.id === activeInvoice.client_id) ?? null : null;

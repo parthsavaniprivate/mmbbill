@@ -129,9 +129,17 @@ export function MarkAsPaidButton({ invoiceId, pending, onDone }: {
   const [open, setOpen] = useState(false);
   const m = useMutation({
     mutationFn: async () => {
-      if (pending <= 0) return;
+      // Re-check server state to prevent duplicate payments (double-clicks, stale UI)
+      const { data: inv, error: invErr } = await supabase
+        .from("invoices")
+        .select("total, amount_paid")
+        .eq("id", invoiceId)
+        .single();
+      if (invErr) throw invErr;
+      const remaining = Number(inv.total) - Number(inv.amount_paid);
+      if (remaining <= 0) throw new Error("Invoice is already fully paid");
       const { error } = await supabase.from("payments").insert({
-        invoice_id: invoiceId, amount: pending,
+        invoice_id: invoiceId, amount: remaining,
         payment_date: new Date().toISOString().slice(0, 10),
         method: "bank_transfer", reference: "Marked as paid", notes: null,
       });
@@ -149,9 +157,10 @@ export function MarkAsPaidButton({ invoiceId, pending, onDone }: {
   });
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)} disabled={pending <= 0}>
-        Mark as Paid
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} disabled={pending <= 0 || m.isPending}>
+        {m.isPending ? "Marking…" : "Mark as Paid"}
       </Button>
+
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Mark invoice as paid?</AlertDialogTitle>

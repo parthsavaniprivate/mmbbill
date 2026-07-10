@@ -42,10 +42,8 @@ function AuthedLayout() {
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
       <header className="h-14 border-b flex items-center gap-3 px-4 sticky top-0 z-30 bg-background/80 backdrop-blur-xl no-print">
-        <Link to="/home" className="flex items-center gap-2">
-          <img src={mmbLogo.url} alt="Make Me Brand" className="w-9 h-9 rounded-lg object-contain bg-white p-1 shadow-sm" />
-          <span className="hidden sm:inline font-semibold tracking-tight">Make Me Brand</span>
-        </Link>
+        <Link to="/home" className="flex items-center gap-2" />
+
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-56 h-9">
             <SelectValue />

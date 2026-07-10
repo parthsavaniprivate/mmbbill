@@ -98,10 +98,11 @@ function FloatingHomeButton() {
     <Link
       to="/home"
       title="Home"
-      className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform no-print"
+      className="fixed left-4 top-20 z-40 h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform no-print"
     >
-      <Home className="w-6 h-6" />
+      <Home className="w-5 h-5" />
     </Link>
   );
 }
+
 

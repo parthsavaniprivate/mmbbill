@@ -208,19 +208,22 @@ function BillingDashboard() {
             {overLimit.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">All clients within their credit limit.</div>
             ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Limit</TableHead><TableHead className="text-right">Outstanding</TableHead><TableHead className="text-right">Over By</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {overLimit.map((r) => (
-                    <TableRow key={r.client.id}>
-                      <TableCell><Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">{r.client.business_name || r.client.client_name}</Link></TableCell>
-                      <TableCell className="text-right text-muted-foreground">{inr(Number(r.client.credit_limit ?? 0))}</TableCell>
-                      <TableCell className="text-right">{inr(r.outstanding)}</TableCell>
-                      <TableCell className="text-right text-destructive font-semibold">{inr(-(r.creditLeft ?? 0))}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Limit</TableHead><TableHead className="text-right">Outstanding</TableHead><TableHead className="text-right">Over By</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {overLimit.map((r) => (
+                      <TableRow key={r.client.id}>
+                        <TableCell><Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">{r.client.business_name || r.client.client_name}</Link></TableCell>
+                        <TableCell className="text-right text-muted-foreground">{inr(Number(r.client.credit_limit ?? 0))}</TableCell>
+                        <TableCell className="text-right">{inr(r.outstanding)}</TableCell>
+                        <TableCell className="text-right text-destructive font-semibold">{inr(-(r.creditLeft ?? 0))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
             )}
           </CardContent>
         </Card>

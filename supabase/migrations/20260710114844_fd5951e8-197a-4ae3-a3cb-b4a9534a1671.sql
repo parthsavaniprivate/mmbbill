@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Auth upload company-assets" ON storage.objects;

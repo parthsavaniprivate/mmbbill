@@ -46,9 +46,6 @@ function AuthedLayout() {
           <img src={mmbLogo.url} alt="Make Me Brand" className="w-9 h-9 rounded-lg object-contain bg-white p-1 shadow-sm" />
           <span className="hidden sm:inline font-semibold tracking-tight">Make Me Brand</span>
         </Link>
-        <Button variant="ghost" size="icon" asChild title="Home">
-          <Link to="/home"><Home className="w-4 h-4" /></Link>
-        </Button>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-56 h-9">
             <SelectValue />

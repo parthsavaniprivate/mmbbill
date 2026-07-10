@@ -177,8 +177,19 @@
   .shadow-glow { box-shadow: var(--shadow-glow); }
 }
 
+@page {
+  size: A4;
+  margin: 0;
+}
+
 @media print {
   .no-print { display: none !important; }
+  /* Hide Lovable badge / edit widgets on print */
+  #lovable-badge,
+  [data-lovable-badge],
+  gpt-engineer-badge,
+  a[href*="lovable.dev"],
+  iframe[src*="lovable"] { display: none !important; }
   body { background: white !important; }
   /* Preserve colors, backgrounds, and gradients when printing / saving as PDF */
   *, *::before, *::after {
@@ -196,9 +207,37 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
 /* Invoice preview: horizontal scroll on small screens instead of clipping */
 .invoice-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .invoice-scroll > * { min-width: 720px; }
+
 @media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    overflow: visible !important;
+  }
+  /* Strip app layout chrome so the invoice owns the A4 page */
+  main, .container,
+  main > div, main > div > div {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   .invoice-scroll { overflow: visible !important; }
-  .invoice-scroll > * { min-width: 0 !important; }
+  .invoice-scroll > * {
+    min-width: 0 !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
 
 /* SF Pro Display Bold — uses Apple's system font on macOS/iOS,

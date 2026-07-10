@@ -171,17 +171,20 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     },
   });
   const periodByInvoice = useMemo(() => {
-    const m = new Map<string, { from: Date; to: Date }>();
+    // Use the lowest-position line item with a parseable period as the bar range.
+    // Merging the "widest" range across items causes an ADS line like
+    // "For Apr 2026 - Jun 2026" to stretch a single-month invoice across 3 months.
+    const chosen = new Map<string, { pos: number; period: { from: Date; to: Date } }>();
     for (const it of firstItems) {
       const p = parseItemPeriod(it.description);
       if (!p) continue;
-      const prev = m.get(it.invoice_id);
-      if (!prev) m.set(it.invoice_id, p);
-      else m.set(it.invoice_id, {
-        from: p.from < prev.from ? p.from : prev.from,
-        to: p.to > prev.to ? p.to : prev.to,
-      });
+      const prev = chosen.get(it.invoice_id);
+      if (!prev || it.position < prev.pos) {
+        chosen.set(it.invoice_id, { pos: it.position, period: p });
+      }
     }
+    const m = new Map<string, { from: Date; to: Date }>();
+    for (const [k, v] of chosen) m.set(k, v.period);
     return m;
   }, [firstItems]);
   const startFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.from ?? new Date(inv.invoice_date);

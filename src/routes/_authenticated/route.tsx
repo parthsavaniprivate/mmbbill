@@ -82,27 +82,27 @@ function AuthedLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex-1 w-full min-w-0 p-3 sm:p-4 md:p-6 pl-16 sm:pl-20">
+      <main className="flex-1 w-full min-w-0 p-3 sm:p-4 md:p-6">
+        <InlineHomeButton />
         <Outlet />
       </main>
-      <FloatingHomeButton />
-
     </div>
   );
 }
 
-function FloatingHomeButton() {
+function InlineHomeButton() {
   const { pathname } = useLocation();
   if (pathname === "/home") return null;
   return (
     <Link
       to="/home"
       title="Home"
-      className="fixed left-4 top-20 z-40 h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform no-print"
+      className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm hover:scale-105 transition-transform mb-3 no-print"
     >
-      <Home className="w-5 h-5" />
+      <Home className="w-4 h-4" />
     </Link>
   );
 }
+
 
 

@@ -213,22 +213,26 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     margin: 0 !important;
     padding: 0 !important;
     width: 210mm !important;
-    overflow: visible !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
   }
-  /* Strip app layout chrome so the invoice owns the A4 page */
   main, .container,
   main > div, main > div > div {
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
+  /* Kill any siblings after the invoice card that could push a 2nd page */
+  .invoice-scroll ~ * { display: none !important; }
   .invoice-scroll { overflow: visible !important; }
   .invoice-scroll > * {
     min-width: 0 !important;
     width: 210mm !important;
     max-width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
+    max-height: 296mm !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
@@ -237,6 +241,7 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    break-after: avoid !important;
   }
 }
 

@@ -266,12 +266,6 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 px-5 sm:px-8 pb-3 text-sm">
-        <div className="border-t border-dashed border-slate-300 pt-2 text-slate-500">Customer Signature</div>
-        <div className="border-t border-dashed border-slate-300 pt-2 text-right text-slate-500">
-          Authorised Signatory · {heading}
-        </div>
-      </div>
 
       <p className="text-center text-slate-400 text-sm pb-8">Thank you for your business !</p>
     </div>

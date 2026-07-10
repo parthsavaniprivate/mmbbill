@@ -236,6 +236,10 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="col-span-2">
+              <p className="text-[10px] tracking-wider text-slate-500 font-bold uppercase">Account Holder</p>
+              <p className="font-bold">Janki Parth Savani</p>
+            </div>
             <div>
               <p className="text-[10px] tracking-wider text-slate-500 font-bold uppercase">Account Number</p>
               <p className="font-bold">{co?.bank_account || "—"}</p>

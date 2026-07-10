@@ -166,8 +166,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     queryFn: async () => {
       const { data } = await supabase.from("invoice_items")
         .select("invoice_id, description, position")
-        .in("invoice_id", invoiceIds)
-        .eq("position", 0);
+        .in("invoice_id", invoiceIds);
       return data ?? [];
     },
   });
@@ -175,7 +174,13 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     const m = new Map<string, { from: Date; to: Date }>();
     for (const it of firstItems) {
       const p = parseItemPeriod(it.description);
-      if (p) m.set(it.invoice_id, p);
+      if (!p) continue;
+      const prev = m.get(it.invoice_id);
+      if (!prev) m.set(it.invoice_id, p);
+      else m.set(it.invoice_id, {
+        from: p.from < prev.from ? p.from : prev.from,
+        to: p.to > prev.to ? p.to : prev.to,
+      });
     }
     return m;
   }, [firstItems]);

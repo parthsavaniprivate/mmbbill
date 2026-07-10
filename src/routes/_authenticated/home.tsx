@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Users, Receipt, Wallet, TrendingDown, RefreshCw,
   BarChart3, Settings, FileText, BadgeIndianRupee, Map,
 } from "lucide-react";
+import { useCompany, ALL } from "@/lib/company";
 
 export const Route = createFileRoute("/_authenticated/home")({ component: HomeScreen });
 

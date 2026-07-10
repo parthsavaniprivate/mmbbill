@@ -396,7 +396,7 @@ function Dashboard() {
             borderColor,
           )}>
             <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold truncate">{label}</p>
-            <p className={cn("text-sm sm:text-xl md:text-2xl font-extrabold mt-1 sm:mt-1.5 tracking-tight truncate", color)}>{value}</p>
+            <p className={cn("text-xs sm:text-sm md:text-base lg:text-xl font-extrabold mt-1 sm:mt-1.5 tracking-tight break-words leading-tight", color)}>{value}</p>
           </div>
         );
 

@@ -153,8 +153,8 @@ function BillingDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">Billing Dashboard</h1>
           <p className="text-sm text-muted-foreground">Invoices, outstanding & credit per client.</p>
         </div>
@@ -163,13 +163,14 @@ function BillingDashboard() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard icon={Receipt} label="Total Billed" value={inr(totals.billed)} />
         <StatCard icon={Wallet} label="Collected" value={inr(totals.collected)} tone="success" />
         <StatCard icon={Percent} label="Collection Rate" value={`${collectionRate.toFixed(1)}%`} tone={collectionRate >= 80 ? "success" : collectionRate >= 50 ? "warning" : "accent"} />
         <StatCard icon={AlertTriangle} label="Outstanding" value={inr(totals.outstanding)} tone="warning" />
         <StatCard icon={TrendingUp} label="Overdue" value={inr(totals.overdue)} tone="accent" />
       </div>
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -178,24 +179,27 @@ function BillingDashboard() {
             {overdueRows.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">No overdue invoices.</div>
             ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Overdue</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {overdueRows.slice(0, 10).map((r) => (
-                    <TableRow key={r.client.id}>
-                      <TableCell>
-                        <Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">
-                          {r.client.business_name || r.client.client_name}
-                        </Link>
-                        {agingBadge(r.oldestDays)}
-                      </TableCell>
-                      <TableCell className="text-right text-destructive font-semibold">{inr(r.overdue)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Overdue</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {overdueRows.slice(0, 10).map((r) => (
+                      <TableRow key={r.client.id}>
+                        <TableCell>
+                          <Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">
+                            {r.client.business_name || r.client.client_name}
+                          </Link>
+                          {agingBadge(r.oldestDays)}
+                        </TableCell>
+                        <TableCell className="text-right text-destructive font-semibold">{inr(r.overdue)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
+
         </Card>
 
         <Card>
@@ -204,19 +208,22 @@ function BillingDashboard() {
             {overLimit.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">All clients within their credit limit.</div>
             ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Limit</TableHead><TableHead className="text-right">Outstanding</TableHead><TableHead className="text-right">Over By</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {overLimit.map((r) => (
-                    <TableRow key={r.client.id}>
-                      <TableCell><Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">{r.client.business_name || r.client.client_name}</Link></TableCell>
-                      <TableCell className="text-right text-muted-foreground">{inr(Number(r.client.credit_limit ?? 0))}</TableCell>
-                      <TableCell className="text-right">{inr(r.outstanding)}</TableCell>
-                      <TableCell className="text-right text-destructive font-semibold">{inr(-(r.creditLeft ?? 0))}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Limit</TableHead><TableHead className="text-right">Outstanding</TableHead><TableHead className="text-right">Over By</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {overLimit.map((r) => (
+                      <TableRow key={r.client.id}>
+                        <TableCell><Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">{r.client.business_name || r.client.client_name}</Link></TableCell>
+                        <TableCell className="text-right text-muted-foreground">{inr(Number(r.client.credit_limit ?? 0))}</TableCell>
+                        <TableCell className="text-right">{inr(r.outstanding)}</TableCell>
+                        <TableCell className="text-right text-destructive font-semibold">{inr(-(r.creditLeft ?? 0))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
             )}
           </CardContent>
         </Card>
@@ -232,7 +239,7 @@ function BillingDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search client…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 w-56" />
+                <Input placeholder="Search client…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 w-full sm:w-56" />
               </div>
               <div className="flex gap-1">
                 {(["all", "overdue", "overlimit", "active"] as FilterKey[]).map((k) => (
@@ -309,14 +316,15 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: React.ComponentTyp
   const toneClass = tone === "success" ? "text-emerald-500" : tone === "warning" ? "text-amber-500" : tone === "accent" ? "text-primary" : "text-muted-foreground";
   return (
     <Card>
-      <CardContent className="p-5 flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${toneClass}`}>
-          <Icon className="w-5 h-5" />
+      <CardContent className="p-3 sm:p-5 flex items-center gap-3">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center ${toneClass}`}>
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-          <div className="text-xl font-semibold truncate">{value}</div>
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground truncate">{label}</div>
+          <div className="text-sm sm:text-lg lg:text-xl font-semibold break-words leading-tight">{value}</div>
         </div>
+
       </CardContent>
     </Card>
   );

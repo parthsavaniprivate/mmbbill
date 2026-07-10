@@ -228,7 +228,7 @@ function InvoicesPage() {
           ) : (
             <>
             {/* Mobile card list */}
-            <div className="md:hidden divide-y">
+            <div className="lg:hidden divide-y">
               {filtered.map((i, idx) => {
                 const cl = i.clients as ClientLite | null;
                 const pending = Number(i.total) - Number(i.amount_paid);

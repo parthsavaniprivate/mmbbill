@@ -111,11 +111,12 @@ function NewQuotationPage() {
               <div className="col-span-8 md:col-span-4 space-y-1"><Label className="text-xs">Total Amount</Label>
                 <Input type="number" value={it.amount} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, amount: Number(e.target.value) } : x))} />
               </div>
-              <div className="col-span-1">
+              <div className="col-span-4 md:col-span-1 flex justify-end">
                 <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={() => setItems([...items, { item_name: "", description: "", amount: 0 }])}>

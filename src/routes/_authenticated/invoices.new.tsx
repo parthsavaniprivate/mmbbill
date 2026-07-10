@@ -198,10 +198,10 @@ function NewInvoicePage() {
                 </div>
 
                 {/* Row 2 */}
-                <div className="grid grid-cols-12 gap-2 items-end">
+                <div className="grid grid-cols-2 md:grid-cols-12 gap-2 items-end">
                   {!it.oneTime && (
                     <>
-                      <div className="col-span-3 space-y-1.5">
+                      <div className="col-span-1 md:col-span-3 space-y-1.5">
                         <Label className="text-xs font-medium">From Month</Label>
                         <Input
                           type="month"
@@ -210,7 +210,7 @@ function NewInvoicePage() {
                           onChange={(e) => updateRange(e.target.value ? `${e.target.value}-01` : undefined, it.toDate)}
                         />
                       </div>
-                      <div className="col-span-3 space-y-1.5">
+                      <div className="col-span-1 md:col-span-3 space-y-1.5">
                         <Label className="text-xs font-medium">To Month</Label>
                         <Input
                           type="month"
@@ -221,15 +221,15 @@ function NewInvoicePage() {
                       </div>
                     </>
                   )}
-                  <div className="col-span-1 space-y-1.5">
+                  <div className="col-span-1 md:col-span-1 space-y-1.5">
                     <Label className="text-xs font-medium">{it.oneTime ? "Unit" : "Qty"}</Label>
                     <Input type="number" placeholder="0" value={it.quantity} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
-                  <div className="col-span-2 space-y-1.5">
+                  <div className="col-span-1 md:col-span-2 space-y-1.5">
                     <Label className="text-xs font-medium">Rate</Label>
                     <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
-                  <div className="col-span-2 space-y-1.5">
+                  <div className="col-span-2 md:col-span-2 space-y-1.5">
                     <Label className="text-xs font-medium">Total (÷ months)</Label>
                     <Input
                       type="number"
@@ -243,12 +243,13 @@ function NewInvoicePage() {
                       }}
                     />
                   </div>
-                  <div className="col-span-1 flex justify-end">
+                  <div className="col-span-2 md:col-span-1 flex justify-end">
                     <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
+
               </div>
             );
           })}

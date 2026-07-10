@@ -58,7 +58,8 @@ function AuthedLayout() {
           <div className="relative w-full">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search clients, invoices…"
+              id="global-search"
+              placeholder="Search clients, invoices…  (press /)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {

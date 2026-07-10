@@ -82,7 +82,7 @@ function AuthedLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex-1 w-full min-w-0 p-3 sm:p-4 md:p-6">
+      <main className="flex-1 w-full min-w-0 p-3 sm:p-4 md:p-6 pl-16 sm:pl-20">
         <Outlet />
       </main>
       <FloatingHomeButton />

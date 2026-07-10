@@ -42,7 +42,9 @@ function AuthedLayout() {
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
       <header className="h-14 border-b flex items-center gap-3 px-4 sticky top-0 z-30 bg-background/80 backdrop-blur-xl no-print">
-        <Link to="/home" className="flex items-center gap-2" />
+        <Link to="/home" className="font-semibold tracking-tight truncate max-w-[60vw]">
+          {selected === ALL ? "All Companies" : companies.find((c) => c.id === selected)?.name || ""}
+        </Link>
 
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-56 h-9">

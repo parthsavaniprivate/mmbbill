@@ -344,7 +344,7 @@ function EditInvoicePage() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/invoices/$id" params={{ id }}>Cancel</Link></Button>
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "Saving…" : "Save Changes"}</Button>
+        <Button data-shortcut="save" onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "Saving…" : "Save Changes"}</Button>
       </div>
     </div>
   );

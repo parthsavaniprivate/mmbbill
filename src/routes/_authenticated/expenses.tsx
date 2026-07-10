@@ -472,32 +472,39 @@ function RecurringForm({ initial, onClose }: { initial: RecurringRow | null; onC
   );
 }
 
-function VariableForm({ onClose }: { onClose: () => void }) {
+function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClose: () => void }) {
   const { companies, selected, isAll } = useCompany();
   const [form, setForm] = useState({
-    company_id: isAll ? companies[0]?.id ?? "" : selected,
-    category: "facebook_ads" as Category,
-    amount: "",
-    expense_date: new Date().toISOString().slice(0, 10),
-    vendor: "", description: "",
+    company_id: initial?.company_id ?? (isAll ? companies[0]?.id ?? "" : selected),
+    category: (initial?.category ?? "facebook_ads") as Category,
+    amount: initial ? String(initial.amount) : "",
+    expense_date: initial?.expense_date ?? new Date().toISOString().slice(0, 10),
+    vendor: initial?.vendor ?? "",
+    description: initial?.description ?? "",
   });
   const save = useMutation({
     mutationFn: async () => {
       if (!form.company_id || !form.amount) throw new Error("Company and amount required");
-      const { error } = await supabase.from("expenses").insert({
-        company_id: form.company_id, category: form.category, expense_kind: "variable",
+      const payload = {
+        company_id: form.company_id, category: form.category, expense_kind: "variable" as const,
         amount: Number(form.amount), expense_date: form.expense_date,
         vendor: form.vendor || null, description: form.description || null,
-      });
-      if (error) throw error;
+      };
+      if (initial) {
+        const { error } = await supabase.from("expenses").update(payload).eq("id", initial.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("expenses").insert(payload);
+        if (error) throw error;
+      }
     },
-    onSuccess: () => { toast.success("Expense added"); onClose(); },
+    onSuccess: () => { toast.success(initial ? "Updated" : "Expense added"); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const variableCats = CATEGORIES.filter((c) => !FIXED_CATEGORIES.includes(c.value));
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>New Variable Expense</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{initial ? "Edit" : "New"} Variable Expense</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div className="space-y-1.5"><Label>Company</Label>
           <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>

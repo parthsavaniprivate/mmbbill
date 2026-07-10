@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Users, Receipt, Wallet, TrendingDown, RefreshCw,
   BarChart3, Settings, FileText, BadgeIndianRupee, Map,
 } from "lucide-react";
+import { useCompany, ALL } from "@/lib/company";
 
 export const Route = createFileRoute("/_authenticated/home")({ component: HomeScreen });
 
@@ -22,6 +23,8 @@ const APPS = [
 ] as const;
 
 function HomeScreen() {
+  const { selected, companies } = useCompany();
+  const title = selected === ALL ? "All Companies" : (companies.find((c) => c.id === selected)?.name || "Home");
   return (
     <div className="relative min-h-[calc(100vh-56px)] -m-3 sm:-m-4 md:-m-6 overflow-hidden">
       {/* Ambient gradient background */}
@@ -33,7 +36,7 @@ function HomeScreen() {
       <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16">
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent">
-            Make Me Brand
+            {title}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">Tap an app to open</p>
         </div>

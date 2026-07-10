@@ -159,8 +159,9 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
 
   // First-item period per invoice (drives bar start/end)
   const invoiceIds = useMemo(() => invoices.map((i) => i.id), [invoices]);
+  const invoiceIdsKey = useMemo(() => [...invoiceIds].sort().join("|"), [invoiceIds]);
   const { data: firstItems = [] } = useQuery({
-    queryKey: ["timeline-first-items", invoiceIds.length, invoiceIds[0] ?? ""],
+    queryKey: ["timeline-first-items", invoiceIdsKey],
     enabled: invoiceIds.length > 0,
     queryFn: async () => {
       const { data } = await supabase.from("invoice_items")
@@ -182,9 +183,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const endFor = (inv: Invoice) => periodByInvoice.get(inv.id)?.to ?? (inv.due_date ? new Date(inv.due_date) : addUnit(new Date(inv.invoice_date), "day", 1));
 
 
-  // Monthly Gantt scale. If parent supplies from/to (dashboard filter), honor
-  // that range. Otherwise span from the earliest invoice/item start to the
-  // latest end so older invoices (e.g. first-item period in 2025) always show.
+  // Monthly Gantt scale. Start with the dashboard range, but always expand it
+  // to include every invoice billing period so future-month bars never vanish.
   const granularity: Granularity = "month";
   const now = new Date();
 
@@ -200,8 +200,8 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const earliest = allStarts.length ? new Date(Math.min(...allStarts)) : now;
   const latest = allEnds.length ? new Date(Math.max(...allEnds)) : now;
 
-  const rangeStart = _from ?? earliest;
-  const rangeEnd = to ?? latest;
+  const rangeStart = _from ? new Date(Math.min(+_from, +earliest)) : earliest;
+  const rangeEnd = to ? new Date(Math.max(+to, +latest)) : latest;
 
   const gStart = startOf(rangeStart, "month");
   const endMonth = startOf(rangeEnd, "month");

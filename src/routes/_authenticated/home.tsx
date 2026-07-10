@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, Receipt, Wallet, TrendingDown, RefreshCw,
-  BarChart3, Settings, FileText, BadgeIndianRupee, Map,
+  BarChart3, Settings, FileText, BadgeIndianRupee, Map, History,
 } from "lucide-react";
 import { useCompany, ALL } from "@/lib/company";
 

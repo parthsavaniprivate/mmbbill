@@ -73,6 +73,7 @@ function ExpensesPage() {
   const [openVar, setOpenVar] = useState(false);
   const [openFix, setOpenFix] = useState(false);
   const [editingFix, setEditingFix] = useState<RecurringRow | null>(null);
+  const [editingVar, setEditingVar] = useState<ExpenseRow | null>(null);
   const [period, setPeriod] = useState<"all" | "month" | "year">("month");
 
   const { data: expenses = [] } = useQuery({
@@ -315,9 +316,13 @@ function ExpensesPage() {
               date: e.expense_date, company: companies.find((c) => c.id === e.company_id)?.name,
               kind: e.expense_kind, category: e.category, amount: e.amount, vendor: e.vendor, description: e.description,
             })))}><FileDown className="w-4 h-4" />Export</Button>
-            <Dialog open={openVar} onOpenChange={setOpenVar}>
+            <Dialog open={openVar} onOpenChange={(o) => { setOpenVar(o); if (!o) setEditingVar(null); }}>
               <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4" />Add Variable</Button></DialogTrigger>
-              <VariableForm onClose={() => { setOpenVar(false); qc.invalidateQueries({ queryKey: ["expenses"] }); }} />
+              <VariableForm
+                key={editingVar?.id ?? "new"}
+                initial={editingVar}
+                onClose={() => { setOpenVar(false); setEditingVar(null); qc.invalidateQueries({ queryKey: ["expenses"] }); }}
+              />
             </Dialog>
           </div>
         </CardHeader>
@@ -339,7 +344,12 @@ function ExpensesPage() {
                     <TableCell>{e.vendor || "—"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
                     <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
-                    <TableCell><Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button></TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -369,6 +379,7 @@ function SummaryCard({
 }
 
 type RecurringRow = Database["public"]["Tables"]["recurring_expenses"]["Row"];
+type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"];
 
 function RecurringForm({ initial, onClose }: { initial: RecurringRow | null; onClose: () => void }) {
   const { companies, selected, isAll } = useCompany();
@@ -461,32 +472,39 @@ function RecurringForm({ initial, onClose }: { initial: RecurringRow | null; onC
   );
 }
 
-function VariableForm({ onClose }: { onClose: () => void }) {
+function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClose: () => void }) {
   const { companies, selected, isAll } = useCompany();
   const [form, setForm] = useState({
-    company_id: isAll ? companies[0]?.id ?? "" : selected,
-    category: "facebook_ads" as Category,
-    amount: "",
-    expense_date: new Date().toISOString().slice(0, 10),
-    vendor: "", description: "",
+    company_id: initial?.company_id ?? (isAll ? companies[0]?.id ?? "" : selected),
+    category: (initial?.category ?? "facebook_ads") as Category,
+    amount: initial ? String(initial.amount) : "",
+    expense_date: initial?.expense_date ?? new Date().toISOString().slice(0, 10),
+    vendor: initial?.vendor ?? "",
+    description: initial?.description ?? "",
   });
   const save = useMutation({
     mutationFn: async () => {
       if (!form.company_id || !form.amount) throw new Error("Company and amount required");
-      const { error } = await supabase.from("expenses").insert({
-        company_id: form.company_id, category: form.category, expense_kind: "variable",
+      const payload = {
+        company_id: form.company_id, category: form.category, expense_kind: "variable" as const,
         amount: Number(form.amount), expense_date: form.expense_date,
         vendor: form.vendor || null, description: form.description || null,
-      });
-      if (error) throw error;
+      };
+      if (initial) {
+        const { error } = await supabase.from("expenses").update(payload).eq("id", initial.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("expenses").insert(payload);
+        if (error) throw error;
+      }
     },
-    onSuccess: () => { toast.success("Expense added"); onClose(); },
+    onSuccess: () => { toast.success(initial ? "Updated" : "Expense added"); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const variableCats = CATEGORIES.filter((c) => !FIXED_CATEGORIES.includes(c.value));
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>New Variable Expense</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{initial ? "Edit" : "New"} Variable Expense</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div className="space-y-1.5"><Label>Company</Label>
           <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>

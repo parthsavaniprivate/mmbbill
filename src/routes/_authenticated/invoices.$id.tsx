@@ -67,7 +67,14 @@ function InvoiceDetail() {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Link>
         <div className="col-span-2 flex flex-wrap gap-2 sm:col-auto">
-          <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4" />Print / PDF</Button>
+          <Button variant="outline" onClick={() => {
+            const name = (cl?.business_name || cl?.client_name || inv.invoice_number).replace(/[\\/:*?"<>|]/g, "").trim();
+            const prev = document.title;
+            document.title = `${name} Invoice`;
+            const restore = () => { document.title = prev; window.removeEventListener("afterprint", restore); };
+            window.addEventListener("afterprint", restore);
+            window.print();
+          }}><Printer className="w-4 h-4" />Print / PDF</Button>
           {waLink && (
             <AlertDialog open={waOpen} onOpenChange={setWaOpen}>
               <AlertDialogTrigger asChild>

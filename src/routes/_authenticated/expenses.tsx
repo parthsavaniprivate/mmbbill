@@ -370,6 +370,7 @@ function SummaryCard({
 }
 
 type RecurringRow = Database["public"]["Tables"]["recurring_expenses"]["Row"];
+type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"];
 
 function RecurringForm({ initial, onClose }: { initial: RecurringRow | null; onClose: () => void }) {
   const { companies, selected, isAll } = useCompany();

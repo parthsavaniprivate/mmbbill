@@ -226,6 +226,83 @@ function InvoicesPage() {
           {filtered.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">No invoices found.</div>
           ) : (
+            <>
+            {/* Mobile card list */}
+            <div className="md:hidden divide-y">
+              {filtered.map((i, idx) => {
+                const cl = i.clients as ClientLite | null;
+                const pending = Number(i.total) - Number(i.amount_paid);
+                const canRemind = REMINDABLE.includes(i.status);
+                const overdueDays = i.due_date && pending > 0 ? daysBetween(i.due_date) : 0;
+                const companyName = companies.find((c) => c.id === i.company_id)?.name || "—";
+                const prevCompanyName = idx > 0
+                  ? (companies.find((c) => c.id === filtered[idx - 1].company_id)?.name || "—")
+                  : null;
+                const showGroup = companyName !== prevCompanyName;
+                return (
+                  <Fragment key={i.id}>
+                    {showGroup && (
+                      <div className="px-3 py-2 bg-muted/40 text-xs font-semibold uppercase tracking-wide">{companyName}</div>
+                    )}
+                    <div className="p-3 flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <div className="min-w-0 flex-1">
+                          <Link to="/invoices/$id" params={{ id: i.id }} className="font-semibold text-sm hover:underline block truncate">{i.invoice_number}</Link>
+                          <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
+                        </div>
+                        <Badge className={`${STATUS_COLORS[i.status]} shrink-0 text-[10px]`} variant="outline">{i.status.replace("_", " ")}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-muted-foreground">Total</p>
+                          <p className="font-semibold">{inr(Number(i.total))}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Pending</p>
+                          <p className={`font-semibold ${pending > 0 ? "text-destructive" : ""}`}>{inr(pending)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Date</p>
+                          <p>{i.invoice_date ? formatDate(i.invoice_date) : "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Due</p>
+                          <p>{pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}
+                          {pending > 0 && overdueDays > 0 && <span className="text-destructive"> · {overdueDays}d</span>}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end items-center gap-1 pt-1">
+                        {pending > 0 && i.status !== "cancelled" && (
+                          <MarkAsPaidButton invoiceId={i.id} pending={pending} />
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="ghost"><MoreHorizontal className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem asChild><Link to="/invoices/$id" params={{ id: i.id }}><Eye className="w-4 h-4" /> View</Link></DropdownMenuItem>
+                            <DropdownMenuItem asChild><Link to="/invoices/$id/edit" params={{ id: i.id }}><Pencil className="w-4 h-4" /> Edit</Link></DropdownMenuItem>
+                            {canRemind && <DropdownMenuItem onSelect={() => setReminderFor(i.id)}><Bell className="w-4 h-4" /> Send Reminder</DropdownMenuItem>}
+                            {canRemind && (cl?.whatsapp || cl?.mobile) && (
+                              <DropdownMenuItem onSelect={() => {
+                                const url = `https://wa.me/${(cl.whatsapp || cl.mobile || "").replace(/\D/g, "")}`;
+                                const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+                                document.body.appendChild(a); a.click(); a.remove();
+                              }}><MessageCircle className="w-4 h-4" /> WhatsApp</DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeleteFor(i.id)}><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </Fragment>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -336,9 +413,12 @@ function InvoicesPage() {
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
+
 
       {reminderInv && (
         <SendReminderDialog

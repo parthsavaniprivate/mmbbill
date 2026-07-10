@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
-
-export const Route = createFileRoute("/_authenticated/history")({
-  component: HistoryPage,
-});
 
 type AuditRow = {
   id: string;
@@ -24,6 +20,31 @@ type AuditRow = {
   changed_fields: string[] | null;
   created_at: string;
 };
+
+const auditQuery = (table: string) =>
+  queryOptions({
+    queryKey: ["audit_log", table],
+    queryFn: async () => {
+      let q = supabase
+        .from("audit_log" as never)
+        .select("id,user_email,table_name,record_id,action,old_data,new_data,changed_fields,created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (table !== "all") q = q.eq("table_name" as never, table);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as AuditRow[];
+    },
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  });
+
+export const Route = createFileRoute("/_authenticated/history")({
+  loader: ({ context }) => {
+    context.queryClient.prefetchQuery(auditQuery("all"));
+  },
+  component: HistoryPage,
+});
 
 const TABLES = ["all", "invoices", "clients", "payments", "expenses", "quotations", "companies", "employees", "invoice_items", "salary_slips", "recurring_expenses", "packages"];
 
@@ -43,16 +64,8 @@ function HistoryPage() {
   const [table, setTable] = useState("all");
   const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["audit_log", table],
-    queryFn: async () => {
-      let q = supabase.from("audit_log" as never).select("*").order("created_at", { ascending: false }).limit(300);
-      if (table !== "all") q = q.eq("table_name" as never, table);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data ?? []) as unknown as AuditRow[];
-    },
-  });
+  const { data, isLoading } = useQuery(auditQuery(table));
+
 
   const rows = (data ?? []).filter((r) => {
     if (!search) return true;

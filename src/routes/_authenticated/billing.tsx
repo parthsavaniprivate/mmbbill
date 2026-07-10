@@ -153,8 +153,8 @@ function BillingDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">Billing Dashboard</h1>
           <p className="text-sm text-muted-foreground">Invoices, outstanding & credit per client.</p>
         </div>
@@ -163,13 +163,14 @@ function BillingDashboard() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard icon={Receipt} label="Total Billed" value={inr(totals.billed)} />
         <StatCard icon={Wallet} label="Collected" value={inr(totals.collected)} tone="success" />
         <StatCard icon={Percent} label="Collection Rate" value={`${collectionRate.toFixed(1)}%`} tone={collectionRate >= 80 ? "success" : collectionRate >= 50 ? "warning" : "accent"} />
         <StatCard icon={AlertTriangle} label="Outstanding" value={inr(totals.outstanding)} tone="warning" />
         <StatCard icon={TrendingUp} label="Overdue" value={inr(totals.overdue)} tone="accent" />
       </div>
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

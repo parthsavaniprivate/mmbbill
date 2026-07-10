@@ -34,7 +34,7 @@ function AuthPage() {
   useEffect(() => {
     if (user) {
       if (isSafeRelative(next)) window.location.replace(next);
-      else navigate({ to: "/dashboard", replace: true });
+      else navigate({ to: "/home", replace: true });
     }
   }, [user, navigate, next]);
 

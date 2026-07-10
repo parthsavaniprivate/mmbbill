@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   LayoutDashboard, Users, Receipt, Wallet, TrendingDown, RefreshCw,
-  BarChart3, Settings, FileText, BadgeIndianRupee, Map,
+  BarChart3, Settings, FileText, BadgeIndianRupee, Map, History,
 } from "lucide-react";
 import { useCompany, ALL } from "@/lib/company";
 
@@ -19,6 +19,7 @@ const APPS = [
   { to: "/renewals", label: "Renewals", icon: RefreshCw, from: "#a855f7", toColor: "#6366f1" },
   { to: "/salary", label: "Salary Slips", icon: BadgeIndianRupee, from: "#eab308", toColor: "#f59e0b" },
   { to: "/reports", label: "Reports", icon: BarChart3, from: "#14b8a6", toColor: "#06b6d4" },
+  { to: "/history", label: "History", icon: History, from: "#8b5cf6", toColor: "#6366f1" },
   { to: "/settings", label: "Settings", icon: Settings, from: "#64748b", toColor: "#334155" },
 ] as const;
 

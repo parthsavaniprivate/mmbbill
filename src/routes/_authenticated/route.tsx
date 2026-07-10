@@ -4,18 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCompany, ALL } from "@/lib/company";
 import { useTheme } from "@/lib/theme";
-import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
-  SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, SidebarHeader,
-  SidebarFooter, SidebarGroupLabel,
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  LayoutDashboard, Users, Receipt, Wallet, TrendingDown, RefreshCw,
-  BarChart3, Settings, LogOut, Moon, Sun, Search, FileText, BadgeIndianRupee,
-  Map,
-} from "lucide-react";
+import { LogOut, Moon, Sun, Search, Home } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 

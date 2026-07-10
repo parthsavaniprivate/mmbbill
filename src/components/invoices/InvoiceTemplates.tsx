@@ -43,7 +43,7 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
   const { invoice: inv, items, company: co, client: cl } = data;
   const pending = Number(inv.total) - Number(inv.amount_paid);
   return (
-    <div className="p-5 sm:p-8 md:p-10 space-y-5 sm:space-y-6 bg-white text-black">
+    <div className="invoice-template-page p-5 sm:p-8 md:p-10 space-y-5 sm:space-y-6 bg-white text-black">
       <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
         <span className="uppercase">{inv.invoice_type === "proforma" ? "Proforma Invoice" : "Bill of Supply"}</span>
         <span className="border border-gray-300 text-gray-500 px-2 py-0.5 rounded uppercase">Original for Recipient</span>
@@ -145,7 +145,7 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
   const pending = Number(inv.total) - Number(inv.amount_paid);
   const heading = co?.legal_name || co?.name || "";
   return (
-    <div className="bg-white text-slate-800">
+    <div className="invoice-template-page bg-white text-slate-800">
       {/* Purple header */}
       <div className="p-5 sm:p-8 text-white flex flex-wrap gap-4 justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
         <div>

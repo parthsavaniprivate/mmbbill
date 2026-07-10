@@ -302,7 +302,7 @@ function InvoicesPage() {
             </div>
 
             {/* Desktop table */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
             <Table>
               <TableHeader>
                 <TableRow>

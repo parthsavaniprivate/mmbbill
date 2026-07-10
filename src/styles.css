@@ -232,18 +232,25 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     min-width: 0 !important;
     width: 210mm !important;
     max-width: 210mm !important;
-    max-height: 296mm !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    overflow: hidden !important;
+    /* Auto-shrink invoice content to fit exactly one A4 page */
+    zoom: 0.72;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     break-after: avoid !important;
   }
+  /* Tighten template internal spacing so it fits A4 cleanly */
+  .invoice-scroll .p-8, .invoice-scroll .sm\:p-8 { padding: 1rem !important; }
+  .invoice-scroll .pb-8 { padding-bottom: 0.5rem !important; }
+  .invoice-scroll .p-5, .invoice-scroll .sm\:p-5 { padding: 0.75rem !important; }
+  .invoice-scroll .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+  .invoice-scroll .py-3 { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
 }
+
 
 /* SF Pro Display Bold — uses Apple's system font on macOS/iOS,
    falls back to Inter/system-ui elsewhere (SF Pro is proprietary Apple font). */

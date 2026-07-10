@@ -190,7 +190,7 @@
   gpt-engineer-badge,
   a[href*="lovable.dev"],
   iframe[src*="lovable"] { display: none !important; }
-  body { background: white !important; }
+  html, body { background: white !important; }
   /* Preserve colors, backgrounds, and gradients when printing / saving as PDF */
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
@@ -198,6 +198,7 @@
     color-adjust: exact !important;
   }
 }
+
 
 /* Global mobile overflow safety */
 html, body { overflow-x: hidden; }

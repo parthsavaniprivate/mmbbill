@@ -249,6 +249,8 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
   .invoice-scroll .p-5, .invoice-scroll .sm\:p-5 { padding: 0.75rem !important; }
   .invoice-scroll .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
   .invoice-scroll .py-3 { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
+}
+
 
 /* SF Pro Display Bold — uses Apple's system font on macOS/iOS,
    falls back to Inter/system-ui elsewhere (SF Pro is proprietary Apple font). */

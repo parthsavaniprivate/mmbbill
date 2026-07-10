@@ -1,5 +1,6 @@
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { requireAdmin } from "./_guard";
 
 export default defineTool({
   name: "list_invoices",
@@ -14,7 +15,8 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ status, client_id, from_date, to_date, limit }, ctx: ToolContext) => {
-    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("invoices")

@@ -1,5 +1,6 @@
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { requireAdmin } from "./_guard";
 
 export default defineTool({
   name: "get_invoice",
@@ -11,7 +12,8 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ id, invoice_number }, ctx: ToolContext) => {
-    if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
     if (!id && !invoice_number) {
       return { content: [{ type: "text", text: "Provide id or invoice_number." }], isError: true };
     }

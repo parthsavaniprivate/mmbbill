@@ -125,7 +125,7 @@ function NewSalarySlip() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/salary">Cancel</Link></Button>
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Generating…" : "Generate Slip"}</Button>
+        <Button data-shortcut="save" onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Generating…" : "Generate Slip"}</Button>
       </div>
     </div>
   );

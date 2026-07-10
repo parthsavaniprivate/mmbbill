@@ -316,9 +316,13 @@ function ExpensesPage() {
               date: e.expense_date, company: companies.find((c) => c.id === e.company_id)?.name,
               kind: e.expense_kind, category: e.category, amount: e.amount, vendor: e.vendor, description: e.description,
             })))}><FileDown className="w-4 h-4" />Export</Button>
-            <Dialog open={openVar} onOpenChange={setOpenVar}>
+            <Dialog open={openVar} onOpenChange={(o) => { setOpenVar(o); if (!o) setEditingVar(null); }}>
               <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4" />Add Variable</Button></DialogTrigger>
-              <VariableForm onClose={() => { setOpenVar(false); qc.invalidateQueries({ queryKey: ["expenses"] }); }} />
+              <VariableForm
+                key={editingVar?.id ?? "new"}
+                initial={editingVar}
+                onClose={() => { setOpenVar(false); setEditingVar(null); qc.invalidateQueries({ queryKey: ["expenses"] }); }}
+              />
             </Dialog>
           </div>
         </CardHeader>

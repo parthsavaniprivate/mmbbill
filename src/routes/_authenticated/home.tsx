@@ -36,7 +36,7 @@ function HomeScreen() {
 
       <div className="max-w-6xl mx-auto px-6 py-12 sm:py-16">
         <div className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent">
+          <h1 className="font-sf-display text-3xl sm:text-4xl tracking-tight text-white drop-shadow-lg">
             {title}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">Tap an app to open</p>

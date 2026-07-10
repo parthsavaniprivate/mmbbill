@@ -179,24 +179,27 @@ function BillingDashboard() {
             {overdueRows.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">No overdue invoices.</div>
             ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Overdue</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {overdueRows.slice(0, 10).map((r) => (
-                    <TableRow key={r.client.id}>
-                      <TableCell>
-                        <Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">
-                          {r.client.business_name || r.client.client_name}
-                        </Link>
-                        {agingBadge(r.oldestDays)}
-                      </TableCell>
-                      <TableCell className="text-right text-destructive font-semibold">{inr(r.overdue)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Client</TableHead><TableHead className="text-right">Overdue</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {overdueRows.slice(0, 10).map((r) => (
+                      <TableRow key={r.client.id}>
+                        <TableCell>
+                          <Link to="/clients/$id" params={{ id: r.client.id }} className="hover:underline">
+                            {r.client.business_name || r.client.client_name}
+                          </Link>
+                          {agingBadge(r.oldestDays)}
+                        </TableCell>
+                        <TableCell className="text-right text-destructive font-semibold">{inr(r.overdue)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
+
         </Card>
 
         <Card>

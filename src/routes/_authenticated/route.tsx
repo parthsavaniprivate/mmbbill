@@ -94,13 +94,15 @@ function InlineHomeButton() {
   const { pathname } = useLocation();
   if (pathname === "/home") return null;
   return (
-    <Link
-      to="/home"
-      title="Home"
-      className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm hover:scale-105 transition-transform mb-3 no-print"
-    >
-      <Home className="w-4 h-4" />
-    </Link>
+    <div className="mb-4 flex no-print">
+      <Link
+        to="/home"
+        title="Home"
+        className="flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm hover:scale-105 transition-transform"
+      >
+        <Home className="w-4 h-4" />
+      </Link>
+    </div>
   );
 }
 

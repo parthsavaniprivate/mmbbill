@@ -240,6 +240,8 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     min-width: 0 !important;
     width: 210mm !important;
     max-width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
     max-height: 296mm !important;
     margin: 0 !important;
     background: white !important;
@@ -251,6 +253,11 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     break-after: avoid !important;
+  }
+  .invoice-template-page {
+    height: 297mm !important;
+    min-height: 297mm !important;
+    background: white !important;
   }
 
 }

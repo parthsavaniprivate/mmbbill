@@ -344,7 +344,12 @@ function ExpensesPage() {
                     <TableCell>{e.vendor || "—"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
                     <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
-                    <TableCell><Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button></TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

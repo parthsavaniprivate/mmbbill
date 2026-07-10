@@ -235,6 +235,7 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     max-width: 210mm !important;
     max-height: 296mm !important;
     margin: 0 !important;
+    background: white !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -244,6 +245,7 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
     break-inside: avoid !important;
     break-after: avoid !important;
   }
+
 }
 
 /* SF Pro Display Bold — uses Apple's system font on macOS/iOS,

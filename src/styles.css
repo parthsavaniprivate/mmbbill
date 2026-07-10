@@ -279,7 +279,10 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
 
   .janki-print-content > div:first-child { padding: 16px 22px !important; }
   .janki-print-content .px-5 { padding-left: 22px !important; padding-right: 22px !important; }
+  .janki-print-content .px-6 { padding-left: 18px !important; padding-right: 18px !important; }
   .janki-print-content .p-5 { padding: 16px 22px !important; }
+  .janki-print-content .sm\:p-8 { padding: 16px 22px !important; }
+  .janki-print-content .sm\:px-8 { padding-left: 22px !important; padding-right: 22px !important; }
   .janki-print-content .py-4 { padding-top: 10px !important; padding-bottom: 10px !important; }
   .janki-print-content .py-3 { padding-top: 8px !important; padding-bottom: 8px !important; }
   .janki-print-content .pb-8 { padding-bottom: 10px !important; }

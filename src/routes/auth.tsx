@@ -24,7 +24,7 @@ function isSafeRelative(path: string | undefined): path is string {
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
-  const target = isSafeRelative(next) ? next : "/dashboard";
+  const target = isSafeRelative(next) ? next : "/home";
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

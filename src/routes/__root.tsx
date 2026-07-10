@@ -68,7 +68,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#0b0b0f" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Agency OS" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { title: "Agency OS — MMB & JPS" },
       { name: "description", content: "Agency Management, Billing & CRM for Make Me Brand and Janki Parth Savani" },
       { property: "og:title", content: "Agency OS — MMB & JPS" },

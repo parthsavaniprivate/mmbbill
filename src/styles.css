@@ -205,23 +205,17 @@ html, body { overflow-x: hidden; }
 body { -webkit-text-size-adjust: 100%; }
 /* Allow long words / URLs / IDs to wrap on narrow screens */
 h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-break: normal; }
-/* Invoice preview: horizontal scroll on small screens instead of clipping */
-.invoice-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.invoice-scroll > * { min-width: 720px; }
+/* Invoice preview: fit-to-width on any screen narrower than the template.
+   CSS zoom shrinks the layout box (unlike transform:scale), so parent height
+   collapses correctly and content doesn't get clipped on the right edge. */
+.invoice-scroll { overflow: hidden; }
+.invoice-scroll > * { min-width: 720px; width: 720px; }
 
-/* On phones/tablets scale the invoice down to fit width instead of scrolling */
-@media (max-width: 820px) {
-  .invoice-scroll { overflow-x: hidden; zoom: 0.85; }
-  .invoice-scroll > * { min-width: 720px; }
+@media (max-width: 1024px) {
+  .invoice-scroll > * { zoom: calc((100vw - 32px) / 720); }
 }
-@media (max-width: 640px) {
-  .invoice-scroll { zoom: 0.65; }
-}
-@media (max-width: 480px) {
-  .invoice-scroll { zoom: 0.5; }
-}
-@media (max-width: 380px) {
-  .invoice-scroll { zoom: 0.42; }
+@media (min-width: 1025px) {
+  .invoice-scroll > * { zoom: 1; }
 }
 
 

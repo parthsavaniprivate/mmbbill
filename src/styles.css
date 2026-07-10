@@ -205,21 +205,18 @@ html, body { overflow-x: hidden; }
 body { -webkit-text-size-adjust: 100%; }
 /* Allow long words / URLs / IDs to wrap on narrow screens */
 h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-break: normal; }
-/* Invoice preview: fit-to-width using CSS transform scale (reliable across browsers).
-   Uses a CSS variable --invoice-scale set via media queries so the wrapper reserves
-   the correct height (avoiding cut-off / extra whitespace). */
-.invoice-scroll { --invoice-scale: 1; overflow: hidden; }
-.invoice-scroll > * {
-  min-width: 720px;
-  width: 720px;
-  transform: scale(var(--invoice-scale));
-  transform-origin: top left;
-  margin-bottom: calc((var(--invoice-scale) - 1) * 100%);
-}
-.invoice-scroll { height: auto; }
+/* Invoice preview: fit-to-width on any screen narrower than the template.
+   CSS zoom shrinks the layout box (unlike transform:scale), so parent height
+   collapses correctly and content doesn't get clipped on the right edge. */
+.invoice-scroll { overflow: hidden; }
+.invoice-scroll > * { min-width: 720px; width: 720px; }
 
-@media (max-width: 1024px) { .invoice-scroll { --invoice-scale: calc(100vw / 780); } }
-@media (min-width: 1025px) { .invoice-scroll > * { transform: none; margin-bottom: 0; } }
+@media (max-width: 1024px) {
+  .invoice-scroll > * { zoom: calc((100vw - 32px) / 720); }
+}
+@media (min-width: 1025px) {
+  .invoice-scroll > * { zoom: 1; }
+}
 
 
 @media print {

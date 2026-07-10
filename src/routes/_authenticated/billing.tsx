@@ -239,7 +239,7 @@ function BillingDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search client…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 w-56" />
+                <Input placeholder="Search client…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 w-full sm:w-56" />
               </div>
               <div className="flex gap-1">
                 {(["all", "overdue", "overlimit", "active"] as FilterKey[]).map((k) => (

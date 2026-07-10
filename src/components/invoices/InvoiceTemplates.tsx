@@ -69,7 +69,6 @@ export function BillOfSupplyTemplate({ data }: { data: TemplateData }) {
       <div>
         <p className="text-sm font-bold uppercase mb-1">Bill To</p>
         <p className="font-bold">{cl?.business_name || cl?.client_name}</p>
-        {cl?.business_name && <p className="text-sm">{cl.client_name}</p>}
         {cl?.address && <p className="text-sm text-gray-700 whitespace-pre-line">{cl.address}</p>}
       </div>
       <div>

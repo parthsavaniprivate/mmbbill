@@ -212,8 +212,16 @@ function PaymentForm({ invoiceId, pending, onSaved }: { invoiceId: string; pendi
   });
   const save = useMutation({
     mutationFn: async () => {
+      const { data: inv, error: invErr } = await supabase
+        .from("invoices").select("total, amount_paid").eq("id", invoiceId).single();
+      if (invErr) throw invErr;
+      const remaining = Number(inv.total) - Number(inv.amount_paid);
+      if (remaining <= 0) throw new Error("Invoice is already fully paid");
+      const amt = Number(form.amount);
+      if (!(amt > 0)) throw new Error("Enter a valid amount");
+      if (amt > remaining) throw new Error(`Amount cannot exceed pending ₹${remaining}`);
       const { error } = await supabase.from("payments").insert({
-        invoice_id: invoiceId, amount: Number(form.amount),
+        invoice_id: invoiceId, amount: amt,
         payment_date: form.payment_date,
         method: form.method as "cash" | "bank_transfer" | "upi" | "card" | "cheque" | "other",
         reference: form.reference || null, notes: form.notes || null,

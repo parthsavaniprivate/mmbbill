@@ -139,7 +139,7 @@ function NewQuotationPage() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/quotations">Cancel</Link></Button>
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Saving…" : "Create Quotation"}</Button>
+        <Button data-shortcut="save" onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Saving…" : "Create Quotation"}</Button>
       </div>
     </div>
   );

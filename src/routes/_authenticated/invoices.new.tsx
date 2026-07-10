@@ -278,7 +278,7 @@ function NewInvoicePage() {
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/invoices">Cancel</Link></Button>
-        <Button onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Saving…" : "Create Invoice"}</Button>
+        <Button data-shortcut="save" onClick={() => create.mutate()} disabled={create.isPending}>{create.isPending ? "Saving…" : "Create Invoice"}</Button>
       </div>
     </div>
   );

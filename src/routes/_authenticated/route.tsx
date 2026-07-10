@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useCompany, ALL } from "@/lib/company";
 import { useTheme } from "@/lib/theme";
+import { ShortcutsProvider, useShortcuts } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LogOut, Moon, Sun, Search, Home } from "lucide-react";
+import { LogOut, Moon, Sun, Search, Home, Keyboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import mmbLogo from "@/assets/make-me-brand-logo.png.asset.json";
 
@@ -40,6 +41,7 @@ function AuthedLayout() {
   }
 
   return (
+    <ShortcutsProvider>
     <div className="min-h-screen flex flex-col w-full bg-background">
       <header className="h-14 border-b flex items-center gap-3 px-4 sticky top-0 z-30 bg-background/80 backdrop-blur-xl no-print">
 
@@ -58,7 +60,8 @@ function AuthedLayout() {
           <div className="relative w-full">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search clients, invoices…"
+              id="global-search"
+              placeholder="Search clients, invoices…  (press /)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
@@ -71,6 +74,7 @@ function AuthedLayout() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <ShortcutsHelpButton />
           <Button variant="ghost" size="icon" onClick={toggle} title="Toggle theme">
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
@@ -84,6 +88,16 @@ function AuthedLayout() {
         <Outlet />
       </main>
     </div>
+    </ShortcutsProvider>
+  );
+}
+
+function ShortcutsHelpButton() {
+  const { openHelp } = useShortcuts();
+  return (
+    <Button variant="ghost" size="icon" onClick={openHelp} title="Keyboard shortcuts (Shift + ?)">
+      <Keyboard className="w-4 h-4" />
+    </Button>
   );
 }
 

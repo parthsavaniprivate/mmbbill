@@ -1,5 +1,4 @@
 import { formatDate, amountInWords } from "@/lib/format";
-import { useEffect, useRef } from "react";
 
 const inrFmt = (n: number) =>
   `₹${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -145,32 +144,8 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
   const { invoice: inv, items, company: co, client: cl } = data;
   const pending = Number(inv.total) - Number(inv.amount_paid);
   const heading = co?.legal_name || co?.name || "";
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fitToA4 = () => {
-      const content = contentRef.current;
-      if (!content) return;
-
-      content.style.setProperty("--janki-print-scale", "1");
-      const pageHeightPx = (297 / 25.4) * 96;
-      const pageWidthPx = (210 / 25.4) * 96;
-      const scale = Math.min(1, pageHeightPx / content.scrollHeight, pageWidthPx / content.scrollWidth);
-      content.style.setProperty("--janki-print-scale", String(Math.max(0.72, scale - 0.006)));
-    };
-
-    fitToA4();
-    window.addEventListener("beforeprint", fitToA4);
-    window.addEventListener("resize", fitToA4);
-    return () => {
-      window.removeEventListener("beforeprint", fitToA4);
-      window.removeEventListener("resize", fitToA4);
-    };
-  }, [items.length, inv.invoice_number, inv.subtotal, inv.total, inv.notes, inv.terms]);
-
   return (
-    <div className="janki-print-sheet bg-white text-slate-800">
-      <div ref={contentRef} className="janki-print-content">
+    <div className="bg-white text-slate-800">
       {/* Purple header */}
       <div className="p-5 sm:p-8 text-white flex flex-wrap gap-4 justify-between items-start" style={{ background: "linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%)" }}>
         <div>
@@ -299,7 +274,6 @@ export function ModernPurpleTemplate({ data }: { data: TemplateData }) {
       </div>
 
       <p className="text-center text-slate-400 text-sm pb-8">Thank you for your business !</p>
-      </div>
     </div>
   );
 }

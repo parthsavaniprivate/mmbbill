@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, redirect, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -46,9 +46,6 @@ function AuthedLayout() {
           <img src={mmbLogo.url} alt="Make Me Brand" className="w-9 h-9 rounded-lg object-contain bg-white p-1 shadow-sm" />
           <span className="hidden sm:inline font-semibold tracking-tight">Make Me Brand</span>
         </Link>
-        <Button variant="ghost" size="icon" asChild title="Home">
-          <Link to="/home"><Home className="w-4 h-4" /></Link>
-        </Button>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-56 h-9">
             <SelectValue />
@@ -88,6 +85,23 @@ function AuthedLayout() {
       <main className="flex-1 w-full min-w-0 p-3 sm:p-4 md:p-6">
         <Outlet />
       </main>
+      <FloatingHomeButton />
+
     </div>
   );
 }
+
+function FloatingHomeButton() {
+  const { pathname } = useLocation();
+  if (pathname === "/home") return null;
+  return (
+    <Link
+      to="/home"
+      title="Home"
+      className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform no-print"
+    >
+      <Home className="w-6 h-6" />
+    </Link>
+  );
+}
+

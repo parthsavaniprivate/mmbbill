@@ -46,7 +46,7 @@ function AuthPage() {
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
     if (isSafeRelative(next)) window.location.replace(next);
-    else navigate({ to: target as "/dashboard", replace: true });
+    else navigate({ to: target as "/home", replace: true });
   };
 
   const onReset = async (e: React.FormEvent) => {

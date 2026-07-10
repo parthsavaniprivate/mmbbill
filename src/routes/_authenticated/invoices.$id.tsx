@@ -102,10 +102,12 @@ function InvoiceDetail() {
           {pending > 0 && inv.status !== "cancelled" && (
             <MarkAsPaidButton invoiceId={id} pending={pending} />
           )}
-          <Dialog open={payOpen} onOpenChange={setPayOpen}>
-            <DialogTrigger asChild><Button><Plus className="w-4 h-4" />Record Payment</Button></DialogTrigger>
-            <PaymentForm invoiceId={id} pending={pending} onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }} />
-          </Dialog>
+          {pending > 0 && inv.status !== "cancelled" && (
+            <Dialog open={payOpen} onOpenChange={setPayOpen}>
+              <DialogTrigger asChild><Button><Plus className="w-4 h-4" />Record Payment</Button></DialogTrigger>
+              <PaymentForm invoiceId={id} pending={pending} onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }} />
+            </Dialog>
+          )}
         </div>
       </div>
 

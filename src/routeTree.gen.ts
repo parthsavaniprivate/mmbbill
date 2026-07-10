@@ -19,6 +19,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRenewalsRouteImport } from './routes/_authenticated/renewals'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCollectionMapRouteImport } from './routes/_authenticated/collection-map'
@@ -88,6 +89,11 @@ const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/collection-map': typeof AuthenticatedCollectionMapRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/renewals': typeof AuthenticatedRenewalsRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/collection-map': typeof AuthenticatedCollectionMapRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/home': typeof AuthenticatedHomeRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/renewals': typeof AuthenticatedRenewalsRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/collection-map': typeof AuthenticatedCollectionMapRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/renewals': typeof AuthenticatedRenewalsRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/collection-map'
     | '/dashboard'
     | '/expenses'
+    | '/history'
     | '/home'
     | '/payments'
     | '/renewals'
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/collection-map'
     | '/dashboard'
     | '/expenses'
+    | '/history'
     | '/home'
     | '/payments'
     | '/renewals'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/collection-map'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
+    | '/_authenticated/history'
     | '/_authenticated/home'
     | '/_authenticated/payments'
     | '/_authenticated/renewals'
@@ -489,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/expenses': {
@@ -646,6 +665,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCollectionMapRoute: typeof AuthenticatedCollectionMapRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedRenewalsRoute: typeof AuthenticatedRenewalsRoute
@@ -671,6 +691,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCollectionMapRoute: AuthenticatedCollectionMapRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedRenewalsRoute: AuthenticatedRenewalsRoute,

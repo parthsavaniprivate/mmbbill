@@ -316,14 +316,15 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: React.ComponentTyp
   const toneClass = tone === "success" ? "text-emerald-500" : tone === "warning" ? "text-amber-500" : tone === "accent" ? "text-primary" : "text-muted-foreground";
   return (
     <Card>
-      <CardContent className="p-5 flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${toneClass}`}>
-          <Icon className="w-5 h-5" />
+      <CardContent className="p-3 sm:p-5 flex items-center gap-3">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-lg bg-muted flex items-center justify-center ${toneClass}`}>
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-          <div className="text-xl font-semibold truncate">{value}</div>
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground truncate">{label}</div>
+          <div className="text-sm sm:text-lg lg:text-xl font-semibold break-words leading-tight">{value}</div>
         </div>
+
       </CardContent>
     </Card>
   );

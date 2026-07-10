@@ -41,6 +41,7 @@ function AuthedLayout() {
   }
 
   return (
+    <ShortcutsProvider>
     <div className="min-h-screen flex flex-col w-full bg-background">
       <header className="h-14 border-b flex items-center gap-3 px-4 sticky top-0 z-30 bg-background/80 backdrop-blur-xl no-print">
 
@@ -73,6 +74,7 @@ function AuthedLayout() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <ShortcutsHelpButton />
           <Button variant="ghost" size="icon" onClick={toggle} title="Toggle theme">
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
@@ -86,6 +88,16 @@ function AuthedLayout() {
         <Outlet />
       </main>
     </div>
+    </ShortcutsProvider>
+  );
+}
+
+function ShortcutsHelpButton() {
+  const { openHelp } = useShortcuts();
+  return (
+    <Button variant="ghost" size="icon" onClick={openHelp} title="Keyboard shortcuts (Shift + ?)">
+      <Keyboard className="w-4 h-4" />
+    </Button>
   );
 }
 

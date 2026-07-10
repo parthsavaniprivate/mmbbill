@@ -73,6 +73,7 @@ function ExpensesPage() {
   const [openVar, setOpenVar] = useState(false);
   const [openFix, setOpenFix] = useState(false);
   const [editingFix, setEditingFix] = useState<RecurringRow | null>(null);
+  const [editingVar, setEditingVar] = useState<ExpenseRow | null>(null);
   const [period, setPeriod] = useState<"all" | "month" | "year">("month");
 
   const { data: expenses = [] } = useQuery({

@@ -24,7 +24,7 @@ function isSafeRelative(path: string | undefined): path is string {
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
-  const target = isSafeRelative(next) ? next : "/dashboard";
+  const target = isSafeRelative(next) ? next : "/home";
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +34,7 @@ function AuthPage() {
   useEffect(() => {
     if (user) {
       if (isSafeRelative(next)) window.location.replace(next);
-      else navigate({ to: "/dashboard", replace: true });
+      else navigate({ to: "/home", replace: true });
     }
   }, [user, navigate, next]);
 
@@ -46,7 +46,7 @@ function AuthPage() {
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
     if (isSafeRelative(next)) window.location.replace(next);
-    else navigate({ to: target as "/dashboard", replace: true });
+    else navigate({ to: target as "/home", replace: true });
   };
 
   const onReset = async (e: React.FormEvent) => {

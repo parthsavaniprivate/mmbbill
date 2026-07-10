@@ -228,7 +228,14 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
   }
   /* Kill any siblings after the invoice card that could push a 2nd page */
   .invoice-scroll ~ * { display: none !important; }
-  .invoice-scroll { overflow: visible !important; }
+  .invoice-scroll {
+    overflow: visible !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
   .invoice-scroll > * {
     min-width: 0 !important;
     width: 210mm !important;

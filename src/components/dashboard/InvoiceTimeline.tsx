@@ -93,6 +93,9 @@ const MONTH_MAP: Record<string, number> = {
   may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
   sep: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
 };
+
+const SECONDARY_PERIOD_ITEM_RE = /\b(meta\s*ads?|ad\s*spend|advertising|boosting|paid\s*ads?)\b/i;
+
 function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Date } | null {
   if (!desc) return null;
   const rest = desc.split("\n").slice(1).join(" ").trim();
@@ -151,6 +154,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
       .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => {
         qc.invalidateQueries({ queryKey: ["dashboard-data"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "invoice_items" }, () => {
+        qc.invalidateQueries({ queryKey: ["timeline-first-items"] });
+        qc.invalidateQueries({ queryKey: ["dashboard-data"] });
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -166,21 +173,24 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
     queryFn: async () => {
       const { data } = await supabase.from("invoice_items")
         .select("invoice_id, description, position")
-        .in("invoice_id", invoiceIds);
+        .in("invoice_id", invoiceIds)
+        .order("position", { ascending: true });
       return data ?? [];
     },
   });
   const periodByInvoice = useMemo(() => {
-    // Use the lowest-position line item with a parseable period as the bar range.
-    // Merging the "widest" range across items causes an ADS line like
-    // "For Apr 2026 - Jun 2026" to stretch a single-month invoice across 3 months.
-    const chosen = new Map<string, { pos: number; period: { from: Date; to: Date } }>();
+    // Use the invoice's primary service line as the bar range. Secondary lines
+    // like Meta ADS/ad-spend can have a longer service window, but they should
+    // not stretch a one-month invoice across multiple month blocks.
+    const chosen = new Map<string, { rank: number; pos: number; period: { from: Date; to: Date } }>();
     for (const it of firstItems) {
       const p = parseItemPeriod(it.description);
       if (!p) continue;
+      const rank = SECONDARY_PERIOD_ITEM_RE.test(it.description ?? "") ? 1 : 0;
+      const pos = Number.isFinite(Number(it.position)) ? Number(it.position) : Number.MAX_SAFE_INTEGER;
       const prev = chosen.get(it.invoice_id);
-      if (!prev || it.position < prev.pos) {
-        chosen.set(it.invoice_id, { pos: it.position, period: p });
+      if (!prev || rank < prev.rank || (rank === prev.rank && pos < prev.pos)) {
+        chosen.set(it.invoice_id, { rank, pos, period: p });
       }
     }
     const m = new Map<string, { from: Date; to: Date }>();

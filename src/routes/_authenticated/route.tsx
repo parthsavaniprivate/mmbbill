@@ -33,7 +33,7 @@ function AuthedLayout() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: {}, replace: true });
   };
 
   if (loading || !user) {

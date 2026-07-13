@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/auth", replace: true });
+    if (!data.user) throw redirect({ to: "/auth", search: {}, replace: true });
   },
   component: AuthedLayout,
 });
@@ -28,12 +28,12 @@ function AuthedLayout() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", replace: true });
+    if (!loading && !user) navigate({ to: "/auth", search: {}, replace: true });
   }, [user, loading, navigate]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: {}, replace: true });
   };
 
   if (loading || !user) {

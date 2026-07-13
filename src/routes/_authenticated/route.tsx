@@ -28,7 +28,7 @@ function AuthedLayout() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", replace: true });
+    if (!loading && !user) navigate({ to: "/auth", search: {}, replace: true });
   }, [user, loading, navigate]);
 
   const signOut = async () => {

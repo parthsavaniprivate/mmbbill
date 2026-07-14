@@ -178,3 +178,44 @@ export function MarkAsPaidButton({ invoiceId, pending, onDone }: {
     </AlertDialog>
   );
 }
+
+export function MarkAsUnpaidButton({ invoiceId, onDone }: { invoiceId: string; onDone?: () => void }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const m = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("payments").delete().eq("invoice_id", invoiceId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Marked as unpaid");
+      setOpen(false);
+      onDone?.();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} disabled={m.isPending}>
+        {m.isPending ? "Updating…" : "Mark as Unpaid"}
+      </Button>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mark invoice as unpaid?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will delete ALL recorded payments for this invoice and reset it to pending. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={() => m.mutate()} disabled={m.isPending}>
+            Confirm
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

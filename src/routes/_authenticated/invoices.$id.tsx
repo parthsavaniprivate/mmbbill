@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Printer, MessageCircle, Plus, Bell } from "lucide-react";
 import { inr, formatDate, amountInWords } from "@/lib/format";
 import { toast } from "sonner";
-import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
+import { SendReminderDialog, MarkAsPaidButton, MarkAsUnpaidButton } from "@/components/invoices/SendReminderDialog";
 import { BillOfSupplyTemplate, ModernPurpleTemplate } from "@/components/invoices/InvoiceTemplates";
 
 const REMINDABLE = ["pending", "partially_paid", "overdue"];
@@ -101,6 +101,9 @@ function InvoiceDetail() {
           )}
           {pending > 0 && inv.status !== "cancelled" && (
             <MarkAsPaidButton invoiceId={id} pending={pending} />
+          )}
+          {Number(inv.amount_paid) > 0 && inv.status !== "cancelled" && (
+            <MarkAsUnpaidButton invoiceId={id} />
           )}
           {pending > 0 && inv.status !== "cancelled" && (
             <Dialog open={payOpen} onOpenChange={setPayOpen}>

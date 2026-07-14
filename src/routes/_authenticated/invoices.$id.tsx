@@ -102,6 +102,9 @@ function InvoiceDetail() {
           {pending > 0 && inv.status !== "cancelled" && (
             <MarkAsPaidButton invoiceId={id} pending={pending} />
           )}
+          {Number(inv.amount_paid) > 0 && inv.status !== "cancelled" && (
+            <MarkAsUnpaidButton invoiceId={id} />
+          )}
           {pending > 0 && inv.status !== "cancelled" && (
             <Dialog open={payOpen} onOpenChange={setPayOpen}>
               <DialogTrigger asChild><Button><Plus className="w-4 h-4" />Record Payment</Button></DialogTrigger>

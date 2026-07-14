@@ -7,6 +7,9 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:capacitor": "BUILD_TARGET=capacitor vite build && node scripts/build-capacitor.mjs",
+    "cap:sync": "bun run build:capacitor && cap sync android",
+    "cap:open": "cap open android",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."

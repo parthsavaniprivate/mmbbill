@@ -778,7 +778,7 @@ function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <RecentActivity items={activity} />
         <SmartInsights insights={insights} />
-        <MapPreview overdueCount={overdueCount} dueTodayCount={dueTodayCount} pendingAmount={allPending} />
+        <MapPreview overdueCount={overdueCount} dueTodayCount={dueTodayCount} pendingAmount={monthDue} />
       </div>
 
       {/* Pending collection table */}

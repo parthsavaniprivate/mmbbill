@@ -574,7 +574,7 @@ function Dashboard() {
       {/* Business Health + Today's Collection */}
       <div className="grid gap-4 lg:grid-cols-2">
         <HealthScore inputs={{
-          pending: allPending,
+          pending: monthDue,
           billed: monthTotalBilled,
           collected: monthCleared,
           overdue: overdue,

@@ -24,7 +24,8 @@ export function MarkCollectedButton({ invoiceId, invoiceNumber, pending, onDone 
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(String(pending));
-  const [method, setMethod] = useState("cash");
+  type Method = "cash" | "upi" | "bank_transfer" | "cheque";
+  const [method, setMethod] = useState<Method>("cash");
   const [reference, setReference] = useState("");
 
   const m = useMutation({

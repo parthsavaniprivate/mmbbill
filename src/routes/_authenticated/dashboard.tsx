@@ -345,6 +345,182 @@ function Dashboard() {
   const EXP_COLOR = "#ef4444";
   const BAL_COLOR = "#10b981";
 
+  // ---------- Previous-period MoM ----------
+  const rangeDays = from && to ? Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1) : 30;
+  const prevFrom = from ? new Date(from.getTime() - rangeDays * 86400000) : null;
+  const prevTo = from ? new Date(from.getTime() - 86400000) : null;
+  const inPrev = (d: string | Date | null | undefined) => {
+    if (!d || !prevFrom || !prevTo) return false;
+    const dt = new Date(d);
+    return dt >= prevFrom && dt <= prevTo;
+  };
+  const prevInvoices = invoices.filter((i) => inPrev(i.invoice_date));
+  const prevRevenue = prevInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
+  const prevPayments = data.payments.filter((p) => {
+    const inv = p.invoices as { company_id: string } | null;
+    if (!isAll && inv?.company_id !== selected) return false;
+    return inPrev(p.payment_date);
+  });
+  const prevCollected = prevPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const prevExpenses = expenses.filter((e) => inPrev(e.expense_date)).reduce((s, e) => s + Number(e.amount || 0), 0);
+  const prevBalance = prevCollected - prevExpenses;
+  const pct = (curr: number, prev: number) => prev === 0 ? (curr > 0 ? 100 : 0) : ((curr - prev) / Math.abs(prev)) * 100;
+  const deltaRevenue = pct(monthTotalBilled, prevRevenue);
+  const deltaCollected = pct(monthCleared, prevCollected);
+  const deltaExpenses = pct(monthExpTotal, prevExpenses);
+  const deltaBalance = pct(companyBalance, prevBalance);
+
+  // ---------- All-time pending across all invoices (for pending KPI) ----------
+  const allPending = invoices.reduce((s, i) => s + Math.max(0, Number(i.total || 0) - Number(i.amount_paid || 0)), 0);
+
+  // ---------- Today's collection ----------
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const collectedToday = data.payments
+    .filter((p) => {
+      const inv = p.invoices as { company_id: string } | null;
+      if (!isAll && inv?.company_id !== selected) return false;
+      return p.payment_date === todayIso;
+    })
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+  // ---------- Recent Activity feed ----------
+  const activity: ActivityItem[] = [
+    ...invoices.slice(-20).map((i) => ({
+      id: `inv-${i.id}`, type: "invoice" as const,
+      title: `Invoice ${i.invoice_number} created`,
+      subtitle: (clients.find((c) => c.id === i.client_id)?.business_name || clients.find((c) => c.id === i.client_id)?.client_name || ""),
+      amount: Number(i.total || 0),
+      at: i.invoice_date,
+    })),
+    ...data.payments.filter((p) => {
+      const inv = p.invoices as { company_id: string } | null;
+      return isAll ? true : inv?.company_id === selected;
+    }).slice(-20).map((p) => ({
+      id: `pay-${p.id}`, type: "payment" as const,
+      title: "Payment received",
+      subtitle: (p.invoices as { clients?: { business_name?: string | null; client_name?: string | null } | null } | null)?.clients?.business_name
+        || (p.invoices as { clients?: { client_name?: string | null } | null } | null)?.clients?.client_name || "",
+      amount: Number(p.amount || 0),
+      at: p.payment_date,
+    })),
+    ...expenses.slice(-20).map((e) => ({
+      id: `exp-${e.id}`, type: "expense" as const,
+      title: `Expense: ${CAT_LABEL[e.category] || e.category}`,
+      subtitle: e.notes || undefined,
+      amount: Number(e.amount || 0),
+      at: e.expense_date,
+    })),
+    ...clients.slice(-10).map((c) => ({
+      id: `cli-${c.id}`, type: "client" as const,
+      title: `Client added: ${c.business_name || c.client_name}`,
+      at: c.created_at ?? new Date().toISOString(),
+    })),
+  ].sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 15);
+
+  // ---------- Smart insights ----------
+  const insights: Insight[] = [];
+  if (Math.abs(deltaCollected) > 5) {
+    insights.push({
+      tone: deltaCollected >= 0 ? "positive" : "negative",
+      icon: deltaCollected >= 0 ? "up" : "down",
+      text: `Collections ${deltaCollected >= 0 ? "up" : "down"} ${Math.abs(deltaCollected).toFixed(1)}% vs previous period.`,
+    });
+  }
+  const in7 = new Date(today.getTime() + 7 * 86400000);
+  const goingOverdue = invoices.filter((i) => i.due_date && new Date(i.due_date) >= today && new Date(i.due_date) <= in7 && Number(i.amount_paid || 0) < Number(i.total || 0)).length;
+  if (goingOverdue > 0) insights.push({ tone: "warning", icon: "warn", text: `${goingOverdue} invoice${goingOverdue > 1 ? "s" : ""} become overdue within 7 days.` });
+
+  const clientPayMap = new Map<string, number>();
+  for (const p of rangePayments) {
+    const inv = p.invoices as { client_id?: string | null } | null;
+    const cid = inv?.client_id;
+    if (!cid) continue;
+    clientPayMap.set(cid, (clientPayMap.get(cid) || 0) + Number(p.amount || 0));
+  }
+  const topPaying = [...clientPayMap.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (topPaying) {
+    const c = clients.find((x) => x.id === topPaying[0]);
+    if (c) insights.push({ tone: "positive", icon: "award", text: `Top paying client: ${c.business_name || c.client_name} (${inr(topPaying[1])}).` });
+  }
+  const clientPendMap = new Map<string, number>();
+  for (const i of invoices) {
+    if (!i.client_id) continue;
+    const pend = Math.max(0, Number(i.total || 0) - Number(i.amount_paid || 0));
+    if (pend > 0) clientPendMap.set(i.client_id, (clientPendMap.get(i.client_id) || 0) + pend);
+  }
+  const topPending = [...clientPendMap.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (topPending) {
+    const c = clients.find((x) => x.id === topPending[0]);
+    if (c) insights.push({ tone: "warning", icon: "warn", text: `Highest pending: ${c.business_name || c.client_name} (${inr(topPending[1])}).` });
+  }
+  if (Math.abs(deltaBalance) > 5) {
+    insights.push({
+      tone: deltaBalance >= 0 ? "positive" : "negative",
+      icon: deltaBalance >= 0 ? "up" : "down",
+      text: `Net profit ${deltaBalance >= 0 ? "improved" : "declined"} ${Math.abs(deltaBalance).toFixed(1)}% vs previous period.`,
+    });
+  }
+
+  // ---------- Pending table (top 10) ----------
+  const pendingRows: PendingRow[] = invoices
+    .map((i) => {
+      const pend = Math.max(0, Number(i.total || 0) - Number(i.amount_paid || 0));
+      const days = i.due_date ? Math.floor((today.getTime() - new Date(i.due_date).getTime()) / 86400000) : 0;
+      return { pend, days, inv: i };
+    })
+    .filter((r) => r.pend > 0)
+    .sort((a, b) => b.days - a.days)
+    .slice(0, 10)
+    .map((r): PendingRow => ({
+      id: r.inv.id,
+      invoice_number: r.inv.invoice_number,
+      client_name: clients.find((c) => c.id === r.inv.client_id)?.business_name || clients.find((c) => c.id === r.inv.client_id)?.client_name || "—",
+      amount: r.pend,
+      due_date: r.inv.due_date,
+      days_overdue: Math.max(0, r.days),
+    }));
+
+  // ---------- Collection map preview ----------
+  const overdueCount = invoices.filter((i) => i.due_date && new Date(i.due_date) < today && Number(i.amount_paid || 0) < Number(i.total || 0))
+    .map((i) => i.client_id).filter((v, idx, arr) => v && arr.indexOf(v) === idx).length;
+  const dueTodayCount = invoices.filter((i) => i.due_date === todayIso && Number(i.amount_paid || 0) < Number(i.total || 0)).length;
+
+  // ---------- Company performance (only shown in isAll) ----------
+  const companyRows: CompanyRow[] = data.companies.map((co) => {
+    const cInv = data.invoices.filter((i) => i.company_id === co.id && inDateRange(i.invoice_date));
+    const cInvCount = cInv.length;
+    const cCollected = data.payments.filter((p) => {
+      const inv = p.invoices as { company_id: string } | null;
+      return inv?.company_id === co.id && inDateRange(p.payment_date);
+    }).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const cExp = data.expenses.filter((e) => e.company_id === co.id && inDateRange(e.expense_date))
+      .reduce((s, e) => s + Number(e.amount || 0), 0);
+    const cPrevCollected = data.payments.filter((p) => {
+      const inv = p.invoices as { company_id: string } | null;
+      return inv?.company_id === co.id && inPrev(p.payment_date);
+    }).reduce((s, p) => s + Number(p.amount || 0), 0);
+    return {
+      id: co.id, name: co.name,
+      invoices: cInvCount,
+      collected: cCollected,
+      expenses: cExp,
+      profit: cCollected - cExp,
+      growthPct: pct(cCollected, cPrevCollected),
+    };
+  }).sort((a, b) => b.collected - a.collected);
+
+  // ---------- Bottom widgets ----------
+  const recentClients = [...clients].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, 5);
+  const upcomingDue = invoices
+    .filter((i) => i.due_date && new Date(i.due_date) >= today && new Date(i.due_date) <= in7 && Number(i.amount_paid || 0) < Number(i.total || 0))
+    .sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1))
+    .slice(0, 5);
+  const recentExpenses = [...expenses].sort((a, b) => (b.expense_date ?? "").localeCompare(a.expense_date ?? "")).slice(0, 5);
+  const recentPayments = [...data.payments]
+    .filter((p) => isAll ? true : (p.invoices as { company_id: string } | null)?.company_id === selected)
+    .sort((a, b) => (b.payment_date ?? "").localeCompare(a.payment_date ?? "")).slice(0, 5);
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">

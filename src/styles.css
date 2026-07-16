@@ -338,3 +338,15 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
 @utility it-today {
   animation: it-today-glow 2.4s ease-in-out infinite;
 }
+
+/* Hide the "Edit with Lovable" / "Made with Lovable" badge */
+#lovable-badge,
+[id^="lovable-badge"],
+a[href*="lovable.dev"][target="_blank"],
+a[href*="lovable.app"][target="_blank"][class*="badge" i] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+

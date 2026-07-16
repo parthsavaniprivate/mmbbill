@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { inr } from "@/lib/format";
-import { loadTarget, saveTarget } from "@/lib/collection/status";
+import { loadTarget } from "@/lib/collection/status";
 import { cn } from "@/lib/utils";
-import { Target, Pencil, Check } from "lucide-react";
+import { Target } from "lucide-react";
+
 
 export function CollectionToday({ companyId, collectedToday, pendingToday }: {
   companyId: string; collectedToday: number; pendingToday: number;

@@ -17,12 +17,14 @@ export function CollectionToday({ companyId, collectedToday, pendingToday, paidC
   }, [companyId, pendingToday]);
 
   const pct = target > 0 ? Math.min(100, (collectedToday / target) * 100) : 0;
-  const remaining = Math.max(0, target - collectedToday);
+  // "Remaining" = total pending amount across all invoices (matches Due on dashboard)
+  const remaining = pendingToday;
   const now = new Date();
   const hoursDone = now.getHours() + now.getMinutes() / 60;
   const rate = hoursDone > 0 ? collectedToday / hoursDone : 0;
-  const hoursNeeded = rate > 0 ? remaining / rate : Infinity;
-  const eta = remaining === 0 ? "Target achieved" :
+  const targetLeft = Math.max(0, target - collectedToday);
+  const hoursNeeded = rate > 0 ? targetLeft / rate : Infinity;
+  const eta = targetLeft === 0 ? "Target achieved" :
     !isFinite(hoursNeeded) ? "Start collecting" :
     hoursNeeded > 12 ? "Beyond today" : `~${hoursNeeded.toFixed(1)}h to goal`;
 

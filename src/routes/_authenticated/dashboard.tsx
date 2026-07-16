@@ -375,13 +375,13 @@ function Dashboard() {
 
   // ---------- Today's collection ----------
   const todayIso = new Date().toISOString().slice(0, 10);
-  const collectedToday = data.payments
-    .filter((p) => {
-      const inv = p.invoices as { company_id: string } | null;
-      if (!isAll && inv?.company_id !== selected) return false;
-      return p.payment_date === todayIso;
-    })
-    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const todayPayments = data.payments.filter((p) => {
+    const inv = p.invoices as { company_id: string } | null;
+    if (!isAll && inv?.company_id !== selected) return false;
+    return p.payment_date === todayIso;
+  });
+  const collectedToday = todayPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const paidCountToday = new Set(todayPayments.map((p) => p.invoice_id)).size;
 
   // ---------- Recent Activity feed ----------
   const activity: ActivityItem[] = [
@@ -580,7 +580,7 @@ function Dashboard() {
           balance: companyBalance,
           momGrowthPct: deltaCollected,
         }} />
-        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={allPending} />
+        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={allPending} paidCountToday={paidCountToday} />
       </div>
 
       {/* HERO: Collection · Expenses · Balance */}

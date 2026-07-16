@@ -782,7 +782,94 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      {/* Activity · Insights · Map preview */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <RecentActivity items={activity} />
+        <SmartInsights insights={insights} />
+        <MapPreview overdueCount={overdueCount} dueTodayCount={dueTodayCount} pendingAmount={allPending} />
+      </div>
 
+      {/* Pending collection table */}
+      <PendingTable rows={pendingRows} />
+
+      {/* Company performance (all-companies view only) */}
+      {isAll && companyRows.length > 1 && <CompanyPerformance rows={companyRows} />}
+
+      {/* Bottom widgets */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="shadow-card border-border/60">
+          <CardHeader><CardTitle className="text-base">Recent Clients</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-border/60">
+              {recentClients.length === 0 && <li className="p-4 text-sm text-muted-foreground">No clients yet.</li>}
+              {recentClients.map((c) => (
+                <li key={c.id} className="p-3 text-sm hover:bg-muted/30">
+                  <p className="font-medium truncate">{c.business_name || c.client_name}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(c.created_at)}</p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <Card className="shadow-card border-border/60">
+          <CardHeader><CardTitle className="text-base">Upcoming Due (7d)</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-border/60">
+              {upcomingDue.length === 0 && <li className="p-4 text-sm text-muted-foreground">Nothing due this week.</li>}
+              {upcomingDue.map((i) => (
+                <li key={i.id} className="p-3 text-sm hover:bg-muted/30 flex justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{i.invoice_number}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(i.due_date)}</p>
+                  </div>
+                  <p className="font-semibold text-amber-500">{inr(Number(i.total || 0) - Number(i.amount_paid || 0))}</p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <Card className="shadow-card border-border/60">
+          <CardHeader><CardTitle className="text-base">Recent Expenses</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-border/60">
+              {recentExpenses.length === 0 && <li className="p-4 text-sm text-muted-foreground">No expenses.</li>}
+              {recentExpenses.map((e) => (
+                <li key={e.id} className="p-3 text-sm hover:bg-muted/30 flex justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{CAT_LABEL[e.category] || e.category}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(e.expense_date)}</p>
+                  </div>
+                  <p className="font-semibold text-orange-500">{inr(e.amount)}</p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <Card className="shadow-card border-border/60">
+          <CardHeader><CardTitle className="text-base">Recent Payments</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-border/60">
+              {recentPayments.length === 0 && <li className="p-4 text-sm text-muted-foreground">No payments.</li>}
+              {recentPayments.map((p) => {
+                const inv = p.invoices as { clients?: { business_name?: string | null; client_name?: string | null } | null } | null;
+                const name = inv?.clients?.business_name || inv?.clients?.client_name || "—";
+                return (
+                  <li key={p.id} className="p-3 text-sm hover:bg-muted/30 flex justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{name}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(p.payment_date)}</p>
+                    </div>
+                    <p className="font-semibold text-emerald-500">{inr(p.amount)}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      <QuickActionsFab />
     </div>
+
   );
 }

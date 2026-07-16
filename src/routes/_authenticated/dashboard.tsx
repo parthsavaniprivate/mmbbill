@@ -23,12 +23,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
-import { HealthScore } from "@/components/dashboard/HealthScore";
-import { CollectionToday } from "@/components/dashboard/CollectionToday";
-import { RecentActivity, type ActivityItem } from "@/components/dashboard/RecentActivity";
-import { SmartInsights, type Insight } from "@/components/dashboard/SmartInsights";
-import { MapPreview } from "@/components/dashboard/MapPreview";
-import { PendingTable, type PendingRow } from "@/components/dashboard/PendingTable";
+import type { ActivityItem } from "@/components/dashboard/RecentActivity";
+import type { Insight } from "@/components/dashboard/SmartInsights";
+import type { PendingRow } from "@/components/dashboard/PendingTable";
 import { CompanyPerformance, type CompanyRow } from "@/components/dashboard/CompanyPerformance";
 import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
 

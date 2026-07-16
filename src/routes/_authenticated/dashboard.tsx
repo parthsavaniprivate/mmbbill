@@ -574,14 +574,14 @@ function Dashboard() {
       {/* Business Health + Today's Collection */}
       <div className="grid gap-4 lg:grid-cols-2">
         <HealthScore inputs={{
-          pending: allPending,
+          pending: monthDue,
           billed: monthTotalBilled,
           collected: monthCleared,
           overdue: overdue,
           balance: companyBalance,
           momGrowthPct: deltaCollected,
         }} />
-        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={allPending} paidCountToday={paidCountToday} />
+        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={monthDue} paidCountToday={paidCountToday} />
       </div>
 
       {/* HERO: Collection · Expenses · Balance */}
@@ -778,7 +778,7 @@ function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <RecentActivity items={activity} />
         <SmartInsights insights={insights} />
-        <MapPreview overdueCount={overdueCount} dueTodayCount={dueTodayCount} pendingAmount={allPending} />
+        <MapPreview overdueCount={overdueCount} dueTodayCount={dueTodayCount} pendingAmount={monthDue} />
       </div>
 
       {/* Pending collection table */}

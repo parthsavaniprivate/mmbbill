@@ -641,11 +641,11 @@ function Dashboard() {
 
         const miniCard = (label: string, value: string, color: string, borderColor: string) => (
           <div className={cn(
-            "relative rounded-xl border bg-card/60 backdrop-blur p-2.5 sm:p-4 shadow-card transition-all hover:scale-[1.02] hover:shadow-lg min-w-0",
+            "relative rounded-xl border bg-card/60 backdrop-blur p-3 sm:p-4 shadow-card transition-all hover:scale-[1.02] hover:shadow-lg min-w-0 h-full flex flex-col justify-between",
             borderColor,
           )}>
             <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold truncate">{label}</p>
-            <p className={cn("text-xs sm:text-sm md:text-base lg:text-xl font-extrabold mt-1 sm:mt-1.5 tracking-tight break-words leading-tight", color)}>{value}</p>
+            <p className={cn("text-sm sm:text-base lg:text-xl font-extrabold mt-1 sm:mt-1.5 tracking-tight break-words leading-tight", color)}>{value}</p>
           </div>
         );
 
@@ -653,18 +653,18 @@ function Dashboard() {
           <div className="grid gap-4 md:grid-cols-[1fr_auto_1.1fr] md:items-stretch">
             {/* Left: Row 1 = Due + Cleared = Total Amount, Row 2 = Fixed + Variable = Total Expense */}
             <div className="flex flex-col gap-3 min-w-0">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch sm:items-center gap-2">
                 {miniCard("Due", inr(monthDue), "text-amber-500", "border-amber-500/40")}
-                <span className="text-muted-foreground font-bold text-base sm:text-lg">+</span>
+                <span className="hidden sm:flex text-muted-foreground font-bold text-lg items-center justify-center">+</span>
                 {miniCard("Cleared", inr(monthInvoicesPaid), "text-emerald-500", "border-emerald-500/40")}
-                <span className="text-muted-foreground font-bold text-base sm:text-lg">=</span>
+                <span className="hidden sm:flex text-muted-foreground font-bold text-lg items-center justify-center">=</span>
                 {miniCard("Total", inr(totalCollection), "text-blue-500", "border-blue-500/50 bg-blue-500/5")}
               </div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch sm:items-center gap-2">
                 {miniCard("Fixed", inr(monthFixed), "text-orange-500", "border-orange-500/40")}
-                <span className="text-muted-foreground font-bold text-base sm:text-lg">+</span>
+                <span className="hidden sm:flex text-muted-foreground font-bold text-lg items-center justify-center">+</span>
                 {miniCard("Variable", inr(monthVariable), "text-purple-500", "border-purple-500/40")}
-                <span className="text-muted-foreground font-bold text-base sm:text-lg">=</span>
+                <span className="hidden sm:flex text-muted-foreground font-bold text-lg items-center justify-center">=</span>
                 {miniCard("Total Exp", inr(totalExpenses), "text-red-500", "border-red-500/50 bg-red-500/5")}
               </div>
             </div>

@@ -264,8 +264,9 @@ function Dashboard() {
   const monthExpTotal = bookedTotal + projectedFixed;
   const monthVariable = monthExpTotal - monthFixed;
 
-  // Company balance (overall cleared - overall expenses, current month)
-  const companyBalance = monthCleared - monthExpTotal;
+  // Company balance = paid portion of invoices raised in range − expenses in range
+  // (kept consistent with the "Cleared" mini-card and "Total Balance" widget below)
+  const companyBalance = monthInvoicesPaid - monthExpTotal;
 
   // Overdue
   const today = new Date();

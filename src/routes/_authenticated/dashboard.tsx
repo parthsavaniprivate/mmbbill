@@ -146,6 +146,46 @@ function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
   );
 }
 
+function KpiCard({ title, value, delta, icon: Icon, href, tone }: {
+  title: string; value: string; delta?: number | null; icon: React.ElementType;
+  href: string; tone: "blue" | "amber" | "emerald" | "orange" | "purple" | "cyan";
+}) {
+  const styles = {
+    blue: "from-blue-500/20 to-transparent text-blue-500 bg-blue-500/10",
+    amber: "from-amber-500/20 to-transparent text-amber-500 bg-amber-500/10",
+    emerald: "from-emerald-500/20 to-transparent text-emerald-500 bg-emerald-500/10",
+    orange: "from-orange-500/20 to-transparent text-orange-500 bg-orange-500/10",
+    purple: "from-purple-500/20 to-transparent text-purple-500 bg-purple-500/10",
+    cyan: "from-cyan-500/20 to-transparent text-cyan-500 bg-cyan-500/10",
+  }[tone];
+  const [gradient, textColor, iconBg] = styles.split(" ");
+  const up = (delta ?? 0) >= 0;
+  return (
+    <Link to={href} className="group block">
+      <Card className={cn("relative overflow-hidden border-border/60 shadow-card backdrop-blur transition-all group-hover:-translate-y-0.5 group-hover:shadow-lg bg-gradient-to-br", gradient)}>
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold truncate">{title}</p>
+              <p className={cn("text-xl sm:text-2xl font-extrabold mt-1.5 tracking-tight break-words leading-tight", textColor)}>{value}</p>
+              {delta != null && (
+                <p className={cn("mt-1 inline-flex items-center gap-1 text-[11px] font-semibold", up ? "text-emerald-500" : "text-red-500")}>
+                  {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {Math.abs(delta).toFixed(1)}% <span className="text-muted-foreground font-normal">vs prev</span>
+                </p>
+              )}
+            </div>
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", iconBg, textColor)}>
+              <Icon className="w-5 h-5" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+
 function Dashboard() {
   const { selected, isAll, companies, setSelected } = useCompany();
   const { data, isLoading } = useAll();

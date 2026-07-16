@@ -569,15 +569,6 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Premium KPI grid (6 cards) */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-        <KpiCard title="Total Revenue" value={inr(monthTotalBilled)} delta={deltaRevenue} icon={IndianRupee} href="/invoices" tone="blue" />
-        <KpiCard title="Pending Collection" value={inr(allPending)} icon={Clock} href="/collection-map" tone="amber" />
-        <KpiCard title="Collected (Range)" value={inr(monthCleared)} delta={deltaCollected} icon={Wallet} href="/payments" tone="emerald" />
-        <KpiCard title="Total Expenses" value={inr(monthExpTotal)} delta={-deltaExpenses} icon={TrendingDown} href="/expenses" tone="orange" />
-        <KpiCard title="Company Balance" value={inr(companyBalance)} delta={deltaBalance} icon={balancePositive ? TrendingUp : AlertCircle} href="/billing" tone={balancePositive ? "emerald" : "orange"} />
-        <KpiCard title="Active Clients" value={String(activeClients)} icon={Users} href="/clients" tone="purple" />
-      </div>
 
       {/* Business Health + Today's Collection */}
       <div className="grid gap-4 lg:grid-cols-2">

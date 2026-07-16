@@ -81,7 +81,7 @@ export function MarkCollectedButton({ invoiceId, invoiceNumber, pending, onDone 
           </div>
           <div className="space-y-1.5">
             <Label>Method</Label>
-            <Select value={method} onValueChange={setMethod}>
+            <Select value={method} onValueChange={(v) => setMethod(v as Method)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="cash">Cash</SelectItem>

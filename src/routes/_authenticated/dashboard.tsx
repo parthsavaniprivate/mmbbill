@@ -8,6 +8,7 @@ import { inr, formatDate, monthKey } from "@/lib/format";
 import {
   TrendingUp, TrendingDown, UserCheck, Clock, IndianRupee,
   Wallet, CalendarIcon, AlertCircle, CheckCircle2, Bell,
+  Receipt, Users, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar,
@@ -22,6 +23,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
+import { HealthScore } from "@/components/dashboard/HealthScore";
+import { CollectionToday } from "@/components/dashboard/CollectionToday";
+import { RecentActivity, type ActivityItem } from "@/components/dashboard/RecentActivity";
+import { SmartInsights, type Insight } from "@/components/dashboard/SmartInsights";
+import { MapPreview } from "@/components/dashboard/MapPreview";
+import { PendingTable, type PendingRow } from "@/components/dashboard/PendingTable";
+import { CompanyPerformance, type CompanyRow } from "@/components/dashboard/CompanyPerformance";
+import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 

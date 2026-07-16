@@ -571,18 +571,7 @@ function Dashboard() {
       </div>
 
 
-      {/* Business Health + Today's Collection */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <HealthScore inputs={{
-          pending: monthDue,
-          billed: monthTotalBilled,
-          collected: monthCleared,
-          overdue: overdue,
-          balance: companyBalance,
-          momGrowthPct: deltaCollected,
-        }} />
-        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={monthDue} paidCountToday={paidCountToday} />
-      </div>
+
 
       {/* HERO: Collection · Expenses · Balance */}
 

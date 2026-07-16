@@ -581,7 +581,7 @@ function Dashboard() {
           balance: companyBalance,
           momGrowthPct: deltaCollected,
         }} />
-        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={allPending} paidCountToday={paidCountToday} />
+        <CollectionToday companyId={isAll ? "all" : selected} collectedToday={collectedToday} pendingToday={monthDue} paidCountToday={paidCountToday} />
       </div>
 
       {/* HERO: Collection · Expenses · Balance */}

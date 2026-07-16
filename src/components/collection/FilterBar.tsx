@@ -22,6 +22,27 @@ const STATUS_TABS: Array<{ key: CollectionFilters["status"]; label: string }> = 
   { key: "paid", label: STATUS_LABEL.paid },
 ];
 
+type Preset = "today" | "tomorrow" | "week" | "pending" | null;
+
+function isoDay(offset: number) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+}
+
+function activePreset(f: CollectionFilters): Preset {
+  const t = isoDay(0);
+  const tmr = isoDay(1);
+  const w = isoDay(7);
+  if (f.status === "all" && f.dueFrom === t && f.dueTo === t) return "today";
+  if (f.status === "all" && f.dueFrom === tmr && f.dueTo === tmr) return "tomorrow";
+  if (f.status === "all" && f.dueFrom === t && f.dueTo === w) return "week";
+  if (f.status === "all" && !f.dueFrom && !f.dueTo && f.minAmount == null && f.maxAmount == null && !f.city && !f.search) return "pending";
+  return null;
+}
+
+
 export function FilterBar({ filters, onChange, onReset, cities }: Props) {
   const activeCount =
     (filters.city ? 1 : 0) +

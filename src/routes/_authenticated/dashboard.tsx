@@ -406,7 +406,7 @@ function Dashboard() {
     ...expenses.slice(-20).map((e) => ({
       id: `exp-${e.id}`, type: "expense" as const,
       title: `Expense: ${CAT_LABEL[e.category] || e.category}`,
-      subtitle: e.notes || undefined,
+      subtitle: e.description || e.title || undefined,
       amount: Number(e.amount || 0),
       at: e.expense_date,
     })),

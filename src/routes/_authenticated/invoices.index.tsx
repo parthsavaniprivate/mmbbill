@@ -465,11 +465,12 @@ function InvoicesPage() {
   );
 }
 
-function StatCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "destructive" }) {
+function StatCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "destructive" | "warning" }) {
   const toneMap = {
     primary: "border-primary/40 bg-primary/5 text-primary",
     success: "border-success/40 bg-success/5 text-success",
     destructive: "border-destructive/40 bg-destructive/5 text-destructive",
+    warning: "border-warning/40 bg-warning/5 text-warning",
   } as const;
   return (
     <Card className={`border ${toneMap[tone]}`}>

@@ -340,7 +340,7 @@ function InvoicesPage() {
                     <Fragment key={i.id}>
                       {showGroup && (
                         <TableRow key={`group-${i.company_id}`} className="bg-muted/40 hover:bg-muted/40">
-                          <TableCell colSpan={8} className="py-2 font-sf-display text-sm uppercase tracking-wide">
+                          <TableCell colSpan={9} className="py-2 font-sf-display text-sm uppercase tracking-wide">
                             {companyName} <span className="text-muted-foreground normal-case font-normal">· {groupCount} invoice{groupCount === 1 ? "" : "s"}</span>
                           </TableCell>
                         </TableRow>

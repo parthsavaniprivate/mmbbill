@@ -578,7 +578,8 @@ function Dashboard() {
       {/* HERO: Collection · Expenses · Balance */}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Invoices raised in range" accent="primary" icon={IndianRupee}>
+        <HeroKpi to="/invoices" title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Invoices raised in range" accent="primary" icon={IndianRupee}>
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Cleared</p>

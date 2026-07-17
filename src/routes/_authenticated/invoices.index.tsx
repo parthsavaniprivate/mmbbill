@@ -153,9 +153,10 @@ function InvoicesPage() {
       if (i.status === "cancelled") return a;
       a.total += Number(i.total || 0);
       a.paid += Number(i.amount_paid || 0);
+      a.gst += Number(i.gst_amount || 0);
       return a;
     },
-    { total: 0, paid: 0 },
+    { total: 0, paid: 0, gst: 0 },
   );
   const unpaid = Math.max(0, stats.total - stats.paid);
 
@@ -172,11 +173,13 @@ function InvoicesPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Sales" value={inr(stats.total)} icon={<Receipt className="w-4 h-4" />} tone="primary" />
         <StatCard label="Paid" value={inr(stats.paid)} icon={<IndianRupee className="w-4 h-4" />} tone="success" />
         <StatCard label="Unpaid" value={inr(unpaid)} icon={<AlertCircle className="w-4 h-4" />} tone="destructive" />
+        <StatCard label="Total GST" value={inr(stats.gst)} icon={<Percent className="w-4 h-4" />} tone="warning" />
       </div>
+
 
 
       <div className="flex flex-wrap gap-2">

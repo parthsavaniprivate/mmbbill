@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2, Receipt, IndianRupee, AlertCircle } from "lucide-react";
+import { Plus, FileDown, Eye, MessageCircle, Bell, MoreHorizontal, Pencil, Trash2, Receipt, IndianRupee, AlertCircle, Percent } from "lucide-react";
 import { inr, formatDate, downloadCSV } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
@@ -153,9 +153,10 @@ function InvoicesPage() {
       if (i.status === "cancelled") return a;
       a.total += Number(i.total || 0);
       a.paid += Number(i.amount_paid || 0);
+      a.gst += Number(i.gst_amount || 0);
       return a;
     },
-    { total: 0, paid: 0 },
+    { total: 0, paid: 0, gst: 0 },
   );
   const unpaid = Math.max(0, stats.total - stats.paid);
 
@@ -172,11 +173,13 @@ function InvoicesPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Sales" value={inr(stats.total)} icon={<Receipt className="w-4 h-4" />} tone="primary" />
         <StatCard label="Paid" value={inr(stats.paid)} icon={<IndianRupee className="w-4 h-4" />} tone="success" />
         <StatCard label="Unpaid" value={inr(unpaid)} icon={<AlertCircle className="w-4 h-4" />} tone="destructive" />
+        <StatCard label="Total GST" value={inr(stats.gst)} icon={<Percent className="w-4 h-4" />} tone="warning" />
       </div>
+
 
 
       <div className="flex flex-wrap gap-2">
@@ -258,6 +261,10 @@ function InvoicesPage() {
                           <p className="font-semibold">{inr(Number(i.total))}</p>
                         </div>
                         <div>
+                          <p className="text-muted-foreground">GST</p>
+                          <p className="font-semibold">{inr(Number(i.gst_amount || 0))}</p>
+                        </div>
+                        <div>
                           <p className="text-muted-foreground">Pending</p>
                           <p className={`font-semibold ${pending > 0 ? "text-destructive" : ""}`}>{inr(pending)}</p>
                         </div>
@@ -310,6 +317,7 @@ function InvoicesPage() {
                   <TableHead>Client</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Due</TableHead>
+                  <TableHead className="text-right">GST</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Pending</TableHead>
                   <TableHead>Status</TableHead>
@@ -332,7 +340,7 @@ function InvoicesPage() {
                     <Fragment key={i.id}>
                       {showGroup && (
                         <TableRow key={`group-${i.company_id}`} className="bg-muted/40 hover:bg-muted/40">
-                          <TableCell colSpan={8} className="py-2 font-sf-display text-sm uppercase tracking-wide">
+                          <TableCell colSpan={9} className="py-2 font-sf-display text-sm uppercase tracking-wide">
                             {companyName} <span className="text-muted-foreground normal-case font-normal">· {groupCount} invoice{groupCount === 1 ? "" : "s"}</span>
                           </TableCell>
                         </TableRow>
@@ -349,6 +357,7 @@ function InvoicesPage() {
                             <div className="text-xs text-destructive">{overdueDays}d overdue</div>
                           )}
                         </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground">{inr(Number(i.gst_amount || 0))}</TableCell>
                         <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
                         <TableCell className="text-right">{inr(pending)}</TableCell>
                         <TableCell>
@@ -462,11 +471,12 @@ function InvoicesPage() {
   );
 }
 
-function StatCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "destructive" }) {
+function StatCard({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "destructive" | "warning" }) {
   const toneMap = {
     primary: "border-primary/40 bg-primary/5 text-primary",
     success: "border-success/40 bg-success/5 text-success",
     destructive: "border-destructive/40 bg-destructive/5 text-destructive",
+    warning: "border-warning/40 bg-warning/5 text-warning",
   } as const;
   return (
     <Card className={`border ${toneMap[tone]}`}>

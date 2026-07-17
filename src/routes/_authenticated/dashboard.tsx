@@ -87,11 +87,12 @@ function useAll() {
   });
 }
 
-function HeroKpi({ title, value, sub, accent, icon: Icon, children }: {
+function HeroKpi({ title, value, sub, accent, icon: Icon, children, to }: {
   title: string; value: string; sub?: string;
   accent: "primary" | "expense" | "balance-pos" | "balance-neg";
   icon: React.ElementType;
   children?: React.ReactNode;
+  to?: string;
 }) {
   const styles = {
     primary:      { ring: "from-blue-500/20 to-blue-500/0",   text: "text-blue-500",  iconBg: "bg-blue-500/15 text-blue-500" },
@@ -99,9 +100,10 @@ function HeroKpi({ title, value, sub, accent, icon: Icon, children }: {
     "balance-pos":{ ring: "from-emerald-500/20 to-emerald-500/0", text: "text-emerald-500", iconBg: "bg-emerald-500/15 text-emerald-500" },
     "balance-neg":{ ring: "from-red-500/20 to-red-500/0",     text: "text-red-500",   iconBg: "bg-red-500/15 text-red-500" },
   }[accent];
-  return (
+  const card = (
     <Card className={cn("relative overflow-hidden border-border/60 shadow-card backdrop-blur",
-      "bg-gradient-to-br", styles.ring)}>
+      "bg-gradient-to-br", styles.ring,
+      to && "cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5")}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="min-w-0">
@@ -113,11 +115,14 @@ function HeroKpi({ title, value, sub, accent, icon: Icon, children }: {
             <Icon className="w-6 h-6" />
           </div>
         </div>
+
         {children && <div className="mt-4">{children}</div>}
       </CardContent>
     </Card>
   );
+  return to ? <Link to={to} className="block">{card}</Link> : card;
 }
+
 
 function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
   title: string; value: string; icon: React.ElementType; tone?: "default" | "warn" | "danger" | "ok";
@@ -573,7 +578,8 @@ function Dashboard() {
       {/* HERO: Collection · Expenses · Balance */}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <HeroKpi title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Invoices raised in range" accent="primary" icon={IndianRupee}>
+        <HeroKpi to="/invoices" title="Total Bill Collection" value={inr(monthTotalBilled)} sub="Invoices raised in range" accent="primary" icon={IndianRupee}>
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Cleared</p>
@@ -587,7 +593,7 @@ function Dashboard() {
         </HeroKpi>
 
 
-        <HeroKpi title="Total Expenses" value={inr(monthExpTotal)} sub={projectedFixed > 0 ? `Incl. ${inr(projectedFixed)} projected fixed` : "Selected range"} accent="expense" icon={TrendingDown}>
+        <HeroKpi to="/expenses" title="Total Expenses" value={inr(monthExpTotal)} sub={projectedFixed > 0 ? `Incl. ${inr(projectedFixed)} projected fixed` : "Selected range"} accent="expense" icon={TrendingDown}>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-lg bg-background/80 border border-border/80 p-2.5 shadow-sm">
               <p className="text-muted-foreground">Fixed</p>

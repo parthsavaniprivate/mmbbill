@@ -208,6 +208,11 @@ function Dashboard() {
       const last = new Date(end.getFullYear(), end.getMonth() + 1, 0);
       return { from: start, to: last };
     }
+    if (rangeKey === "pm") {
+      const start = new Date(end.getFullYear(), end.getMonth() - 1, 1);
+      const last = new Date(end.getFullYear(), end.getMonth(), 0);
+      return { from: start, to: last };
+    }
     const preset = RANGE_PRESETS.find((p) => p.key === rangeKey)!;
     const start = new Date(end.getFullYear(), end.getMonth() - (preset.months - 1), 1);
     return { from: start, to: end };

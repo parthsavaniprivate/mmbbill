@@ -120,7 +120,9 @@ function HeroKpi({ title, value, sub, accent, icon: Icon, children, to }: {
       </CardContent>
     </Card>
   );
+  return to ? <Link to={to} className="block">{card}</Link> : card;
 }
+
 
 function MiniKpi({ title, value, icon: Icon, tone = "default" }: {
   title: string; value: string; icon: React.ElementType; tone?: "default" | "warn" | "danger" | "ok";

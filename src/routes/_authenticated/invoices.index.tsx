@@ -357,6 +357,7 @@ function InvoicesPage() {
                             <div className="text-xs text-destructive">{overdueDays}d overdue</div>
                           )}
                         </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground">{inr(Number(i.gst_amount || 0))}</TableCell>
                         <TableCell className="text-right font-medium">{inr(Number(i.total))}</TableCell>
                         <TableCell className="text-right">{inr(pending)}</TableCell>
                         <TableCell>

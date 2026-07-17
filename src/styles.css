@@ -339,14 +339,20 @@ h1, h2, h3, h4, p, span, div, a, td, th, li { overflow-wrap: anywhere; word-brea
   animation: it-today-glow 2.4s ease-in-out infinite;
 }
 
-/* Hide the "Edit with Lovable" / "Made with Lovable" badge */
+/* Hide the "Edit with Lovable" / "Made with Lovable" badge everywhere */
 #lovable-badge,
 [id^="lovable-badge"],
-a[href*="lovable.dev"][target="_blank"],
-a[href*="lovable.app"][target="_blank"][class*="badge" i] {
+[data-lovable-badge],
+[class*="lovable-badge" i],
+a[href*="lovable.dev"],
+a[href*="lovable.app"][class*="badge" i],
+iframe[src*="lovable.dev"],
+iframe[src*="gpteng"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 

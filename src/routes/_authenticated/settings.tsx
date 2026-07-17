@@ -19,6 +19,7 @@ type Company = Database["public"]["Tables"]["companies"]["Row"];
 export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
 
 function SettingsPage() {
+  const qc = useQueryClient();
   const { data: companies = [] } = useQuery({
     queryKey: ["companies-full"],
     queryFn: async () => {
@@ -27,15 +28,65 @@ function SettingsPage() {
     },
   });
 
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("");
+  useEffect(() => { if (!activeTab && companies[0]) setActiveTab(companies[0].id); }, [companies, activeTab]);
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const name = newName.trim();
+      if (!name) throw new Error("Company name is required");
+      const { data, error } = await supabase
+        .from("companies")
+        .insert({ name, invoice_prefix: "INV", currency: "INR" })
+        .select("id")
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    },
+    onSuccess: async (id) => {
+      toast.success("Company created");
+      setOpen(false);
+      setNewName("");
+      await qc.invalidateQueries({ queryKey: ["companies-full"] });
+      await qc.invalidateQueries({ queryKey: ["companies"] });
+      setActiveTab(id);
+    },
+    onError: (e: Error) => toast.error(e.message.includes("row-level") ? "Only admins can add companies" : e.message),
+  });
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Configure company info, invoice defaults, branding, and WhatsApp templates.</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">Configure company info, invoice defaults, branding, and WhatsApp templates.</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button><Plus className="w-4 h-4" /> New Company</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Add Company</DialogTitle></DialogHeader>
+            <div className="space-y-2">
+              <Label>Company Name</Label>
+              <Input autoFocus value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Acme Pvt Ltd"
+                onKeyDown={(e) => { if (e.key === "Enter") create.mutate(); }} />
+              <p className="text-xs text-muted-foreground">You can fill in the rest of the details after creation.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={() => create.mutate()} disabled={create.isPending || !newName.trim()}>
+                {create.isPending ? "Creating…" : "Create"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Tabs defaultValue={companies[0]?.id ?? ""}>
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex-wrap h-auto">
           {companies.map((c) => <TabsTrigger key={c.id} value={c.id}>{c.name}</TabsTrigger>)}
         </TabsList>
         {companies.map((c) => (

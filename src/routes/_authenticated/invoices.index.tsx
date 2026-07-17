@@ -261,6 +261,10 @@ function InvoicesPage() {
                           <p className="font-semibold">{inr(Number(i.total))}</p>
                         </div>
                         <div>
+                          <p className="text-muted-foreground">GST</p>
+                          <p className="font-semibold">{inr(Number(i.gst_amount || 0))}</p>
+                        </div>
+                        <div>
                           <p className="text-muted-foreground">Pending</p>
                           <p className={`font-semibold ${pending > 0 ? "text-destructive" : ""}`}>{inr(pending)}</p>
                         </div>

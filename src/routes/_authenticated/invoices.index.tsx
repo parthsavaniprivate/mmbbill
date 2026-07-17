@@ -317,6 +317,7 @@ function InvoicesPage() {
                   <TableHead>Client</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Due</TableHead>
+                  <TableHead className="text-right">GST</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Pending</TableHead>
                   <TableHead>Status</TableHead>

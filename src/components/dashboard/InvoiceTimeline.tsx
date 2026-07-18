@@ -120,7 +120,6 @@ function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Dat
 
 
 const ROW_H = 56;
-const CLIENT_COL = 240;
 
 type Props = {
   invoices: Invoice[];

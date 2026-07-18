@@ -55,6 +55,7 @@ function ClientsPage() {
   
   const [search, setSearch] = useState(q);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
 
@@ -67,9 +68,21 @@ function ClientsPage() {
     },
   });
 
+  const overrides = useMemo(() => {
+    const m: Record<string, PaymentBehaviour | null> = {};
+    for (const c of clients) {
+      const v = (c as unknown as { payment_behaviour_override?: PaymentBehaviour | null }).payment_behaviour_override ?? null;
+      m[c.id] = v;
+    }
+    return m;
+  }, [clients]);
+  // Company scope: when "All", pass null to compute across all invoices/payments.
+  const behaviours = useClientBehaviours(isAll ? null : selected, overrides);
+
   const filtered = clients.filter((c) => {
     if (!isAll && c.company_id !== selected) return false;
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (behaviourFilter !== "all" && behaviours.get(c.id)?.behaviour !== behaviourFilter) return false;
     if (search) {
       const s = search.toLowerCase();
       return (c.client_name + " " + (c.business_name || "") + " " + (c.mobile || "") + " " + (c.email || ""))

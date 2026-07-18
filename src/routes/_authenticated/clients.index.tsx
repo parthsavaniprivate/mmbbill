@@ -113,7 +113,6 @@ function ClientsPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((c) => {
             const co = companies.find((x) => x.id === c.company_id);
-            const initials = (c.business_name || c.client_name).split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
             return (
               <Link
                 key={c.id}
@@ -124,9 +123,12 @@ function ClientsPage() {
                 <Card className="shadow-card transition-all hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer h-full">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center font-semibold text-primary">
-                        {initials || "?"}
-                      </div>
+                      <ClientLogo
+                        name={c.business_name || c.client_name}
+                        logoUrl={c.logo_url}
+                        className="h-11 w-11 shrink-0 rounded-xl"
+                        textClassName="text-sm"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold truncate">{c.business_name || c.client_name}</p>
                         {c.business_name && <p className="text-xs text-muted-foreground truncate">{c.client_name}</p>}

@@ -469,10 +469,12 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className={cn("truncate text-[13px] font-medium leading-tight sm:text-sm", isSelected && "text-primary")} title={row.client.client_name}>{row.client.client_name}</p>
-                          {row.client.business_name && (
-                            <p className="truncate text-[10px] leading-tight text-muted-foreground sm:text-[11px]" title={row.client.business_name}>{row.client.business_name}</p>
-                          )}
+                          {(() => {
+                            const displayName = row.client.business_name?.trim() || row.client.client_name;
+                            return (
+                              <p className={cn("truncate text-[13px] font-medium leading-tight sm:text-sm", isSelected && "text-primary")} title={displayName}>{displayName}</p>
+                            );
+                          })()}
                         </div>
                       </button>
                       <div className="relative flex-1" style={{ width: totalWidth }}>

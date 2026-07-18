@@ -132,9 +132,7 @@ function NewInvoicePage() {
     if (svcs.length) {
       const scheduleStep = _intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
       const periodStart = schedule.last_generated_date
-        ? _addMonths(schedule.last_generated_date, 0).length
-          ? (() => { const d = new Date(schedule.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
-          : schedule.next_billing_date
+        ? (() => { const d = new Date(schedule.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
         : schedule.next_billing_date;
       setItems(svcs.map((s) => {
         const iv = Number((s as { interval_months?: number | null }).interval_months ?? scheduleStep);

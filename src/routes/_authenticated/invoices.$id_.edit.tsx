@@ -105,8 +105,9 @@ function EditInvoicePage() {
     setNotes(data.inv.notes ?? "");
     setTerms(data.inv.terms ?? "");
     setItems(
-      (data.items.length ? data.items : [{ id: undefined, description: "", quantity: 1, rate: 0 }]).map((it) => {
+      (data.items.length ? data.items : [{ id: undefined, description: "", quantity: 1, rate: 0, gst_rate: null }]).map((it) => {
         const parsed = parseDescription(it.description);
+        const gr = (it as { gst_rate?: number | null }).gst_rate;
         return {
           id: (it as { id?: string }).id,
           description: parsed.main,
@@ -115,6 +116,7 @@ function EditInvoicePage() {
           oneTime: !parsed.fromDate && !parsed.toDate,
           quantity: Number(it.quantity),
           rate: Number(it.rate),
+          gstRate: gr === null || gr === undefined ? undefined : Number(gr),
         };
       }),
     );
@@ -123,9 +125,23 @@ function EditInvoicePage() {
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.rate || 0), 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
+    let gstAmount = 0;
+    if (gstEnabled) {
+      const hasPerItem = items.some((it) => it.gstRate !== undefined && it.gstRate !== "");
+      if (hasPerItem && subtotal > 0) {
+        const factor = afterDisc / subtotal;
+        gstAmount = items.reduce((s, it) => {
+          const amt = Number(it.quantity || 0) * Number(it.rate || 0);
+          const rt = Number(it.gstRate || 0);
+          return s + amt * factor * rt / 100;
+        }, 0);
+      } else {
+        gstAmount = afterDisc * Number(gstRate || 0) / 100;
+      }
+      gstAmount = +gstAmount.toFixed(2);
+    }
     return { subtotal, gstAmount, total: afterDisc + gstAmount };
-  }, [items, discount, gstRate]);
+  }, [items, discount, gstRate, gstEnabled]);
 
   const save = useMutation({
     mutationFn: async () => {

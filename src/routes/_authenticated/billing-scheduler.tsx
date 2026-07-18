@@ -86,13 +86,15 @@ function BillingSchedulerPage() {
     };
     const upcoming30 = [...buckets.dueToday, ...buckets.week, ...buckets.month].reduce((s, r) => s + rowTotal(r), 0);
     const mrr = rows.reduce((s, r) => {
+      const step = intervalMonths(r.billing_type, r.custom_interval_months);
       return s + (r.billing_schedule_services ?? []).reduce((sum, x) => {
         const p = Number(x.price || 0);
         if (x.unit === "one_time") return sum;
-        if (x.unit === "year") return sum + p / 12;
-        return sum + p;
+        const iv = Number(x.interval_months ?? step);
+        return sum + computeServiceAmount(p, iv);
       }, 0);
     }, 0);
+
     return {
       generated: generatedThisMonth,
       pending: buckets.dueToday.length + buckets.week.length + buckets.month.length,

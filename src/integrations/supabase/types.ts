@@ -53,6 +53,119 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_schedule_services: {
+        Row: {
+          created_at: string
+          gst_rate: number | null
+          id: string
+          position: number
+          price: number
+          schedule_id: string
+          service_name: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          gst_rate?: number | null
+          id?: string
+          position?: number
+          price?: number
+          schedule_id: string
+          service_name: string
+          unit?: string
+        }
+        Update: {
+          created_at?: string
+          gst_rate?: number | null
+          id?: string
+          position?: number
+          price?: number
+          schedule_id?: string
+          service_name?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_schedule_services_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "billing_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_schedules: {
+        Row: {
+          auto_reminder: boolean
+          auto_suggest: boolean
+          billing_type: string
+          client_id: string
+          company_id: string
+          created_at: string
+          custom_interval_months: number | null
+          default_gst_rate: number | null
+          id: string
+          invoice_prefix: string | null
+          is_active: boolean
+          last_generated_date: string | null
+          next_billing_date: string
+          notes: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          auto_reminder?: boolean
+          auto_suggest?: boolean
+          billing_type: string
+          client_id: string
+          company_id: string
+          created_at?: string
+          custom_interval_months?: number | null
+          default_gst_rate?: number | null
+          id?: string
+          invoice_prefix?: string | null
+          is_active?: boolean
+          last_generated_date?: string | null
+          next_billing_date: string
+          notes?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          auto_reminder?: boolean
+          auto_suggest?: boolean
+          billing_type?: string
+          client_id?: string
+          company_id?: string
+          created_at?: string
+          custom_interval_months?: number | null
+          default_gst_rate?: number | null
+          id?: string
+          invoice_prefix?: string | null
+          is_active?: boolean
+          last_generated_date?: string | null
+          next_billing_date?: string
+          notes?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_schedules_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_schedules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_activity: {
         Row: {
           actor_id: string | null
@@ -623,6 +736,7 @@ export type Database = {
           notes: string | null
           reminder_days: number | null
           reminders_sent: number
+          source_schedule_id: string | null
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number
           terms: string | null
@@ -652,6 +766,7 @@ export type Database = {
           notes?: string | null
           reminder_days?: number | null
           reminders_sent?: number
+          source_schedule_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
           terms?: string | null
@@ -681,6 +796,7 @@ export type Database = {
           notes?: string | null
           reminder_days?: number | null
           reminders_sent?: number
+          source_schedule_id?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
           terms?: string | null
@@ -707,6 +823,13 @@ export type Database = {
             columns: ["meta_account_id"]
             isOneToOne: false
             referencedRelation: "meta_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_source_schedule_id_fkey"
+            columns: ["source_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "billing_schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -1515,6 +1638,47 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_catalog: {
+        Row: {
+          company_id: string
+          created_at: string
+          default_gst_rate: number | null
+          default_price: number | null
+          id: string
+          last_used_at: string | null
+          name: string
+          usage_count: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          default_gst_rate?: number | null
+          default_price?: number | null
+          id?: string
+          last_used_at?: string | null
+          name: string
+          usage_count?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          default_gst_rate?: number | null
+          default_price?: number | null
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_catalog_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]

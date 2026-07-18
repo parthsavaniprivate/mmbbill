@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -15,8 +15,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
-  validateSearch: (s: Record<string, unknown>): { client?: string } =>
-    typeof s.client === "string" && s.client ? { client: s.client } : {},
+  validateSearch: (s: Record<string, unknown>): { client?: string; schedule?: string } => ({
+    ...(typeof s.client === "string" && s.client ? { client: s.client } : {}),
+    ...(typeof s.schedule === "string" && s.schedule ? { schedule: s.schedule } : {}),
+  }),
   component: NewInvoicePage,
 });
 
@@ -33,9 +35,10 @@ const monthsInclusive = (from: string, to: string) => {
 };
 
 function NewInvoicePage() {
-  const { client: presetClient } = Route.useSearch();
+  const { client: presetClient, schedule: scheduleId } = Route.useSearch();
   const navigate = useNavigate();
   const { companies, selected, isAll } = useCompany();
+  const qc = useQueryClient();
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
   const [clientId, setClientId] = useState(presetClient);
@@ -71,6 +74,38 @@ function NewInvoicePage() {
       return data;
     },
   });
+
+  // Load billing schedule when navigated from BillingReminder / Scheduler
+  const { data: schedule } = useQuery({
+    queryKey: ["schedule-prefill", scheduleId],
+    enabled: !!scheduleId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("billing_schedules")
+        .select("id, client_id, company_id, billing_type, custom_interval_months, next_billing_date, billing_schedule_services(service_name, price, gst_rate, unit, position)")
+        .eq("id", scheduleId!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (!schedule || prefilled) return;
+    if (schedule.company_id) setCompanyId(schedule.company_id);
+    if (schedule.client_id) setClientId(schedule.client_id);
+    const svcs = (schedule.billing_schedule_services ?? []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    if (svcs.length) {
+      setItems(svcs.map((s) => ({
+        description: s.service_name,
+        quantity: 1,
+        rate: Number(s.price || 0),
+        gstRate: s.gst_rate != null ? Number(s.gst_rate) : "",
+      })));
+    }
+    setPrefilled(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedule]);
 
   const filteredClients = clients.filter((c) => c.company_id === companyId);
   const gstEnabled = companyMeta?.gst_enabled ?? true;
@@ -126,6 +161,7 @@ function NewInvoicePage() {
         gst_rate: Number(gstRate || 0),
         discount: Number(discount || 0),
         notes: notes.trim() || null, terms: terms.trim() || null,
+        source_schedule_id: scheduleId ?? null,
       }).select().single();
       if (error) throw error;
 
@@ -151,9 +187,27 @@ function NewInvoicePage() {
       if (itErr) throw itErr;
 
       await supabase.from("clients").update({ last_invoice_date: date }).eq("id", clientId);
+
+      // Advance the billing schedule (if this invoice originated from one)
+      if (scheduleId && schedule) {
+        const { intervalMonths, addMonths } = await import("@/lib/billing/cycle");
+        const step = intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
+        const nextDate = addMonths(schedule.next_billing_date ?? date, step);
+        await supabase.from("billing_schedules").update({
+          last_generated_date: date,
+          next_billing_date: nextDate,
+        }).eq("id", scheduleId);
+      }
+
       return inv.id;
     },
-    onSuccess: (id) => { toast.success("Invoice created"); navigate({ to: "/invoices/$id", params: { id } }); },
+    onSuccess: (id) => {
+      toast.success("Invoice created");
+      qc.invalidateQueries({ queryKey: ["billing-schedules-all"] });
+      qc.invalidateQueries({ queryKey: ["billing-schedule"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-data"] });
+      navigate({ to: "/invoices/$id", params: { id } });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 

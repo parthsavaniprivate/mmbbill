@@ -404,7 +404,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                 {/* Sticky header */}
                 <div className="sticky top-0 z-20 flex border-b border-border/60 bg-card/85 backdrop-blur-md">
                   <div
-                    className="sticky left-0 z-30 flex items-center border-r border-border/60 bg-card/90 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur-md"
+                    className="sticky left-0 z-30 flex items-center border-r border-border/60 bg-card/90 px-2 sm:px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur-md"
                     style={{ width: CLIENT_COL, minWidth: CLIENT_COL, height: 44 }}
                   >
                     Client

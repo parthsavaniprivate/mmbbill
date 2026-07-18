@@ -308,6 +308,9 @@ function NewInvoicePage() {
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => { setDate(e.target.value); if (e.target.value) setDueDate(addMonth(e.target.value)); }} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
       </CardContent></Card>
+      {clientId && selectedBehaviour && (
+        <BehaviourInfoCard stats={selectedBehaviour} />
+      )}
       {clientId && clientSchedule?.next_billing_date && (
         <BillingWarningCard
           nextBillingDate={clientSchedule.next_billing_date}

@@ -14,9 +14,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
-import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2, Trash2 } from "lucide-react";
+import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2, Trash2, Upload, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { ClientLogo, fileToLogoDataUrl } from "@/components/clients/ClientLogo";
 
 type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Status = Database["public"]["Enums"]["client_status"];
@@ -112,7 +113,6 @@ function ClientsPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((c) => {
             const co = companies.find((x) => x.id === c.company_id);
-            const initials = (c.business_name || c.client_name).split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
             return (
               <Link
                 key={c.id}
@@ -123,9 +123,12 @@ function ClientsPage() {
                 <Card className="shadow-card transition-all hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer h-full">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center font-semibold text-primary">
-                        {initials || "?"}
-                      </div>
+                      <ClientLogo
+                        name={c.business_name || c.client_name}
+                        logoUrl={c.logo_url}
+                        className="h-11 w-11 shrink-0 rounded-xl"
+                        textClassName="text-sm"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold truncate">{c.business_name || c.client_name}</p>
                         {c.business_name && <p className="text-xs text-muted-foreground truncate">{c.client_name}</p>}
@@ -187,8 +190,9 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
     service_charge_amount: String(initial?.service_charge_amount ?? ""),
     credit_limit: initial?.credit_limit != null ? String(initial.credit_limit) : "",
     billing_cycle: (initial?.billing_cycle ?? "monthly") as "monthly" | "weekly" | "custom",
-    
+    logo_url: (initial?.logo_url ?? "") as string,
   });
+  const [logoBusy, setLogoBusy] = useState(false);
 
 
   const save = useMutation({
@@ -213,6 +217,57 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>{id ? "Edit Client" : "New Client"}</DialogTitle></DialogHeader>
+
+      <div className="mb-2 flex items-center gap-4 rounded-xl border border-border/60 bg-muted/30 p-3">
+        <ClientLogo
+          name={form.business_name || form.client_name || "?"}
+          logoUrl={form.logo_url || null}
+          className="h-16 w-16 rounded-xl"
+          textClassName="text-base"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">Client Logo</p>
+          <p className="text-xs text-muted-foreground">PNG / JPG / WebP. Auto-resized to 192px.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <label className="inline-flex">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  setLogoBusy(true);
+                  try {
+                    const url = await fileToLogoDataUrl(f);
+                    setForm((s) => ({ ...s, logo_url: url }));
+                  } catch (err) {
+                    toast.error((err as Error).message || "Could not read image");
+                  } finally {
+                    setLogoBusy(false);
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={logoBusy} asChild>
+                <span><Upload className="h-3.5 w-3.5" />{logoBusy ? "Processing…" : form.logo_url ? "Replace" : "Upload"}</span>
+              </Button>
+            </label>
+            {form.logo_url && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-destructive hover:text-destructive"
+                onClick={() => setForm((s) => ({ ...s, logo_url: "" }))}
+              >
+                <XIcon className="h-3.5 w-3.5" /> Remove
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5 col-span-2">
           <Label>Company *</Label>

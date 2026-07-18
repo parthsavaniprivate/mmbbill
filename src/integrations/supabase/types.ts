@@ -1827,6 +1827,8 @@ export type Database = {
         | "office_rent"
         | "electricity"
         | "miscellaneous"
+        | "advance"
+        | "light_bill"
       expense_kind: "fixed" | "variable"
       file_category: "agreement" | "invoice" | "branding" | "content" | "other"
       invoice_status:
@@ -1996,6 +1998,8 @@ export const Constants = {
         "office_rent",
         "electricity",
         "miscellaneous",
+        "advance",
+        "light_bill",
       ],
       expense_kind: ["fixed", "variable"],
       file_category: ["agreement", "invoice", "branding", "content", "other"],

@@ -26,19 +26,25 @@ import type { Database } from "@/integrations/supabase/types";
 type Category = Database["public"]["Enums"]["expense_category"];
 type Cycle = Database["public"]["Enums"]["recurring_cycle"];
 
-const CATEGORIES: { value: Category; label: string }[] = [
+const CATEGORIES: { value: Category; label: string; customizable?: boolean }[] = [
   { value: "facebook_ads", label: "Facebook Ads" },
   { value: "instagram_ads", label: "Instagram Ads" },
   { value: "google_ads", label: "Google Ads" },
-  { value: "employee_salary", label: "Employee Salary" },
+  { value: "employee_salary", label: "Salary", customizable: true },
+  { value: "advance", label: "Advance", customizable: true },
+  { value: "light_bill", label: "Light Bill", customizable: true },
+  { value: "electricity", label: "Electricity", customizable: true },
+  { value: "office_rent", label: "Office Rent", customizable: true },
   { value: "software_subscriptions", label: "Software Subscriptions" },
   { value: "internet", label: "Internet" },
   { value: "office", label: "Office" },
   { value: "travel", label: "Travel" },
-  { value: "other", label: "Other" },
+  { value: "miscellaneous", label: "Miscellaneous", customizable: true },
+  { value: "other", label: "Other", customizable: true },
 ];
 
-const FIXED_CATEGORIES: Category[] = ["employee_salary", "office", "internet", "software_subscriptions"];
+const CUSTOMIZABLE = new Set<Category>(CATEGORIES.filter((c) => c.customizable).map((c) => c.value));
+const FIXED_CATEGORIES: Category[] = ["employee_salary", "office", "internet", "software_subscriptions", "office_rent", "light_bill", "electricity"];
 
 const CYCLES: { value: Cycle; label: string; months: number }[] = [
   { value: "monthly", label: "Monthly", months: 1 },
@@ -377,7 +383,7 @@ function ExpensesPage() {
                   <div key={e.id} className="p-3 space-y-2 min-w-0">
                     <div className="flex items-start justify-between gap-3 min-w-0">
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold truncate">{e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
+                        <div className="font-semibold truncate">{e.title || e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
                         <div className="text-xs text-muted-foreground truncate">{companies.find((c) => c.id === e.company_id)?.name}</div>
                       </div>
                       <div className="text-right shrink-0">
@@ -400,7 +406,7 @@ function ExpensesPage() {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead>Date</TableHead><TableHead>Category</TableHead>
-                  <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
+                  <TableHead>Label / Vendor</TableHead><TableHead>Company</TableHead>
                   <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
@@ -408,7 +414,7 @@ function ExpensesPage() {
                     <TableRow key={e.id}>
                       <TableCell>{formatDate(e.expense_date)}</TableCell>
                       <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
-                      <TableCell>{e.vendor || "—"}</TableCell>
+                      <TableCell>{e.title ? <span className="font-medium">{e.title}</span> : (e.vendor || "—")}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
                       <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
                       <TableCell>
@@ -547,6 +553,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
   const [form, setForm] = useState({
     company_id: initial?.company_id ?? (isAll ? companies[0]?.id ?? "" : selected),
     category: (initial?.category ?? "facebook_ads") as Category,
+    title: initial?.title ?? "",
     amount: initial ? String(initial.amount) : "",
     expense_date: initial?.expense_date ?? new Date().toISOString().slice(0, 10),
     vendor: initial?.vendor ?? "",
@@ -558,6 +565,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
       const payload = {
         company_id: form.company_id, category: form.category, expense_kind: "variable" as const,
         amount: Number(form.amount), expense_date: form.expense_date,
+        title: form.title.trim() || null,
         vendor: form.vendor || null, description: form.description || null,
       };
       if (initial) {
@@ -572,6 +580,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
     onError: (e: Error) => toast.error(e.message),
   });
   const variableCats = CATEGORIES.filter((c) => !FIXED_CATEGORIES.includes(c.value));
+  const showCustom = CUSTOMIZABLE.has(form.category);
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>{initial ? "Edit" : "New"} Variable Expense</DialogTitle></DialogHeader>
@@ -588,6 +597,17 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
             <SelectContent>{variableCats.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
+        {showCustom && (
+          <div className="space-y-1.5">
+            <Label>Custom Label</Label>
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder={`e.g. ${CATEGORIES.find((c) => c.value === form.category)?.label} – October, Ramesh advance, etc.`}
+            />
+            <p className="text-[11px] text-muted-foreground">Yeh custom label list me show hoga.</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5"><Label>Amount (₹)</Label><Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
           <div className="space-y-1.5"><Label>Date</Label><Input type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} /></div>

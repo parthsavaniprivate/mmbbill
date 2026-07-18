@@ -33,7 +33,7 @@ export function BillingReminder() {
     queryFn: async () => {
       let q = supabase
         .from("billing_schedules")
-        .select("id, company_id, client_id, next_billing_date, auto_suggest, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit)")
+        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, auto_suggest, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit, interval_months)")
         .eq("is_active", true)
         .eq("auto_suggest", true);
       if (!isAll) q = q.eq("company_id", selected);

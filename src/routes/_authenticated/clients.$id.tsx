@@ -203,7 +203,7 @@ function ClientDetail() {
             <ClientForm
               id={id}
               initial={client}
-              onClose={() => { setEditOpen(false); qc.invalidateQueries({ queryKey: ["client", id] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
+              onClose={() => { setEditOpen(false); qc.invalidateQueries({ queryKey: ["client", id] }); qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); }}
             />
           </Dialog>
           <Button asChild><Link to="/invoices/new" search={{ client: id } as never}><Plus className="w-4 h-4" />New Invoice</Link></Button>

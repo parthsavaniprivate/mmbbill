@@ -87,7 +87,7 @@ function ClientsPage() {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4" /> New Client</Button>
           </DialogTrigger>
-          <ClientForm onClose={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["clients"] }); }} />
+          <ClientForm onClose={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); }} />
         </Dialog>
       </div>
 

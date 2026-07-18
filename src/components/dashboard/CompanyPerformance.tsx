@@ -89,7 +89,10 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                         {pct.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-right text-orange-500 font-semibold">{inr(r.expenses)}</td>
+                    <td className="px-4 py-2 text-right font-semibold">
+                      <span className="text-orange-500">{inr(Math.max(0, r.total - r.collected))}</span>
+                      <span className="ml-2 text-xs font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</span>
+                    </td>
                   </tr>
                 );
               })}

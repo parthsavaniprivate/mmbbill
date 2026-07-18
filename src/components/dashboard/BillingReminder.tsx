@@ -8,17 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, AlertTriangle, ArrowRight } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
-import { daysBetween, priorityForOverdue, todayISO } from "@/lib/billing/cycle";
+import { daysBetween, priorityForOverdue, todayISO, intervalMonths, computeServiceAmount, type BillingType } from "@/lib/billing/cycle";
 
 type ScheduleRow = {
   id: string;
   company_id: string;
   client_id: string;
+  billing_type: BillingType;
+  custom_interval_months: number | null;
   next_billing_date: string;
   auto_suggest: boolean;
   is_active: boolean;
   clients?: { client_name: string; business_name: string | null } | null;
-  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string }[];
+  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string; interval_months: number | null }[];
 };
 
 export function BillingReminder() {

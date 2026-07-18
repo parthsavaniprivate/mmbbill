@@ -276,7 +276,12 @@ function InvoicesPage() {
                       <div className="flex items-start justify-between gap-2 min-w-0">
                         <div className="min-w-0 flex-1">
                           <Link to="/invoices/$id" params={{ id: i.id }} className="font-semibold text-sm hover:underline block truncate">{i.invoice_number}</Link>
-                          <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
+                            {i.client_id && behaviours.get(i.client_id) && (
+                              <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[9px] py-0 px-1.5 shrink-0" />
+                            )}
+                          </div>
                         </div>
                         <Badge className={`${STATUS_COLORS[i.status]} shrink-0 text-[10px]`} variant="outline">{i.status.replace("_", " ")}</Badge>
                       </div>

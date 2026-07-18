@@ -141,6 +141,10 @@ function InvoicesPage() {
     if (range && i.invoice_date) {
       if (i.invoice_date < range.from || i.invoice_date > range.to) return false;
     }
+    if (behaviourFilter !== "all") {
+      const b = i.client_id ? behaviours.get(i.client_id)?.behaviour : undefined;
+      if (b !== behaviourFilter) return false;
+    }
     if (search) {
       const cl = i.clients as ClientLite | null;
       const s = search.toLowerCase();

@@ -553,6 +553,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
   const [form, setForm] = useState({
     company_id: initial?.company_id ?? (isAll ? companies[0]?.id ?? "" : selected),
     category: (initial?.category ?? "facebook_ads") as Category,
+    title: initial?.title ?? "",
     amount: initial ? String(initial.amount) : "",
     expense_date: initial?.expense_date ?? new Date().toISOString().slice(0, 10),
     vendor: initial?.vendor ?? "",
@@ -564,6 +565,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
       const payload = {
         company_id: form.company_id, category: form.category, expense_kind: "variable" as const,
         amount: Number(form.amount), expense_date: form.expense_date,
+        title: form.title.trim() || null,
         vendor: form.vendor || null, description: form.description || null,
       };
       if (initial) {
@@ -578,6 +580,7 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
     onError: (e: Error) => toast.error(e.message),
   });
   const variableCats = CATEGORIES.filter((c) => !FIXED_CATEGORIES.includes(c.value));
+  const showCustom = CUSTOMIZABLE.has(form.category);
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>{initial ? "Edit" : "New"} Variable Expense</DialogTitle></DialogHeader>
@@ -594,6 +597,17 @@ function VariableForm({ initial, onClose }: { initial: ExpenseRow | null; onClos
             <SelectContent>{variableCats.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
+        {showCustom && (
+          <div className="space-y-1.5">
+            <Label>Custom Label</Label>
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder={`e.g. ${CATEGORIES.find((c) => c.value === form.category)?.label} – October, Ramesh advance, etc.`}
+            />
+            <p className="text-[11px] text-muted-foreground">Yeh custom label list me show hoga.</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5"><Label>Amount (₹)</Label><Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
           <div className="space-y-1.5"><Label>Date</Label><Input type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} /></div>

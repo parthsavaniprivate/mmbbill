@@ -241,6 +241,14 @@ function ClientDetail() {
 
       {client.company_id && <BillingConfigCard clientId={id} companyId={client.company_id} />}
 
+      <PaymentBehaviourCard
+        clientId={id}
+        invoices={invoices}
+        payments={payments}
+        override={(client as unknown as { payment_behaviour_override: PaymentBehaviour | null }).payment_behaviour_override ?? null}
+        onChanged={() => qc.invalidateQueries({ queryKey: ["client", id] })}
+      />
+
       {/* Billing Summary */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card><CardContent className="p-4">

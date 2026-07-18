@@ -776,7 +776,7 @@ function Dashboard() {
       </Card>
 
       {/* Company performance (all-companies view only) */}
-      {isAll && companyRows.length > 1 && <CompanyPerformance rows={companyRows} />}
+      {isAll && companyRows.length > 0 && <CompanyPerformanceWheel rows={companyRows} />}
 
 
 

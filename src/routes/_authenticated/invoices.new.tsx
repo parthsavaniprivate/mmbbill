@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { intervalMonths as _intervalMonths, addMonths as _addMonths, BILLING_TYPE_OPTIONS } from "@/lib/billing/cycle";
+import { ServiceCombobox } from "@/components/billing/ServiceCombobox";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

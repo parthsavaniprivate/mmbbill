@@ -71,7 +71,7 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                 <th className="text-right px-4 py-2">Invoices</th>
                 <th className="text-right px-4 py-2">Total</th>
                 <th className="text-right px-4 py-2">Collected</th>
-                <th className="text-right px-4 py-2">Expenses</th>
+                <th className="text-right px-4 py-2">Pending</th>
               </tr>
             </thead>
             <tbody>

@@ -10,11 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, CalendarClock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { BILLING_TYPE_OPTIONS, computeNextBillingDate, type BillingType, todayISO } from "@/lib/billing/cycle";
+import { BILLING_TYPE_OPTIONS, computeNextBillingDate, computeServiceAmount, intervalMonths as scheduleIntervalMonths, type BillingType, todayISO } from "@/lib/billing/cycle";
 import { ServiceCombobox } from "./ServiceCombobox";
 import { inr, formatDate } from "@/lib/format";
 
-type Service = { id?: string; service_name: string; price: number | ""; gst_rate: number | "" | null; unit: string };
+type Service = { id?: string; service_name: string; price: number | ""; gst_rate: number | "" | null; unit: string; interval_months: number | "" };
 
 export function BillingConfigCard({ clientId, companyId }: { clientId: string; companyId: string }) {
   const qc = useQueryClient();

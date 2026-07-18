@@ -416,4 +416,54 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   );
 }
 
+function BillingWarningCard({
+  nextBillingDate, billingType, customMonths, invoiceDate,
+}: { nextBillingDate: string; billingType: string; customMonths: number | null; invoiceDate: string }) {
+  const fmt = (s: string) => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+  const today = invoiceDate || new Date().toISOString().slice(0, 10);
+  const diffDays = Math.round(
+    (new Date(nextBillingDate + "T00:00:00").getTime() - new Date(today + "T00:00:00").getTime()) / 86400000
+  );
+  const cycleLabel =
+    billingType === "custom"
+      ? `Every ${customMonths || 1} Month${(customMonths || 1) > 1 ? "s" : ""}`
+      : (BILLING_TYPE_OPTIONS.find((o) => o.value === billingType)?.label ?? billingType);
+
+  if (diffDays > 0) {
+    return (
+      <div className="rounded-xl border border-amber-400/60 bg-amber-50 dark:bg-amber-500/10 p-4 flex gap-3 shadow-sm">
+        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-1 text-sm">
+          <div className="font-semibold text-amber-900 dark:text-amber-200">Billing Cycle Warning</div>
+          <div className="text-amber-800 dark:text-amber-100/90">This client is not yet due for billing.</div>
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-amber-900 dark:text-amber-100">
+            <div><span className="opacity-70">Next Billing Date:</span> <span className="font-medium">{fmt(nextBillingDate)}</span></div>
+            <div><span className="opacity-70">Billing Cycle:</span> <span className="font-medium">{cycleLabel}</span></div>
+          </div>
+          <div className="text-amber-800 dark:text-amber-100/90 pt-1">
+            You are creating this invoice <span className="font-semibold">{diffDays} day{diffDays > 1 ? "s" : ""} early</span>. This invoice can still be created if required.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const overdue = -diffDays;
+  return (
+    <div className="rounded-xl border border-emerald-400/60 bg-emerald-50 dark:bg-emerald-500/10 p-4 flex gap-3 shadow-sm">
+      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+      <div className="space-y-1 text-sm">
+        <div className="font-semibold text-emerald-900 dark:text-emerald-200">Ready for Billing</div>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-emerald-900 dark:text-emerald-100">
+          <div>
+            <span className="opacity-70">Next Billing Date:</span>{" "}
+            <span className="font-medium">{overdue === 0 ? "Today" : `Overdue by ${overdue} day${overdue > 1 ? "s" : ""}`}</span>
+          </div>
+          <div><span className="opacity-70">Billing Cycle:</span> <span className="font-medium">{cycleLabel}</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 

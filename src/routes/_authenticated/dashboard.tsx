@@ -26,8 +26,7 @@ import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
 import type { ActivityItem } from "@/components/dashboard/RecentActivity";
 import type { Insight } from "@/components/dashboard/SmartInsights";
 import type { PendingRow } from "@/components/dashboard/PendingTable";
-import { type CompanyRow } from "@/components/dashboard/CompanyPerformance";
-import { CompanyPerformanceWheel } from "@/components/dashboard/CompanyPerformanceWheel";
+import { CompanyPerformance, type CompanyRow } from "@/components/dashboard/CompanyPerformance";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
@@ -776,7 +775,7 @@ function Dashboard() {
       </Card>
 
       {/* Company performance (all-companies view only) */}
-      {isAll && companyRows.length > 0 && <CompanyPerformanceWheel rows={companyRows} />}
+      {isAll && companyRows.length > 1 && <CompanyPerformance rows={companyRows} />}
 
 
 

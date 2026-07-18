@@ -151,6 +151,19 @@ function CompanyForm({ company }: { company: Company }) {
           <F label="Invoice Prefix" value={form.invoice_prefix} onChange={(v) => updStr("invoice_prefix", v)} />
           <F label="Default GST Rate (%)" type="number" value={String(form.default_gst_rate ?? "")} onChange={(v) => upd({ default_gst_rate: v === "" ? null : Number(v) })} />
           <F label="Default Due Days" type="number" value={String(form.default_due_days ?? "")} onChange={(v) => upd({ default_due_days: v === "" ? null : Number(v) })} />
+          <div className="md:col-span-3 flex items-center gap-3 rounded-lg border bg-muted/40 p-3">
+            <input
+              id={`gst-enabled-${form.id}`}
+              type="checkbox"
+              className="h-4 w-4 rounded border-border"
+              checked={form.gst_enabled ?? true}
+              onChange={(e) => upd({ gst_enabled: e.target.checked })}
+            />
+            <div className="flex-1">
+              <Label htmlFor={`gst-enabled-${form.id}`} className="cursor-pointer">Apply GST on this company's invoices</Label>
+              <p className="text-xs text-muted-foreground">When off, GST fields are hidden on new/edit invoices for this company.</p>
+            </div>
+          </div>
           <div className="space-y-1.5"><Label>Currency</Label>
             <Select value={form.currency ?? "INR"} onValueChange={(v) => updStr("currency", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>

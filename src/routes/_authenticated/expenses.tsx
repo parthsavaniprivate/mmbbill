@@ -406,7 +406,7 @@ function ExpensesPage() {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead>Date</TableHead><TableHead>Category</TableHead>
-                  <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
+                  <TableHead>Label / Vendor</TableHead><TableHead>Company</TableHead>
                   <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>

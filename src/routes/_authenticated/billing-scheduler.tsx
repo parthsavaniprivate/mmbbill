@@ -109,7 +109,7 @@ function BillingSchedulerPage() {
         <Stat label="Overdue" value={String(analytics.overdue)} tone="destructive" icon={<AlertTriangle className="w-4 h-4" />} />
         <Stat label="Upcoming 30d" value={inr(analytics.upcoming30)} icon={<Users className="w-4 h-4" />} />
         <Stat label="MRR" value={inr(analytics.mrr)} icon={<IndianRupee className="w-4 h-4" />} />
-        <Stat label="ARR" value={inr(analytics.arr)} icon={<IndianRupee className="w-4 h-4" />} />
+        
       </div>
 
       <Tabs defaultValue="upcoming">

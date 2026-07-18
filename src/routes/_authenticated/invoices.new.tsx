@@ -143,6 +143,7 @@ function NewInvoicePage() {
           return {
             invoice_id: inv.id, description: it.description + period,
             quantity: q, rate: r,
+            gst_rate: gstEnabled && it.gstRate !== undefined && it.gstRate !== "" ? Number(it.gstRate) : null,
             amount: +(q * r).toFixed(2), position: pos++,
           };
         })

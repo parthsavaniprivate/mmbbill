@@ -39,6 +39,7 @@ type Client = {
   mobile?: string | null;
   email?: string | null;
   company_id?: string | null;
+  logo_url?: string | null;
 };
 type Payment = {
   id: string; invoice_id: string; amount: number; payment_date: string; method: string | null;

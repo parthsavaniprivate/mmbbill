@@ -135,6 +135,7 @@ export function BillingConfigCard({ clientId, companyId }: { clientId: string; c
           price: Number(s.price || 0),
           gst_rate: s.gst_rate === "" || s.gst_rate == null ? null : Number(s.gst_rate),
           unit: s.unit || "month",
+          interval_months: s.interval_months === "" || s.interval_months == null ? scheduleInterval : Number(s.interval_months),
           position: i,
         }));
       if (rows.length) {

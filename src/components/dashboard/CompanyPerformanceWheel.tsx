@@ -344,7 +344,18 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 
         {/* ================= MOBILE stage ================= */}
         <div className="md:hidden">
-          <div className="relative w-full mx-auto" style={{ maxWidth: 460 }}>
+          {/* Analytics KPI grid — real HTML so it's crisp on small screens */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <MobileKpi label="Revenue" value={inr(displayedRevenue)} tone="text-blue-500" />
+            <MobileKpi label="Collected" value={inr(displayedCollected)} tone="text-emerald-500" />
+            <MobileKpi label="Pending" value={inr(displayedPending)} tone="text-orange-500" />
+            <MobileKpi label="Expenses" value={inr(totalExpenses)} tone="text-red-500" />
+            <MobileKpi label="Profit" value={inr(totalProfit)} tone={totalProfit >= 0 ? "text-emerald-500" : "text-red-500"} />
+            <MobileKpi label="Health" value={`${health}`} tone={health >= 70 ? "text-emerald-500" : health >= 40 ? "text-amber-500" : "text-red-500"} />
+          </div>
+
+          {/* Compact wheel */}
+          <div className="relative w-full mx-auto" style={{ maxWidth: 340 }}>
             <Wheel
               segments={segments}
               drawOrder={drawOrder}
@@ -357,23 +368,19 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
               TILT={TILT} DEPTH={DEPTH} HOVER_LIFT={HOVER_LIFT} HOVER_GROW={HOVER_GROW}
               singleCompany={singleCompany} drawn={drawn}
               centerContent={
-                <CenterHub
-                  compact
-                  totalCompanies={rows.length}
-                  totalRevenue={displayedRevenue}
-                  totalCollected={displayedCollected}
-                  totalPending={displayedPending}
-                  totalExpenses={totalExpenses}
-                  totalProfit={totalProfit}
-                  overallPct={overallPct}
-                  avgRate={avgCollectionRate}
-                  health={health}
-                  CX={CX} CY={CY}
-                />
+                <foreignObject x={CX - 100} y={CY - 40} width={200} height={80} style={{ pointerEvents: "none" }}>
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Total Revenue</p>
+                    <p className="font-extrabold text-foreground leading-none mt-0.5" style={{ fontSize: 20 }}>{inr(displayedRevenue)}</p>
+                    <p className="text-[10px] text-primary font-semibold mt-1">{Math.round(overallPct)}% collected · {rows.length} {rows.length === 1 ? "co." : "cos."}</p>
+                  </div>
+                </foreignObject>
               }
             />
           </div>
-          <div className="mt-4 -mx-2 px-2 overflow-x-auto snap-x snap-mandatory flex gap-3 pb-2">
+
+          {/* Swipeable cards */}
+          <div className="mt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto snap-x snap-mandatory flex gap-3 pb-2 scrollbar-none">
             {segments.map((seg, i) => (
               <div
                 key={`m-card-${seg.id}`}
@@ -391,7 +398,9 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
               </div>
             ))}
           </div>
+          <p className="mt-2 text-[10px] text-muted-foreground text-center">Swipe to browse companies →</p>
         </div>
+
 
         {/* ================= PREMIUM SUMMARY BAR ================= */}
         <div className="mt-6 pt-4 border-t border-border/60">
@@ -621,6 +630,16 @@ function Row({ label, value, tone }: { label: string; value: string; tone?: stri
     </div>
   );
 }
+
+function MobileKpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/60 backdrop-blur px-2 py-1.5 min-w-0">
+      <p className="text-[9px] uppercase tracking-wider text-muted-foreground truncate">{label}</p>
+      <p className={cn("text-xs font-bold tabular-nums truncate", tone)}>{value}</p>
+    </div>
+  );
+}
+
 
 // ---------------------------------------------------------------------------
 // Wheel (3D radial chart) — extracted for reuse across desktop/mobile

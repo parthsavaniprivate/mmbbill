@@ -46,15 +46,17 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                   <div className="min-w-0">
                     <p className="text-muted-foreground">Collected</p>
                     <p className="font-semibold text-emerald-500 truncate">{inr(r.collected)}</p>
-                    <p className={cn("text-[10px] font-medium inline-flex items-center gap-0.5", pct >= 50 ? "text-emerald-500" : "text-red-500")}>
+                    <span className={cn("mt-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold", pct >= 50 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")}>
                       {pct >= 50 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                      {pct.toFixed(1)}%
-                    </p>
+                      {Math.round(pct)}%
+                    </span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-muted-foreground">Pending</p>
                     <p className="font-semibold text-orange-500 truncate">{inr(Math.max(0, r.total - r.collected))}</p>
-                    <p className="text-[10px] font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</p>
+                    <span className="mt-1 inline-flex items-center rounded-full bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-orange-500">
+                      {Math.round(100 - pct)}%
+                    </span>
                   </div>
                 </div>
               </li>
@@ -84,14 +86,14 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                     <td className="px-4 py-2 text-right text-blue-500 font-semibold">{inr(r.total)}</td>
                     <td className="px-4 py-2 text-right font-semibold">
                       <span className="text-emerald-500">{inr(r.collected)}</span>
-                      <span className={cn("ml-2 text-xs font-medium inline-flex items-center gap-0.5", pct >= 50 ? "text-emerald-500" : "text-red-500")}>
+                      <span className={cn("ml-2 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold", pct >= 50 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500")}>
                         {pct >= 50 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {pct.toFixed(1)}%
+                        {Math.round(pct)}%
                       </span>
                     </td>
                     <td className="px-4 py-2 text-right font-semibold">
                       <span className="text-orange-500">{inr(Math.max(0, r.total - r.collected))}</span>
-                      <span className="ml-2 text-xs font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</span>
+                      <span className="ml-2 inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-xs font-semibold text-orange-500">{Math.round(100 - pct)}%</span>
                     </td>
                   </tr>
                 );

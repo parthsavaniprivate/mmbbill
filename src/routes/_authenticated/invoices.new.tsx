@@ -132,18 +132,17 @@ function NewInvoicePage() {
     if (svcs.length) {
       const scheduleStep = _intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
       setItems(svcs.map((s) => {
-        const iv = Number((s as { interval_months?: number | null }).interval_months ?? scheduleStep);
+        const iv = Math.max(1, Number((s as { interval_months?: number | null }).interval_months ?? scheduleStep));
         const rate = Number(s.price || 0);
         const isRecurring = s.unit !== "one_time";
-        const amount = isRecurring ? rate * Math.max(1, iv) : rate;
         const period = isRecurring ? computePriorBillingPeriod(schedule.next_billing_date, iv, schedule.last_generated_date) : null;
         const desc = period
-          ? `${s.service_name} (${rate.toLocaleString("en-IN")} × ${iv} ${iv === 1 ? "Month" : "Months"})`
+          ? `${s.service_name} (${formatPeriodShort(period.start, period.end)})`
           : s.service_name;
         return {
           description: desc,
-          quantity: 1,
-          rate: amount,
+          quantity: isRecurring ? iv : 1,
+          rate: rate,
           gstRate: s.gst_rate != null ? Number(s.gst_rate) : "",
           fromDate: period?.start,
           toDate: period?.end,

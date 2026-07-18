@@ -83,7 +83,8 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                     <td className="px-4 py-2 text-right text-blue-500 font-semibold">{inr(r.total)}</td>
                     <td className="px-4 py-2 text-right font-semibold">
                       <span className="text-emerald-500">{inr(r.collected)}</span>
-                      <span className={cn("ml-2 text-xs font-medium text-emerald-500/80")}>
+                      <span className={cn("ml-2 text-xs font-medium inline-flex items-center gap-0.5", pct >= 100 ? "text-emerald-500" : "text-red-500")}>
+                        {pct >= 100 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                         {pct.toFixed(1)}%
                       </span>
                     </td>

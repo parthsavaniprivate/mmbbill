@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/invoices/new")({
   component: NewInvoicePage,
 });
 
-type Item = { description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
+type Item = { description: string; quantity: number | ""; rate: number | ""; gstRate?: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
 
 const fmtMonth = (s: string) => {
   const d = new Date(s);
@@ -63,14 +63,46 @@ function NewInvoicePage() {
     },
   });
 
+  const { data: companyMeta } = useQuery({
+    queryKey: ["company-meta", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await supabase.from("companies").select("gst_enabled, default_gst_rate").eq("id", companyId).maybeSingle();
+      return data;
+    },
+  });
+
   const filteredClients = clients.filter((c) => c.company_id === companyId);
+  const gstEnabled = companyMeta?.gst_enabled ?? true;
+  const defaultGst = Number(companyMeta?.default_gst_rate ?? 18);
+
+  useEffect(() => {
+    if (!gstEnabled) {
+      setGstRate("0");
+      setItems((prev) => prev.map((x) => ({ ...x, gstRate: undefined })));
+    }
+  }, [gstEnabled]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.rate || 0), 0);
     const afterDisc = Math.max(0, subtotal - Number(discount || 0));
-    const gstAmount = +(afterDisc * Number(gstRate || 0) / 100).toFixed(2);
+    let gstAmount = 0;
+    if (gstEnabled) {
+      const hasPerItem = items.some((it) => it.gstRate !== undefined && it.gstRate !== "");
+      if (hasPerItem && subtotal > 0) {
+        const factor = afterDisc / subtotal;
+        gstAmount = items.reduce((s, it) => {
+          const amt = Number(it.quantity || 0) * Number(it.rate || 0);
+          const rt = Number(it.gstRate || 0);
+          return s + amt * factor * rt / 100;
+        }, 0);
+      } else {
+        gstAmount = afterDisc * Number(gstRate || 0) / 100;
+      }
+      gstAmount = +gstAmount.toFixed(2);
+    }
     return { subtotal, gstAmount, total: afterDisc + gstAmount };
-  }, [items, discount, gstRate]);
+  }, [items, discount, gstRate, gstEnabled]);
 
 
 
@@ -111,6 +143,7 @@ function NewInvoicePage() {
           return {
             invoice_id: inv.id, description: it.description + period,
             quantity: q, rate: r,
+            gst_rate: gstEnabled && it.gstRate !== undefined && it.gstRate !== "" ? Number(it.gstRate) : null,
             amount: +(q * r).toFixed(2), position: pos++,
           };
         })
@@ -230,19 +263,30 @@ function NewInvoicePage() {
                     <Input type="number" placeholder="0" value={it.rate} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, rate: e.target.value === "" ? "" : Number(e.target.value) } : x))} />
                   </div>
                   <div className="col-span-2 md:col-span-2 space-y-1.5">
-                    <Label className="text-xs font-medium">Total (÷ months)</Label>
+                    <Label className="text-xs font-medium">Total{!it.oneTime ? " (÷ months)" : ""}</Label>
                     <Input
                       type="number"
                       placeholder="0"
-                      value={Number(it.quantity || 0) * Number(it.rate || 0) || ""}
+                      value={+(Number(it.quantity || 0) * Number(it.rate || 0)).toFixed(2) || ""}
                       onChange={(e) => {
                         const total = e.target.value === "" ? 0 : Number(e.target.value);
                         const m = it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
                         const q = m || Number(it.quantity || 0) || 1;
-                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: q, rate: +(total / q).toFixed(2) } : x));
+                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: q, rate: total / q } : x));
                       }}
                     />
                   </div>
+                  {gstEnabled && (
+                    <div className="col-span-1 md:col-span-1 space-y-1.5">
+                      <Label className="text-xs font-medium">GST %</Label>
+                      <Input
+                        type="number"
+                        placeholder={String(defaultGst)}
+                        value={it.gstRate ?? ""}
+                        onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, gstRate: e.target.value === "" ? "" : Number(e.target.value) } : x))}
+                      />
+                    </div>
+                  )}
                   <div className="col-span-2 md:col-span-1 flex justify-end">
                     <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                       <Trash2 className="w-4 h-4" />
@@ -263,7 +307,9 @@ function NewInvoicePage() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Discount (₹)</Label><Input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
+            {gstEnabled && (
+              <div className="space-y-1.5"><Label>Default GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
+            )}
           </div>
           <div className="space-y-1.5"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
           <div className="space-y-1.5"><Label>Terms & Conditions</Label><Textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={3} /></div>
@@ -271,7 +317,7 @@ function NewInvoicePage() {
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
           <Row label="Subtotal" value={inr(totals.subtotal)} />
           {Number(discount) > 0 && <Row label="Discount" value={`- ${inr(Number(discount))}`} />}
-          {totals.gstAmount > 0 && <Row label={`GST (${gstRate}%)`} value={inr(totals.gstAmount)} />}
+          {gstEnabled && totals.gstAmount > 0 && <Row label="GST" value={inr(totals.gstAmount)} />}
           <div className="border-t pt-2"><Row label="Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>

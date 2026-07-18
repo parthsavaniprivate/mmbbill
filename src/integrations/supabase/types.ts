@@ -247,6 +247,7 @@ export type Database = {
           default_due_days: number | null
           default_gst_rate: number | null
           email: string | null
+          gst_enabled: boolean
           gst_number: string | null
           id: string
           invoice_email_template: string | null
@@ -278,6 +279,7 @@ export type Database = {
           default_due_days?: number | null
           default_gst_rate?: number | null
           email?: string | null
+          gst_enabled?: boolean
           gst_number?: string | null
           id?: string
           invoice_email_template?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           default_due_days?: number | null
           default_gst_rate?: number | null
           email?: string | null
+          gst_enabled?: boolean
           gst_number?: string | null
           id?: string
           invoice_email_template?: string | null
@@ -513,6 +516,7 @@ export type Database = {
           amount: number
           created_at: string
           description: string
+          gst_rate: number | null
           id: string
           invoice_id: string
           position: number
@@ -523,6 +527,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description: string
+          gst_rate?: number | null
           id?: string
           invoice_id: string
           position?: number
@@ -533,6 +538,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string
+          gst_rate?: number | null
           id?: string
           invoice_id?: string
           position?: number

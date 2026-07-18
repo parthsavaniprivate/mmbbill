@@ -143,6 +143,7 @@ function InvoiceDetail() {
               rate: baseAmount,
               amount: baseAmount,
               position: 0,
+              gst_rate: null,
               created_at: inv.created_at,
             }];
           }

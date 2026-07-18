@@ -1644,33 +1644,60 @@ export type Database = {
       }
       service_catalog: {
         Row: {
+          billing_type: string | null
+          category: string | null
           company_id: string
           created_at: string
           default_gst_rate: number | null
           default_price: number | null
+          default_quantity: number | null
+          default_unit: string | null
+          description: string | null
+          hsn_sac: string | null
           id: string
+          is_active: boolean
           last_used_at: string | null
           name: string
+          service_code: string | null
+          updated_at: string
           usage_count: number
         }
         Insert: {
+          billing_type?: string | null
+          category?: string | null
           company_id: string
           created_at?: string
           default_gst_rate?: number | null
           default_price?: number | null
+          default_quantity?: number | null
+          default_unit?: string | null
+          description?: string | null
+          hsn_sac?: string | null
           id?: string
+          is_active?: boolean
           last_used_at?: string | null
           name: string
+          service_code?: string | null
+          updated_at?: string
           usage_count?: number
         }
         Update: {
+          billing_type?: string | null
+          category?: string | null
           company_id?: string
           created_at?: string
           default_gst_rate?: number | null
           default_price?: number | null
+          default_quantity?: number | null
+          default_unit?: string | null
+          description?: string | null
+          hsn_sac?: string | null
           id?: string
+          is_active?: boolean
           last_used_at?: string | null
           name?: string
+          service_code?: string | null
+          updated_at?: string
           usage_count?: number
         }
         Relationships: [

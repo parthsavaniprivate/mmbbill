@@ -120,6 +120,7 @@ function ClientsPage() {
             <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
+        <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
       </div>
 
       {isLoading ? (

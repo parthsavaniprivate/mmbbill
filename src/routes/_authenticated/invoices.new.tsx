@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/invoices/new")({
   component: NewInvoicePage,
 });
 
-type Item = { description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
+type Item = { description: string; quantity: number | ""; rate: number | ""; gstRate?: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
 
 const fmtMonth = (s: string) => {
   const d = new Date(s);

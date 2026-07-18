@@ -631,6 +631,16 @@ function Row({ label, value, tone }: { label: string; value: string; tone?: stri
   );
 }
 
+function MobileKpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/60 backdrop-blur px-2 py-1.5 min-w-0">
+      <p className="text-[9px] uppercase tracking-wider text-muted-foreground truncate">{label}</p>
+      <p className={cn("text-xs font-bold tabular-nums truncate", tone)}>{value}</p>
+    </div>
+  );
+}
+
+
 // ---------------------------------------------------------------------------
 // Wheel (3D radial chart) — extracted for reuse across desktop/mobile
 // ---------------------------------------------------------------------------

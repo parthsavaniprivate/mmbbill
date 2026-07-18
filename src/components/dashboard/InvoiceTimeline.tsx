@@ -17,6 +17,7 @@ import {
 import { inr, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SendReminderDialog } from "@/components/invoices/SendReminderDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Invoice = {
   id: string;

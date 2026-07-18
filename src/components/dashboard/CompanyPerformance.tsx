@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 export interface CompanyRow {
   id: string;

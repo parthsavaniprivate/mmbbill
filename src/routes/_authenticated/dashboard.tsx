@@ -27,7 +27,7 @@ import type { ActivityItem } from "@/components/dashboard/RecentActivity";
 import type { Insight } from "@/components/dashboard/SmartInsights";
 import type { PendingRow } from "@/components/dashboard/PendingTable";
 import { CompanyPerformance, type CompanyRow } from "@/components/dashboard/CompanyPerformance";
-import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
@@ -777,7 +777,7 @@ function Dashboard() {
 
 
 
-      <QuickActionsFab />
+      
     </div>
 
   );

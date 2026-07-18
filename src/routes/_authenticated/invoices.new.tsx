@@ -206,15 +206,16 @@ function NewInvoicePage() {
 
       await supabase.from("clients").update({ last_invoice_date: date }).eq("id", clientId);
 
-      // Advance the billing schedule (if this invoice originated from one)
-      if (scheduleId && schedule) {
-        const { intervalMonths, addMonths } = await import("@/lib/billing/cycle");
-        const step = intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
-        const nextDate = addMonths(schedule.next_billing_date ?? date, step);
+      // Advance the billing schedule (originating schedule OR the client's active schedule)
+      const advanceId = scheduleId ?? clientSchedule?.id;
+      const advanceSrc = scheduleId ? schedule : clientSchedule;
+      if (advanceId && advanceSrc) {
+        const step = _intervalMonths(advanceSrc.billing_type as never, advanceSrc.custom_interval_months);
+        const nextDate = _addMonths(advanceSrc.next_billing_date ?? date, step);
         await supabase.from("billing_schedules").update({
           last_generated_date: date,
           next_billing_date: nextDate,
-        }).eq("id", scheduleId);
+        }).eq("id", advanceId);
       }
 
       return inv.id;

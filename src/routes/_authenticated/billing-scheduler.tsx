@@ -287,7 +287,11 @@ function CalendarView({ rows, today }: { rows: Row[]; today: string }) {
           {dayRows.length === 0 && <div className="text-sm text-muted-foreground">No billing on this date.</div>}
           {dayRows.map((r) => {
             const name = r.clients?.business_name || r.clients?.client_name || "Client";
-            const total = (r.billing_schedule_services ?? []).reduce((s, x) => s + Number(x.price || 0), 0);
+            const step = intervalMonths(r.billing_type, r.custom_interval_months);
+            const total = (r.billing_schedule_services ?? []).reduce((s, x) => {
+              const iv = Number(x.interval_months ?? step);
+              return s + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+            }, 0);
             return (
               <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 p-2">
                 <div className="min-w-0">

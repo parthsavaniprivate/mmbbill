@@ -383,7 +383,7 @@ function ExpensesPage() {
                   <div key={e.id} className="p-3 space-y-2 min-w-0">
                     <div className="flex items-start justify-between gap-3 min-w-0">
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold truncate">{e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
+                        <div className="font-semibold truncate">{e.title || e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
                         <div className="text-xs text-muted-foreground truncate">{companies.find((c) => c.id === e.company_id)?.name}</div>
                       </div>
                       <div className="text-right shrink-0">

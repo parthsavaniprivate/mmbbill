@@ -246,6 +246,7 @@ function InvoicesPage() {
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
           </>
         )}
+        <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
       </div>
 
       <Card className="shadow-card">

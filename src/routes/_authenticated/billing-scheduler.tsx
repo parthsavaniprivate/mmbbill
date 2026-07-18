@@ -40,7 +40,7 @@ function BillingSchedulerPage() {
     queryFn: async () => {
       let q = supabase
         .from("billing_schedules")
-        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, last_generated_date, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit)")
+        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, last_generated_date, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit, interval_months)")
         .eq("is_active", true);
       if (!isAll) q = q.eq("company_id", selected);
       const { data } = await q.order("next_billing_date", { ascending: true });

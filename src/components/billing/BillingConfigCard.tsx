@@ -226,60 +226,81 @@ export function BillingConfigCard({ clientId, companyId }: { clientId: string; c
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">Service Plan</Label>
             <span className="text-xs text-muted-foreground">
-              Monthly value: <b className="text-foreground">{inr(monthlyValue)}</b>
+              Invoice total: <b className="text-foreground">{inr(invoiceTotal)}</b>
             </span>
           </div>
-          {services.map((s, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <div className="col-span-12 sm:col-span-5">
-                <ServiceCombobox
-                  companyId={companyId}
-                  value={s.service_name}
-                  onChange={(v) => setServices(services.map((x, j) => j === i ? { ...x, service_name: v } : x))}
-                  onSelect={(sug) => setServices(services.map((x, j) => j === i ? {
-                    ...x,
-                    service_name: sug.name,
-                    price: sug.default_price ?? x.price,
-                    gst_rate: sug.default_gst_rate ?? x.gst_rate,
-                  } : x))}
-                />
+          {services.map((s, i) => {
+            const iv = Number(s.interval_months || scheduleInterval || 1);
+            const rate = Number(s.price || 0);
+            const amount = s.unit === "one_time" ? rate : rate * Math.max(1, iv);
+            return (
+              <div key={i} className="space-y-1.5 rounded-lg border border-border/60 p-2">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-12 sm:col-span-4">
+                    <ServiceCombobox
+                      companyId={companyId}
+                      value={s.service_name}
+                      onChange={(v) => setServices(services.map((x, j) => j === i ? { ...x, service_name: v } : x))}
+                      onSelect={(sug) => setServices(services.map((x, j) => j === i ? {
+                        ...x,
+                        service_name: sug.name,
+                        price: sug.default_price ?? x.price,
+                        gst_rate: sug.default_gst_rate ?? x.gst_rate,
+                      } : x))}
+                    />
+                  </div>
+                  <Input
+                    className="col-span-4 sm:col-span-2"
+                    type="number" placeholder="Rate"
+                    value={s.price}
+                    onChange={(e) => setServices(services.map((x, j) => j === i ? { ...x, price: e.target.value === "" ? "" : Number(e.target.value) } : x))}
+                  />
+                  <Select
+                    value={s.unit}
+                    onValueChange={(v) => setServices(services.map((x, j) => j === i ? { ...x, unit: v } : x))}
+                  >
+                    <SelectTrigger className="col-span-4 sm:col-span-2"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="month">/ month</SelectItem>
+                      <SelectItem value="year">/ year</SelectItem>
+                      <SelectItem value="one_time">one-time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="col-span-4 sm:col-span-1"
+                    type="number" min={1} placeholder="Months"
+                    title="Billing interval (months)"
+                    disabled={s.unit === "one_time"}
+                    value={s.interval_months}
+                    onChange={(e) => setServices(services.map((x, j) => j === i ? { ...x, interval_months: e.target.value === "" ? "" : Number(e.target.value) } : x))}
+                  />
+                  <Input
+                    className="col-span-4 sm:col-span-2"
+                    type="number" placeholder="GST %"
+                    value={s.gst_rate ?? ""}
+                    onChange={(e) => setServices(services.map((x, j) => j === i ? { ...x, gst_rate: e.target.value === "" ? null : Number(e.target.value) } : x))}
+                  />
+                  <Button
+                    variant="ghost" size="icon"
+                    className="col-span-4 sm:col-span-1 justify-self-end text-muted-foreground hover:text-destructive"
+                    onClick={() => setServices(services.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                {s.unit !== "one_time" && rate > 0 && (
+                  <div className="text-xs text-muted-foreground pl-1">
+                    {inr(rate)} × {iv} {iv === 1 ? "Month" : "Months"} = <b className="text-foreground">{inr(amount)}</b>
+                  </div>
+                )}
               </div>
-              <Input
-                className="col-span-4 sm:col-span-2"
-                type="number" placeholder="Price"
-                value={s.price}
-                onChange={(e) => setServices(services.map((x, j) => j === i ? { ...x, price: e.target.value === "" ? "" : Number(e.target.value) } : x))}
-              />
-              <Input
-                className="col-span-3 sm:col-span-2"
-                type="number" placeholder="GST %"
-                value={s.gst_rate ?? ""}
-                onChange={(e) => setServices(services.map((x, j) => j === i ? { ...x, gst_rate: e.target.value === "" ? null : Number(e.target.value) } : x))}
-              />
-              <Select
-                value={s.unit}
-                onValueChange={(v) => setServices(services.map((x, j) => j === i ? { ...x, unit: v } : x))}
-              >
-                <SelectTrigger className="col-span-3 sm:col-span-2"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="month">/ month</SelectItem>
-                  <SelectItem value="year">/ year</SelectItem>
-                  <SelectItem value="one_time">one-time</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="ghost" size="icon"
-                className="col-span-2 sm:col-span-1 justify-self-end text-muted-foreground hover:text-destructive"
-                onClick={() => setServices(services.filter((_, j) => j !== i))}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-          <Button variant="outline" size="sm" onClick={() => setServices([...services, { service_name: "", price: "", gst_rate: defaultGst ? Number(defaultGst) : 18, unit: "month" }])}>
+            );
+          })}
+          <Button variant="outline" size="sm" onClick={() => setServices([...services, { service_name: "", price: "", gst_rate: defaultGst ? Number(defaultGst) : 18, unit: "month", interval_months: scheduleInterval }])}>
             <Plus className="w-4 h-4" /> Add Service
           </Button>
         </div>
+
 
         <div className="flex justify-end">
           <Button onClick={() => save.mutate()} disabled={save.isPending}>

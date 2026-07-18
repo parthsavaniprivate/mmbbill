@@ -21,7 +21,7 @@ export function useClientBehaviours(
 ) {
   const { data: invoices = [] } = useQuery<InvoiceForBehaviour[]>({
     queryKey: ["behaviour-invoices", companyId ?? "all"],
-    enabled: !!companyId,
+    enabled: true,
     queryFn: async () => {
       let q = supabase
         .from("invoices")
@@ -36,7 +36,7 @@ export function useClientBehaviours(
 
   const { data: payments = [] } = useQuery<PaymentForBehaviour[]>({
     queryKey: ["behaviour-payments", companyId ?? "all"],
-    enabled: !!companyId,
+    enabled: true,
     queryFn: async () => {
       let q = supabase
         .from("payments")

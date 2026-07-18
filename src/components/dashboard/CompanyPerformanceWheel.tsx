@@ -596,7 +596,7 @@ function CompanyCard({
           className="w-10 h-10 rounded-xl grid place-items-center shrink-0"
           style={{ background: `${seg.color.base}22`, color: seg.color.base, boxShadow: `inset 0 0 0 1px ${seg.color.base}44` }}
         >
-          <Building2 className="w-4.5 h-4.5" strokeWidth={2.2} />
+          <Building2 className="w-5 h-5" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">

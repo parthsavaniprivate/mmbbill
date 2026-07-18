@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id_/edit")({ component: EditInvoicePage });
 
-type Item = { id?: string; description: string; quantity: number | ""; rate: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
+type Item = { id?: string; description: string; quantity: number | ""; rate: number | ""; gstRate?: number | ""; fromDate?: string; toDate?: string; oneTime?: boolean };
 
 const fmtMonth = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 const fmtFull = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "long", year: "numeric" });

@@ -63,10 +63,18 @@ function NewInvoicePage() {
     },
   });
 
+  const { data: companyMeta } = useQuery({
+    queryKey: ["company-meta", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await supabase.from("companies").select("gst_enabled, default_gst_rate").eq("id", companyId).maybeSingle();
+      return data;
+    },
+  });
+
   const filteredClients = clients.filter((c) => c.company_id === companyId);
-  const activeCompany = companies.find((c) => c.id === companyId);
-  const gstEnabled = activeCompany?.gst_enabled ?? true;
-  const defaultGst = Number(activeCompany?.default_gst_rate ?? 18);
+  const gstEnabled = companyMeta?.gst_enabled ?? true;
+  const defaultGst = Number(companyMeta?.default_gst_rate ?? 18);
 
   useEffect(() => {
     if (!gstEnabled) {

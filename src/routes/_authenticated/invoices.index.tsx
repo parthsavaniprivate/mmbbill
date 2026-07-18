@@ -61,6 +61,23 @@ function InvoicesPage() {
   const [to, setTo] = useState("");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
+
+  const { data: clientOverrides = {} } = useQuery({
+    queryKey: ["client-behaviour-overrides"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clients").select("id, payment_behaviour_override");
+      const map: Record<string, PaymentBehaviour | null> = {};
+      (data ?? []).forEach((c: { id: string; payment_behaviour_override: PaymentBehaviour | null }) => {
+        map[c.id] = c.payment_behaviour_override;
+      });
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
+  const behaviourCompanyId = !isAll ? selected : null;
+  const behaviours = useClientBehaviours(behaviourCompanyId, clientOverrides);
 
   const del = useMutation({
     mutationFn: async (id: string) => {

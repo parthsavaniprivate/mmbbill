@@ -141,7 +141,10 @@ function NewInvoicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedule]);
 
-  const filteredClients = clients.filter((c) => c.company_id === companyId);
+  const filteredClients = clients
+    .filter((c) => c.company_id === companyId)
+    .filter((c) => behaviourFilter === "all" || behaviours.get(c.id)?.behaviour === behaviourFilter);
+  const selectedBehaviour = clientId ? behaviours.get(clientId) : undefined;
   const gstEnabled = companyMeta?.gst_enabled ?? true;
   const defaultGst = Number(companyMeta?.default_gst_rate ?? 18);
 

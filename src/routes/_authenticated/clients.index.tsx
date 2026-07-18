@@ -110,7 +110,7 @@ function ClientsPage() {
       ) : filtered.length === 0 ? (
         <Card className="shadow-card"><CardContent className="p-12 text-center text-muted-foreground">No clients. Create one to get started.</CardContent></Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((c) => {
             const co = companies.find((x) => x.id === c.company_id);
             return (
@@ -118,11 +118,11 @@ function ClientsPage() {
                 key={c.id}
                 to="/clients/$id"
                 params={{ id: c.id }}
-                className="group block focus:outline-none"
+                className="group block focus:outline-none min-w-0"
               >
-                <Card className="shadow-card transition-all hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer h-full">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start gap-3">
+                <Card className="shadow-card transition-all hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer h-full overflow-hidden">
+                  <CardContent className="p-3 sm:p-4 space-y-3 min-w-0">
+                    <div className="flex items-start gap-3 min-w-0">
                       <ClientLogo
                         name={c.business_name || c.client_name}
                         logoUrl={c.logo_url}
@@ -136,22 +136,22 @@ function ClientsPage() {
                       <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
                       {co?.name && (
-                        <Badge variant="outline" className="font-normal gap-1">
-                          <Building2 className="w-3 h-3" />{co.name}
+                        <Badge variant="outline" className="font-normal gap-1 max-w-full">
+                          <Building2 className="w-3 h-3 shrink-0" /><span className="truncate">{co.name}</span>
                         </Badge>
                       )}
                     </div>
 
-                    <div className="space-y-1 text-sm text-muted-foreground border-t border-border/60 pt-3">
-                      {c.mobile && <div className="flex items-center gap-2 truncate"><Phone className="w-3.5 h-3.5 shrink-0" />{c.mobile}</div>}
-                      {c.email && <div className="flex items-center gap-2 truncate"><Mail className="w-3.5 h-3.5 shrink-0" />{c.email}</div>}
+                    <div className="space-y-1 text-sm text-muted-foreground border-t border-border/60 pt-3 min-w-0">
+                      {c.mobile && <div className="flex items-center gap-2 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{c.mobile}</span></div>}
+                      {c.email && <div className="flex items-center gap-2 min-w-0"><Mail className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{c.email}</span></div>}
                       {!c.mobile && !c.email && <div className="text-xs italic">No contact info</div>}
                     </div>
 
-                    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="pt-1 flex items-center gap-2">
+                    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="pt-1 flex items-center gap-2 flex-wrap">
                       {c.whatsapp && (
                         <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex">
                           <Button size="sm" variant="outline" className="gap-1.5 h-8">
@@ -167,6 +167,7 @@ function ClientsPage() {
             );
           })}
         </div>
+
       )}
     </div>
   );

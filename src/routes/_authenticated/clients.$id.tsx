@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil, Download } from "lucide-react";
 import { ClientForm } from "./clients.index";
+import { BillingConfigCard } from "@/components/billing/BillingConfigCard";
 
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";
@@ -235,6 +236,8 @@ function ClientDetail() {
           <Stat label="Credit Limit" value={client.credit_limit != null ? inr(Number(client.credit_limit)) : "—"} />
         </CardContent>
       </Card>
+
+      {client.company_id && <BillingConfigCard clientId={id} companyId={client.company_id} />}
 
       {/* Billing Summary */}
       <div className="grid md:grid-cols-2 gap-4">

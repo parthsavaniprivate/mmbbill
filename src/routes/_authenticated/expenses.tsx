@@ -370,31 +370,61 @@ function ExpensesPage() {
           {variableExpenses.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground text-sm">No variable expenses for this period.</div>
           ) : (
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Date</TableHead><TableHead>Category</TableHead>
-                <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
-                <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card list */}
+              <div className="sm:hidden divide-y">
                 {variableExpenses.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell>{formatDate(e.expense_date)}</TableCell>
-                    <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
-                    <TableCell>{e.vendor || "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
-                    <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <div key={e.id} className="p-3 space-y-2 min-w-0">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold truncate">{e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
+                        <div className="text-xs text-muted-foreground truncate">{companies.find((c) => c.id === e.company_id)?.name}</div>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                      <div className="text-right shrink-0">
+                        <div className="font-semibold">{inr(Number(e.amount))}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatDate(e.expense_date)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-[10px] max-w-full"><span className="truncate">{CATEGORIES.find((c) => c.value === e.category)?.label}</span></Badge>
+                      <div className="ml-auto flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Date</TableHead><TableHead>Category</TableHead>
+                  <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
+                  <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {variableExpenses.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell>{formatDate(e.expense_date)}</TableCell>
+                      <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
+                      <TableCell>{e.vendor || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
+                      <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              </div>
+            </>
           )}
+
         </CardContent>
       </Card>
     </div>

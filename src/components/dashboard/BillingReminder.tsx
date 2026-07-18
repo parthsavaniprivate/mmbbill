@@ -95,7 +95,11 @@ function Group({ title, tone, rows, today }: { title: string; tone: "destructive
         {rows.slice(0, 5).map((s) => {
           const name = s.clients?.business_name || s.clients?.client_name || "Client";
           const services = (s.billing_schedule_services ?? []).map((x) => x.service_name).slice(0, 3).join(", ");
-          const total = (s.billing_schedule_services ?? []).reduce((sum, x) => sum + Number(x.price || 0), 0);
+          const step = intervalMonths(s.billing_type, s.custom_interval_months);
+          const total = (s.billing_schedule_services ?? []).reduce((sum, x) => {
+            const iv = Number(x.interval_months ?? step);
+            return sum + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+          }, 0);
           const overdueDays = -daysBetween(today, s.next_billing_date);
           const priority = overdueDays > 0 ? priorityForOverdue(overdueDays) : null;
           return (

@@ -23,6 +23,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { InvoiceTimeline } from "@/components/dashboard/InvoiceTimeline";
+import { BillingReminder } from "@/components/dashboard/BillingReminder";
 import type { ActivityItem } from "@/components/dashboard/RecentActivity";
 import type { Insight } from "@/components/dashboard/SmartInsights";
 import type { PendingRow } from "@/components/dashboard/PendingTable";
@@ -716,6 +717,9 @@ function Dashboard() {
 
 
 
+
+      {/* Auto-billing reminders */}
+      <BillingReminder />
 
       {/* Invoice Timeline (primary widget) */}
       <InvoiceTimeline

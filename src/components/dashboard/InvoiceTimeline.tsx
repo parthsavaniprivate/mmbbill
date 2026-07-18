@@ -397,10 +397,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
           <TooltipProvider delayDuration={120}>
             <div
               ref={scrollRef}
-              className="timeline-scroll relative overflow-auto border-t border-border/60 bg-background/30"
-              style={{ maxHeight: 620 }}
+              className="timeline-scroll relative w-full overflow-auto overscroll-contain border-t border-border/60 bg-background/30"
+              style={{ maxHeight: isMobile ? 480 : 620, WebkitOverflowScrolling: "touch" }}
             >
-              <div style={{ width: CLIENT_COL + totalWidth, minWidth: "100%" }}>
+              <div style={{ width: CLIENT_COL + totalWidth }}>
                 {/* Sticky header */}
                 <div className="sticky top-0 z-20 flex border-b border-border/60 bg-card/85 backdrop-blur-md">
                   <div

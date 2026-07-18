@@ -134,6 +134,9 @@ type Props = {
 
 export function InvoiceTimeline({ invoices, clients, companies, payments, from: _from, to, selectedCompany, isAll }: Props) {
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
+  const CLIENT_COL = isMobile ? 140 : 240;
+  const tickWidth = isMobile ? 84 : 110;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");

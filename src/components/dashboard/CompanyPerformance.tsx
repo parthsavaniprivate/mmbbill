@@ -7,6 +7,7 @@ export interface CompanyRow {
   id: string;
   name: string;
   invoices: number;
+  total: number;
   collected: number;
   expenses: number;
   profit: number;
@@ -36,7 +37,11 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                   {r.growthPct.toFixed(1)}%
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="min-w-0">
+                  <p className="text-muted-foreground">Total</p>
+                  <p className="font-semibold text-blue-500 truncate">{inr(r.total)}</p>
+                </div>
                 <div className="min-w-0">
                   <p className="text-muted-foreground">Collected</p>
                   <p className="font-semibold text-emerald-500 truncate">{inr(r.collected)}</p>
@@ -57,6 +62,7 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
               <tr>
                 <th className="text-left px-4 py-2">Company</th>
                 <th className="text-right px-4 py-2">Invoices</th>
+                <th className="text-right px-4 py-2">Total</th>
                 <th className="text-right px-4 py-2">Collected</th>
                 <th className="text-right px-4 py-2">Expenses</th>
                 <th className="text-right px-4 py-2">Growth</th>
@@ -67,6 +73,7 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                 <tr key={r.id} className="border-t border-border/60 hover:bg-muted/20">
                   <td className="px-4 py-2 font-medium truncate max-w-[200px]">{r.name}</td>
                   <td className="px-4 py-2 text-right">{r.invoices}</td>
+                  <td className="px-4 py-2 text-right text-blue-500 font-semibold">{inr(r.total)}</td>
                   <td className="px-4 py-2 text-right text-emerald-500 font-semibold">{inr(r.collected)}</td>
                   <td className="px-4 py-2 text-right text-orange-500 font-semibold">{inr(r.expenses)}</td>
                   <td className="px-4 py-2 text-right">

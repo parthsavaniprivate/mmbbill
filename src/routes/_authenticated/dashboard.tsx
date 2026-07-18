@@ -498,6 +498,7 @@ function Dashboard() {
   const companyRows: CompanyRow[] = data.companies.map((co) => {
     const cInv = data.invoices.filter((i) => i.company_id === co.id && inDateRange(i.invoice_date));
     const cInvCount = cInv.length;
+    const cTotal = cInv.reduce((s, i) => s + Number(i.total || 0), 0);
     const cCollected = data.payments.filter((p) => {
       const inv = p.invoices as { company_id: string } | null;
       return inv?.company_id === co.id && inDateRange(p.payment_date);
@@ -511,12 +512,13 @@ function Dashboard() {
     return {
       id: co.id, name: co.name,
       invoices: cInvCount,
+      total: cTotal,
       collected: cCollected,
       expenses: cExp,
       profit: cCollected - cExp,
       growthPct: pct(cCollected, cPrevCollected),
     };
-  }).sort((a, b) => b.collected - a.collected);
+  }).sort((a, b) => b.total - a.total);
 
   // ---------- Bottom widgets ----------
   const recentClients = [...clients].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, 5);

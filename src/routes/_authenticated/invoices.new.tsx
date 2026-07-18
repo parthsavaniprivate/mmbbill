@@ -265,12 +265,45 @@ function NewInvoicePage() {
           </Select>
         </div>
         <div className="space-y-1.5"><Label>Client</Label>
-          <Select value={clientId} onValueChange={setClientId}>
-            <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
-            <SelectContent>
-              {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <div className="flex-1 min-w-0">
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client">
+                    {clientId ? (() => {
+                      const c = filteredClients.find((x) => x.id === clientId) ?? clients.find((x) => x.id === clientId);
+                      const b = behaviours.get(clientId)?.behaviour;
+                      return (
+                        <span className="flex items-center gap-2 min-w-0">
+                          {b && <BehaviourDot behaviour={b} />}
+                          <span className="truncate">{c?.business_name || c?.client_name}</span>
+                        </span>
+                      );
+                    })() : null}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredClients.map((c) => {
+                    const b = behaviours.get(c.id)?.behaviour;
+                    return (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="flex items-center gap-2">
+                          {b && <BehaviourDot behaviour={b} />}
+                          {c.business_name || c.client_name}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                  {filteredClients.length === 0 && (
+                    <div className="px-2 py-4 text-xs text-muted-foreground text-center">
+                      No clients match this filter.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
+          </div>
         </div>
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => { setDate(e.target.value); if (e.target.value) setDueDate(addMonth(e.target.value)); }} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>

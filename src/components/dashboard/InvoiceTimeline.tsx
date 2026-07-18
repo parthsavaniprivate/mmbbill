@@ -233,7 +233,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   );
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
-  const tickWidth = 110;
+  // tickWidth defined above based on viewport
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
   const spanDays = Math.max(1, Math.round(totalMs / 86400000));

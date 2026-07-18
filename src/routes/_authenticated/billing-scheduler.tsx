@@ -27,7 +27,7 @@ type Row = {
   last_generated_date: string | null;
   is_active: boolean;
   clients?: { client_name: string; business_name: string | null } | null;
-  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string }[];
+  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string; interval_months: number | null }[];
 };
 
 function BillingSchedulerPage() {

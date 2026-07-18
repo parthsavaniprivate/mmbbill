@@ -74,6 +74,38 @@ function NewInvoicePage() {
     },
   });
 
+  // Load billing schedule when navigated from BillingReminder / Scheduler
+  const { data: schedule } = useQuery({
+    queryKey: ["schedule-prefill", scheduleId],
+    enabled: !!scheduleId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("billing_schedules")
+        .select("id, client_id, company_id, billing_type, custom_interval_months, next_billing_date, billing_schedule_services(service_name, price, gst_rate, unit, position)")
+        .eq("id", scheduleId!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (!schedule || prefilled) return;
+    if (schedule.company_id) setCompanyId(schedule.company_id);
+    if (schedule.client_id) setClientId(schedule.client_id);
+    const svcs = (schedule.billing_schedule_services ?? []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    if (svcs.length) {
+      setItems(svcs.map((s) => ({
+        description: s.service_name,
+        quantity: 1,
+        rate: Number(s.price || 0),
+        gstRate: s.gst_rate != null ? Number(s.gst_rate) : "",
+      })));
+    }
+    setPrefilled(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schedule]);
+
   const filteredClients = clients.filter((c) => c.company_id === companyId);
   const gstEnabled = companyMeta?.gst_enabled ?? true;
   const defaultGst = Number(companyMeta?.default_gst_rate ?? 18);

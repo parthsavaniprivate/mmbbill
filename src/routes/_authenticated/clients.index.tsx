@@ -18,6 +18,10 @@ import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2, Trash2, Uplo
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { ClientLogo, fileToLogoDataUrl } from "@/components/clients/ClientLogo";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourPill, BehaviourFilter } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
+import { useMemo } from "react";
 
 type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Status = Database["public"]["Enums"]["client_status"];

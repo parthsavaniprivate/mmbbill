@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { intervalMonths as _intervalMonths, addMonths as _addMonths, BILLING_TYPE_OPTIONS, computeBillingPeriod, formatPeriodShort, subDays as _subDays } from "@/lib/billing/cycle";
+import { intervalMonths as _intervalMonths, addMonths as _addMonths, BILLING_TYPE_OPTIONS, computeBillingPeriod, formatPeriodShort } from "@/lib/billing/cycle";
 import { ServiceCombobox } from "@/components/billing/ServiceCombobox";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";

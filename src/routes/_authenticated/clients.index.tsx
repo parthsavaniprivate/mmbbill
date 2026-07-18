@@ -187,8 +187,9 @@ export function ClientForm({ initial, id, onClose }: { initial?: Partial<Client>
     service_charge_amount: String(initial?.service_charge_amount ?? ""),
     credit_limit: initial?.credit_limit != null ? String(initial.credit_limit) : "",
     billing_cycle: (initial?.billing_cycle ?? "monthly") as "monthly" | "weekly" | "custom",
-    
+    logo_url: (initial?.logo_url ?? "") as string,
   });
+  const [logoBusy, setLogoBusy] = useState(false);
 
 
   const save = useMutation({

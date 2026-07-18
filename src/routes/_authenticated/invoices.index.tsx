@@ -68,8 +68,8 @@ function InvoicesPage() {
     queryFn: async () => {
       const { data } = await supabase.from("clients").select("id, payment_behaviour_override");
       const map: Record<string, PaymentBehaviour | null> = {};
-      (data ?? []).forEach((c: { id: string; payment_behaviour_override: PaymentBehaviour | null }) => {
-        map[c.id] = c.payment_behaviour_override;
+      (data ?? []).forEach((c: { id: string; payment_behaviour_override: string | null }) => {
+        map[c.id] = (c.payment_behaviour_override as PaymentBehaviour | null) ?? null;
       });
       return map;
     },

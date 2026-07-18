@@ -135,7 +135,7 @@ type Props = {
 export function InvoiceTimeline({ invoices, clients, companies, payments, from: _from, to, selectedCompany, isAll }: Props) {
   const qc = useQueryClient();
   const isMobile = useIsMobile();
-  const CLIENT_COL = isMobile ? 140 : 240;
+  const CLIENT_COL = isMobile ? 180 : 240;
   const tickWidth = isMobile ? 84 : 110;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
@@ -404,7 +404,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                 {/* Sticky header */}
                 <div className="sticky top-0 z-20 flex border-b border-border/60 bg-card/85 backdrop-blur-md">
                   <div
-                    className="sticky left-0 z-30 flex items-center border-r border-border/60 bg-card/90 px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur-md"
+                    className="sticky left-0 z-30 flex items-center border-r border-border/60 bg-card/90 px-2 sm:px-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur-md"
                     style={{ width: CLIENT_COL, minWidth: CLIENT_COL, height: 44 }}
                   >
                     Client
@@ -443,19 +443,19 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                       style={{ height: rowHeightOf(row.laneCount) }}
                     >
                       <div
-                        className="sticky left-0 z-10 flex items-center gap-3 border-r border-border/60 bg-card/90 px-4 backdrop-blur-md"
+                        className="sticky left-0 z-10 flex items-center gap-2 border-r border-border/60 bg-card/90 px-2 sm:gap-3 sm:px-4 backdrop-blur-md"
                         style={{ width: CLIENT_COL, minWidth: CLIENT_COL }}
                       >
                         <div
-                          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-[11px] font-semibold text-primary ring-1 ring-primary/15"
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-[10px] font-semibold text-primary ring-1 ring-primary/15 sm:h-8 sm:w-8 sm:text-[11px]"
                           aria-hidden
                         >
                           {row.client.client_name.slice(0, 2).toUpperCase()}
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{row.client.client_name}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-medium leading-tight sm:text-sm" title={row.client.client_name}>{row.client.client_name}</p>
                           {row.client.business_name && (
-                            <p className="truncate text-[11px] text-muted-foreground">{row.client.business_name}</p>
+                            <p className="truncate text-[10px] leading-tight text-muted-foreground sm:text-[11px]" title={row.client.business_name}>{row.client.business_name}</p>
                           )}
                         </div>
                       </div>

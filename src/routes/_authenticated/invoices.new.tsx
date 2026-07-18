@@ -130,12 +130,39 @@ function NewInvoicePage() {
     if (schedule.client_id) setClientId(schedule.client_id);
     const svcs = (schedule.billing_schedule_services ?? []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     if (svcs.length) {
-      setItems(svcs.map((s) => ({
-        description: s.service_name,
-        quantity: 1,
-        rate: Number(s.price || 0),
-        gstRate: s.gst_rate != null ? Number(s.gst_rate) : "",
-      })));
+      const scheduleStep = _intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
+      const periodStart = schedule.last_generated_date
+        ? _addMonths(schedule.last_generated_date, 0).length
+          ? (() => { const d = new Date(schedule.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
+          : schedule.next_billing_date
+        : schedule.next_billing_date;
+      setItems(svcs.map((s) => {
+        const iv = Number((s as { interval_months?: number | null }).interval_months ?? scheduleStep);
+        const rate = Number(s.price || 0);
+        const isRecurring = s.unit !== "one_time";
+        const amount = isRecurring ? rate * Math.max(1, iv) : rate;
+        const period = isRecurring ? computeBillingPeriod(periodStart, iv) : null;
+        const desc = period
+          ? `${s.service_name} (${rate.toLocaleString("en-IN")} × ${iv} ${iv === 1 ? "Month" : "Months"})`
+          : s.service_name;
+        return {
+          description: desc,
+          quantity: 1,
+          rate: amount,
+          gstRate: s.gst_rate != null ? Number(s.gst_rate) : "",
+          fromDate: period?.start,
+          toDate: period?.end,
+          oneTime: !isRecurring,
+        };
+      }));
+      // Auto-note with billing period summary
+      const recurring = svcs.filter((s) => s.unit !== "one_time");
+      if (recurring.length && !notes.trim()) {
+        const first = recurring[0];
+        const iv = Number((first as { interval_months?: number | null }).interval_months ?? scheduleStep);
+        const p = computeBillingPeriod(periodStart, iv);
+        setNotes(`Billing Period: ${formatPeriodShort(p.start, p.end)}`);
+      }
     }
     setPrefilled(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps

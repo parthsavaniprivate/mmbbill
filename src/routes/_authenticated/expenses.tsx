@@ -26,19 +26,25 @@ import type { Database } from "@/integrations/supabase/types";
 type Category = Database["public"]["Enums"]["expense_category"];
 type Cycle = Database["public"]["Enums"]["recurring_cycle"];
 
-const CATEGORIES: { value: Category; label: string }[] = [
+const CATEGORIES: { value: Category; label: string; customizable?: boolean }[] = [
   { value: "facebook_ads", label: "Facebook Ads" },
   { value: "instagram_ads", label: "Instagram Ads" },
   { value: "google_ads", label: "Google Ads" },
-  { value: "employee_salary", label: "Employee Salary" },
+  { value: "employee_salary", label: "Salary", customizable: true },
+  { value: "advance", label: "Advance", customizable: true },
+  { value: "light_bill", label: "Light Bill", customizable: true },
+  { value: "electricity", label: "Electricity", customizable: true },
+  { value: "office_rent", label: "Office Rent", customizable: true },
   { value: "software_subscriptions", label: "Software Subscriptions" },
   { value: "internet", label: "Internet" },
   { value: "office", label: "Office" },
   { value: "travel", label: "Travel" },
-  { value: "other", label: "Other" },
+  { value: "miscellaneous", label: "Miscellaneous", customizable: true },
+  { value: "other", label: "Other", customizable: true },
 ];
 
-const FIXED_CATEGORIES: Category[] = ["employee_salary", "office", "internet", "software_subscriptions"];
+const CUSTOMIZABLE = new Set<Category>(CATEGORIES.filter((c) => c.customizable).map((c) => c.value));
+const FIXED_CATEGORIES: Category[] = ["employee_salary", "office", "internet", "software_subscriptions", "office_rent", "light_bill", "electricity"];
 
 const CYCLES: { value: Cycle; label: string; months: number }[] = [
   { value: "monthly", label: "Monthly", months: 1 },

@@ -52,8 +52,9 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-muted-foreground">Expenses</p>
-                    <p className="font-semibold text-orange-500 truncate">{inr(r.expenses)}</p>
+                    <p className="text-muted-foreground">Pending</p>
+                    <p className="font-semibold text-orange-500 truncate">{inr(Math.max(0, r.total - r.collected))}</p>
+                    <p className="text-[10px] font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</p>
                   </div>
                 </div>
               </li>

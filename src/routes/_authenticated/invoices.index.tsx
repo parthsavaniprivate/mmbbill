@@ -379,7 +379,14 @@ function InvoicesPage() {
                         <TableCell>
                           <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
                         </TableCell>
-                        <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{cl?.business_name || cl?.client_name}</span>
+                            {i.client_id && behaviours.get(i.client_id) && (
+                              <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[10px] py-0 px-1.5" />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-sm">{i.invoice_date ? formatDate(i.invoice_date) : "—"}</TableCell>
                         <TableCell className="text-sm">
                           {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}

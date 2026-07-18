@@ -23,6 +23,7 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCollectionMapRouteImport } from './routes/_authenticated/collection-map'
+import { Route as AuthenticatedBillingSchedulerRouteImport } from './routes/_authenticated/billing-scheduler'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -110,6 +111,12 @@ const AuthenticatedCollectionMapRoute =
   AuthenticatedCollectionMapRouteImport.update({
     id: '/collection-map',
     path: '/collection-map',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBillingSchedulerRoute =
+  AuthenticatedBillingSchedulerRouteImport.update({
+    id: '/billing-scheduler',
+    path: '/billing-scheduler',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/billing-scheduler': typeof AuthenticatedBillingSchedulerRoute
   '/collection-map': typeof AuthenticatedCollectionMapRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/billing-scheduler': typeof AuthenticatedBillingSchedulerRoute
   '/collection-map': typeof AuthenticatedCollectionMapRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
@@ -291,6 +300,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
+  '/_authenticated/billing-scheduler': typeof AuthenticatedBillingSchedulerRoute
   '/_authenticated/collection-map': typeof AuthenticatedCollectionMapRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/billing'
+    | '/billing-scheduler'
     | '/collection-map'
     | '/dashboard'
     | '/expenses'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/billing'
+    | '/billing-scheduler'
     | '/collection-map'
     | '/dashboard'
     | '/expenses'
@@ -393,6 +405,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/billing'
+    | '/_authenticated/billing-scheduler'
     | '/_authenticated/collection-map'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
@@ -531,6 +544,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCollectionMapRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing-scheduler': {
+      id: '/_authenticated/billing-scheduler'
+      path: '/billing-scheduler'
+      fullPath: '/billing-scheduler'
+      preLoaderRoute: typeof AuthenticatedBillingSchedulerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/billing': {
       id: '/_authenticated/billing'
       path: '/billing'
@@ -662,6 +682,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
+  AuthenticatedBillingSchedulerRoute: typeof AuthenticatedBillingSchedulerRoute
   AuthenticatedCollectionMapRoute: typeof AuthenticatedCollectionMapRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
@@ -688,6 +709,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
+  AuthenticatedBillingSchedulerRoute: AuthenticatedBillingSchedulerRoute,
   AuthenticatedCollectionMapRoute: AuthenticatedCollectionMapRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,

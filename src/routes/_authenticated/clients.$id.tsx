@@ -17,6 +17,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Plus, Upload, Trash2, MessageCircle, FileDown, Pencil, Download } from "lucide-react";
 import { ClientForm } from "./clients.index";
 import { BillingConfigCard } from "@/components/billing/BillingConfigCard";
+import { computeBehaviour, BEHAVIOUR_LABEL, BEHAVIOUR_ORDER, behaviourDescription, type PaymentBehaviour } from "@/lib/payment-behaviour";
+import { BehaviourPill } from "@/components/clients/BehaviourBadge";
 
 import { inr, formatDate } from "@/lib/format";
 import { toast } from "sonner";

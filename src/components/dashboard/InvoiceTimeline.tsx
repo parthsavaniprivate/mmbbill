@@ -447,12 +447,18 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         className="sticky left-0 z-10 flex items-center gap-2 border-r border-border/60 bg-card/90 px-2 sm:gap-3 sm:px-4 backdrop-blur-md"
                         style={{ width: CLIENT_COL, minWidth: CLIENT_COL }}
                       >
-                        <div
-                          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-[10px] font-semibold text-primary ring-1 ring-primary/15 sm:h-8 sm:w-8 sm:text-[11px]"
-                          aria-hidden
-                        >
-                          {row.client.client_name.slice(0, 2).toUpperCase()}
-                        </div>
+                        {row.client.logo_url ? (
+                          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-border/60 sm:h-8 sm:w-8">
+                            <img src={row.client.logo_url} alt={row.client.client_name} className="h-full w-full object-contain" loading="lazy" />
+                          </div>
+                        ) : (
+                          <div
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-[10px] font-semibold text-primary ring-1 ring-primary/15 sm:h-8 sm:w-8 sm:text-[11px]"
+                            aria-hidden
+                          >
+                            {row.client.client_name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-medium leading-tight sm:text-sm" title={row.client.client_name}>{row.client.client_name}</p>
                           {row.client.business_name && (

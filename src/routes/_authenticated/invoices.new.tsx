@@ -90,6 +90,23 @@ function NewInvoicePage() {
     },
   });
 
+  // Fetch the client's active billing schedule (for the Early Billing Warning)
+  const { data: clientSchedule } = useQuery({
+    queryKey: ["client-schedule-warning", clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("billing_schedules")
+        .select("id, billing_type, custom_interval_months, next_billing_date, is_active")
+        .eq("client_id", clientId!)
+        .eq("is_active", true)
+        .order("next_billing_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const [prefilled, setPrefilled] = useState(false);
   useEffect(() => {
     if (!schedule || prefilled) return;

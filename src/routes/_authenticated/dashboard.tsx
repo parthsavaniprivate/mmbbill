@@ -777,7 +777,7 @@ function Dashboard() {
 
 
 
-      <QuickActionsFab />
+      
     </div>
 
   );

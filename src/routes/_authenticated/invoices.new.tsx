@@ -307,7 +307,9 @@ function NewInvoicePage() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Discount (₹)</Label><Input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label>GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
+            {gstEnabled && (
+              <div className="space-y-1.5"><Label>Default GST Rate (%)</Label><Input type="number" value={gstRate} onChange={(e) => setGstRate(e.target.value)} /></div>
+            )}
           </div>
           <div className="space-y-1.5"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
           <div className="space-y-1.5"><Label>Terms & Conditions</Label><Textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={3} /></div>
@@ -315,7 +317,7 @@ function NewInvoicePage() {
         <div className="space-y-2 p-4 rounded-lg bg-muted/40 self-start">
           <Row label="Subtotal" value={inr(totals.subtotal)} />
           {Number(discount) > 0 && <Row label="Discount" value={`- ${inr(Number(discount))}`} />}
-          {totals.gstAmount > 0 && <Row label={`GST (${gstRate}%)`} value={inr(totals.gstAmount)} />}
+          {gstEnabled && totals.gstAmount > 0 && <Row label="GST" value={inr(totals.gstAmount)} />}
           <div className="border-t pt-2"><Row label="Total" value={inr(totals.total)} bold /></div>
         </div>
       </CardContent></Card>

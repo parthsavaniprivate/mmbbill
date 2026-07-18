@@ -156,6 +156,10 @@ function ClientsPage() {
 
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
+                      {(() => {
+                        const b = behaviours.get(c.id)?.behaviour;
+                        return b ? <BehaviourPill behaviour={b} short /> : null;
+                      })()}
                       {co?.name && (
                         <Badge variant="outline" className="font-normal gap-1 max-w-full">
                           <Building2 className="w-3 h-3 shrink-0" /><span className="truncate">{co.name}</span>

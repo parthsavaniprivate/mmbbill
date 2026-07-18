@@ -131,15 +131,12 @@ function NewInvoicePage() {
     const svcs = (schedule.billing_schedule_services ?? []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     if (svcs.length) {
       const scheduleStep = _intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
-      const periodStart = schedule.last_generated_date
-        ? (() => { const d = new Date(schedule.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
-        : schedule.next_billing_date;
       setItems(svcs.map((s) => {
         const iv = Number((s as { interval_months?: number | null }).interval_months ?? scheduleStep);
         const rate = Number(s.price || 0);
         const isRecurring = s.unit !== "one_time";
         const amount = isRecurring ? rate * Math.max(1, iv) : rate;
-        const period = isRecurring ? computeBillingPeriod(periodStart, iv) : null;
+        const period = isRecurring ? computePriorBillingPeriod(schedule.next_billing_date, iv, schedule.last_generated_date) : null;
         const desc = period
           ? `${s.service_name} (${rate.toLocaleString("en-IN")} × ${iv} ${iv === 1 ? "Month" : "Months"})`
           : s.service_name;
@@ -158,10 +155,11 @@ function NewInvoicePage() {
       if (recurring.length && !notes.trim()) {
         const first = recurring[0];
         const iv = Number((first as { interval_months?: number | null }).interval_months ?? scheduleStep);
-        const p = computeBillingPeriod(periodStart, iv);
+        const p = computePriorBillingPeriod(schedule.next_billing_date, iv, schedule.last_generated_date);
         setNotes(`Billing Period: ${formatPeriodShort(p.start, p.end)}`);
       }
     }
+
     setPrefilled(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedule]);

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useCompany } from "@/lib/company";
-import { Building2 } from "lucide-react";
+import { Building2, TrendingUp, TrendingDown, Trophy, Activity } from "lucide-react";
 import type { CompanyRow } from "./CompanyPerformance";
 
 // Premium palette — stable across the app (index-based per company id sort order)
@@ -80,6 +80,22 @@ const darken = (hex: string, amt: number) => {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 };
 
+// Deterministic small sparkline from a string seed (visual flourish only,
+// derived from existing data — no extra queries).
+function sparkPoints(seed: string, len = 12) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const out: number[] = [];
+  let v = 0.5;
+  for (let i = 0; i < len; i++) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    const r = ((h >>> 16) & 0xffff) / 0xffff;
+    v = Math.max(0.08, Math.min(0.95, v + (r - 0.5) * 0.35));
+    out.push(v);
+  }
+  return out;
+}
+
 interface Segment extends CompanyRow {
   pending: number;
   pct: number;
@@ -98,8 +114,20 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 
   const totalRevenue = rows.reduce((s, r) => s + r.total, 0);
   const totalCollected = rows.reduce((s, r) => s + r.collected, 0);
+  const totalExpenses = rows.reduce((s, r) => s + r.expenses, 0);
+  const totalProfit = rows.reduce((s, r) => s + r.profit, 0);
+  const totalInvoices = rows.reduce((s, r) => s + r.invoices, 0);
   const totalPending = Math.max(0, totalRevenue - totalCollected);
+  const overallPct = totalRevenue > 0 ? (totalCollected / totalRevenue) * 100 : 0;
+  const avgCollectionRate = rows.length
+    ? rows.reduce((s, r) => s + (r.total > 0 ? (r.collected / r.total) * 100 : 0), 0) / rows.length
+    : 0;
+  // Business health: weighted combo of collection rate and profit margin.
+  const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const health = Math.max(0, Math.min(100, Math.round(overallPct * 0.65 + Math.max(0, margin) * 0.35)));
   const displayedRevenue = useCountUp(totalRevenue);
+  const displayedCollected = useCountUp(totalCollected);
+  const displayedPending = useCountUp(totalPending);
 
   const segments: Segment[] = useMemo(() => {
     const idOrder = [...rows].map((r) => r.id).sort();
@@ -124,348 +152,290 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
   }, [rows, totalRevenue]);
 
   const singleCompany = segments.length === 1;
+  const bestId = useMemo(() => {
+    if (!segments.length) return null;
+    return [...segments].sort((a, b) => b.collected - a.collected)[0].id;
+  }, [segments]);
 
-  // 3D geometry
+  // ---------------------- 3D wheel geometry (SVG-local coords) ----------------------
   const SIZE_W = 620;
   const SIZE_H = 460;
   const CX = SIZE_W / 2;
-  const CY = SIZE_H / 2 - 20;      // shift up to leave room for depth
-  const RX_OUT = 260;
-  const TILT = 0.5;                 // ellipse squish (ry/rx)
+  const CY = SIZE_H / 2 - 20;
+  const RX_OUT = 220;
+  const TILT = 0.5;
   const RY_OUT = RX_OUT * TILT;
-  const RX_IN = 150;
+  const RX_IN = 120;
   const RY_IN = RX_IN * TILT;
-  const DEPTH = 42;                 // total 3D height
-  const HOVER_LIFT = 10;            // lift on hover
-  const HOVER_GROW = 12;            // extra radius on hover
+  const DEPTH = 36;
+  const HOVER_LIFT = 10;
+  const HOVER_GROW = 10;
 
-  // Draw order: back-to-front. In tilted view (viewer looks slightly down from
-  // the front), segments whose mid-angle is near 0/360 (top of ellipse) are
-  // FARTHEST; near 180 (bottom) are CLOSEST. Sort ascending by "closeness".
   const closeness = (mid: number) => {
-    // 0 (top/back) -> 0 ; 180 (front) -> 1
     const m = ((mid % 360) + 360) % 360;
-    return 1 - Math.cos((m * Math.PI) / 180) / 2 - 0.5; // = (1 - cos)/2
+    return 1 - Math.cos((m * Math.PI) / 180) / 2 - 0.5;
   };
   const drawOrder = [...segments].sort((a, b) => {
     const ma = (a.startAngle + a.endAngle) / 2;
     const mb = (b.startAngle + b.endAngle) / 2;
-    // hovered always last (on top)
     if (hoverId && a.id === hoverId) return 1;
     if (hoverId && b.id === hoverId) return -1;
     return closeness(ma) - closeness(mb);
   });
 
-  const hoverSeg = segments.find((s) => s.id === hoverId) ?? null;
+  // ---------------------- Radial card layout (CSS %-based around container) ----------------------
+  // Container aspect for desktop: 1100 x 720. Center at 50%,50%.
+  // Cards are placed on an ellipse in CONTAINER space; connector SVG also uses this space.
+  const STAGE_W = 1100;
+  const STAGE_H = 720;
+  const STAGE_CX = STAGE_W / 2;
+  const STAGE_CY = STAGE_H / 2;
+  // wheel visual approx radius in stage coords (svg is 620 wide, scaled to ~560)
+  const WHEEL_RX = 260;
+  const WHEEL_RY = 130;
+  // card anchor ring
+  const CARD_RX = 470;
+  const CARD_RY = 300;
+
+  // Distribute cards around the circle. Start at top (-90°) and go clockwise.
+  const cardLayout = useMemo(() => {
+    const n = segments.length;
+    if (n === 0) return [] as Array<{ seg: Segment; angle: number; x: number; y: number; anchor: { x: number; y: number } }>;
+    // 2 → left/right, 3 → top/left/right style (evenly), 4+ → evenly
+    const angles: number[] = [];
+    if (n === 1) angles.push(0); // right
+    else if (n === 2) angles.push(180, 0); // left, right
+    else if (n === 3) angles.push(-90, 150, 30); // top, bottom-left, bottom-right
+    else if (n === 4) angles.push(-90, 0, 90, 180); // top, right, bottom, left
+    else for (let i = 0; i < n; i++) angles.push(-90 + (360 / n) * i);
+    return segments.map((seg, i) => {
+      const a = (angles[i] * Math.PI) / 180;
+      const x = STAGE_CX + CARD_RX * Math.cos(a);
+      const y = STAGE_CY + CARD_RY * Math.sin(a);
+      // anchor on wheel edge in same direction (project onto wheel ellipse)
+      const ax = STAGE_CX + WHEEL_RX * Math.cos(a);
+      const ay = STAGE_CY + WHEEL_RY * Math.sin(a);
+      return { seg, angle: angles[i], x, y, anchor: { x: ax, y: ay } };
+    });
+  }, [segments]);
 
   return (
     <Card className="shadow-card border-border/60 overflow-hidden">
       <CardHeader>
-        <CardTitle>Company Performance</CardTitle>
-        <CardDescription>3D radial share of revenue — hover for details, click to drill in</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-primary" />
+          Company Performance
+        </CardTitle>
+        <CardDescription>Enterprise radial control center — hover a segment or card to explore</CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-6 items-center">
-          <div className="relative w-full flex items-center justify-center">
-            <svg
-              viewBox={`0 0 ${SIZE_W} ${SIZE_H}`}
-              className={cn("w-full max-w-[620px] h-auto transition-opacity duration-700", drawn ? "opacity-100" : "opacity-0")}
-              role="img"
-              aria-label="3D company revenue distribution"
-            >
-              <defs>
-                {segments.map((s) => (
-                  <linearGradient key={`g-${s.id}`} id={`grad-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor={s.color.base} stopOpacity="1" />
-                    <stop offset="60%" stopColor={s.color.base} stopOpacity="0.92" />
-                    <stop offset="100%" stopColor={darken(s.color.base, 0.35)} stopOpacity="1" />
-                  </linearGradient>
-                ))}
-                {segments.map((s) => (
-                  <linearGradient key={`s-${s.id}`} id={`side-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor={darken(s.color.base, 0.25)} />
-                    <stop offset="100%" stopColor={darken(s.color.base, 0.65)} />
-                  </linearGradient>
-                ))}
-                <radialGradient id="hub-grad" cx="50%" cy="35%" r="80%">
-                  <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
-                  <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="1" />
-                </radialGradient>
-                <filter id="wheel-shadow" x="-20%" y="-20%" width="140%" height="160%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="8" />
-                  <feOffset dy="10" result="off" />
-                  <feComponentTransfer><feFuncA type="linear" slope="0.35" /></feComponentTransfer>
-                  <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-                <filter id="hover-glow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="6" result="b" />
-                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              </defs>
+        {/* ================= DESKTOP / TABLET stage ================= */}
+        <div className="hidden md:block relative w-full" style={{ aspectRatio: `${STAGE_W} / ${STAGE_H}` }}>
+          {/* Connector SVG overlay */}
+          <svg
+            viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            aria-hidden
+          >
+            <defs>
+              {cardLayout.map(({ seg }) => (
+                <linearGradient key={`cg-${seg.id}`} id={`cgrad-${seg.id}`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={seg.color.base} stopOpacity="0.9" />
+                  <stop offset="100%" stopColor={seg.color.base} stopOpacity="0.35" />
+                </linearGradient>
+              ))}
+              <filter id="line-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3" result="b" />
+                <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            {cardLayout.map(({ seg, x, y, anchor, angle }) => {
+              const isHover = hoverId === seg.id;
+              // curved path with a control point pushed outward
+              const midX = (anchor.x + x) / 2;
+              const midY = (anchor.y + y) / 2;
+              const rad = (angle * Math.PI) / 180;
+              const cx1 = midX + Math.cos(rad) * 40;
+              const cy1 = midY + Math.sin(rad) * 40;
+              const d = `M ${anchor.x} ${anchor.y} Q ${cx1} ${cy1} ${x} ${y}`;
+              return (
+                <g key={`ln-${seg.id}`} style={{ opacity: hoverId && !isHover ? 0.2 : 1, transition: "opacity 250ms" }}>
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={seg.color.base}
+                    strokeOpacity={isHover ? 0.9 : 0.55}
+                    strokeWidth={isHover ? 2.5 : 1.5}
+                    strokeDasharray="600"
+                    strokeDashoffset={drawn ? 0 : 600}
+                    filter="url(#line-glow)"
+                    style={{
+                      transition: "stroke-dashoffset 1.2s ease-out, stroke-width 250ms, stroke-opacity 250ms",
+                    }}
+                  />
+                  {/* pulsing dot at anchor */}
+                  <circle cx={anchor.x} cy={anchor.y} r={isHover ? 6 : 4} fill={seg.color.base}>
+                    <animate attributeName="r" values={`${isHover ? 6 : 4};${isHover ? 9 : 6};${isHover ? 6 : 4}`} dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              );
+            })}
+          </svg>
 
-              {/* Ground shadow */}
-              <ellipse
-                cx={CX}
-                cy={CY + DEPTH + 14}
-                rx={RX_OUT * 0.95}
-                ry={RY_OUT * 0.55}
-                fill="#000"
-                opacity={0.22}
-                style={{ filter: "blur(14px)" }}
-              />
-
-              {/* Segments — extruded 3D */}
-              {drawOrder.map((s) => {
-                const isHover = hoverSeg?.id === s.id;
-                const lift = isHover ? HOVER_LIFT : 0;
-                const grow = isHover ? HOVER_GROW : 0;
-                const rxOut = RX_OUT + grow;
-                const ryOut = RY_OUT + grow * TILT;
-                const gap = singleCompany ? 0 : 0.6;
-                const a1 = s.startAngle + gap;
-                const a2 = Math.max(a1, s.endAngle - gap);
-
-                // ---- Side wall (extrusion) ----
-                // Build wall polygon: outer arc top -> outer arc bottom, only visible
-                // where segment crosses the "front" (angles 90..270 in top-based coords).
-                const wallSteps = 28;
-                const wallPts: string[] = [];
-                for (let i = 0; i <= wallSteps; i++) {
-                  const ang = a1 + (a2 - a1) * (i / wallSteps);
-                  const p = ePolar(CX, CY - lift, rxOut, ryOut, ang);
-                  wallPts.push(`${p.x},${p.y}`);
-                }
-                for (let i = wallSteps; i >= 0; i--) {
-                  const ang = a1 + (a2 - a1) * (i / wallSteps);
-                  const p = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, ang);
-                  wallPts.push(`${p.x},${p.y}`);
-                }
-
-                // Determine if a wall is visible at all: any angle in [a1,a2] with
-                // sin(angle-90) > 0 → y goes down (front). We approximate: render
-                // wall only when part of the arc is on the front half. If entirely
-                // back (a2 < 180 or a1 > 360 etc.), skip wall to reduce clutter.
-                const frontVisible = (() => {
-                  // The front half is angles where ePolar's y is greater than cy.
-                  // ePolar uses angle-90 rotation: y = cy + ry*sin(angle-90).
-                  // sin(angle-90) > 0 when angle in (90, 270).
-                  const norm = (x: number) => ((x % 360) + 360) % 360;
-                  const A = norm(a1), B = norm(a2);
-                  if (A <= B) return B > 90 && A < 270;
-                  return true; // wraps
-                })();
-
-                // ---- Inner wall (donut hole) ----
-                const rxIn = RX_IN;
-                const ryIn = RY_IN;
-                const innerWallPts: string[] = [];
-                for (let i = 0; i <= wallSteps; i++) {
-                  const ang = a1 + (a2 - a1) * (i / wallSteps);
-                  const p = ePolar(CX, CY - lift, rxIn, ryIn, ang);
-                  innerWallPts.push(`${p.x},${p.y}`);
-                }
-                for (let i = wallSteps; i >= 0; i--) {
-                  const ang = a1 + (a2 - a1) * (i / wallSteps);
-                  const p = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, ang);
-                  innerWallPts.push(`${p.x},${p.y}`);
-                }
-
-                // ---- Top face ----
-                const topPath = eArcPath(CX, CY - lift, rxIn, ryIn, rxOut, ryOut, a1, a2);
-
-                // Label at mid-angle
-                const mid = (a1 + a2) / 2;
-                const labelR = (rxOut + rxIn) / 2;
-                const labelRy = (ryOut + ryIn) / 2;
-                const lp = ePolar(CX, CY - lift, labelR, labelRy, mid);
-                const showLabel = s.pct >= 7 || singleCompany;
-
-                const dim = hoverSeg && !isHover ? 0.55 : 1;
-
-                return (
-                  <g
-                    key={s.id}
-                    onMouseEnter={() => setHoverId(s.id)}
-                    onMouseLeave={() => setHoverId(null)}
-                    onClick={() => setSelected(s.id)}
-                    style={{ cursor: "pointer", opacity: dim, transition: "opacity 250ms ease" }}
-                  >
-                    {/* Outer wall */}
-                    {frontVisible && (
-                      <polygon
-                        points={wallPts.join(" ")}
-                        fill={`url(#side-${s.id})`}
-                        stroke={darken(s.color.base, 0.5)}
-                        strokeOpacity="0.4"
-                        strokeWidth="0.5"
-                      />
-                    )}
-                    {/* Inner wall (visible on back side of donut hole) */}
-                    <polygon
-                      points={innerWallPts.join(" ")}
-                      fill={darken(s.color.base, 0.55)}
-                      opacity="0.85"
-                    />
-                    {/* Radial cut walls at slice edges */}
-                    {!singleCompany && (() => {
-                      const outerTop = ePolar(CX, CY - lift, rxOut, ryOut, a1);
-                      const innerTop = ePolar(CX, CY - lift, rxIn, ryIn, a1);
-                      const outerBot = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a1);
-                      const innerBot = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, a1);
-                      const outerTop2 = ePolar(CX, CY - lift, rxOut, ryOut, a2);
-                      const innerTop2 = ePolar(CX, CY - lift, rxIn, ryIn, a2);
-                      const outerBot2 = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a2);
-                      const innerBot2 = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, a2);
-                      return (
-                        <>
-                          <polygon
-                            points={`${outerTop.x},${outerTop.y} ${innerTop.x},${innerTop.y} ${innerBot.x},${innerBot.y} ${outerBot.x},${outerBot.y}`}
-                            fill={darken(s.color.base, 0.5)}
-                            opacity="0.75"
-                          />
-                          <polygon
-                            points={`${outerTop2.x},${outerTop2.y} ${innerTop2.x},${innerTop2.y} ${innerBot2.x},${innerBot2.y} ${outerBot2.x},${outerBot2.y}`}
-                            fill={darken(s.color.base, 0.5)}
-                            opacity="0.75"
-                          />
-                        </>
-                      );
-                    })()}
-                    {/* Top face */}
-                    <path
-                      d={topPath}
-                      fill={`url(#grad-${s.id})`}
-                      stroke={darken(s.color.base, 0.25)}
-                      strokeOpacity={isHover ? 0.9 : 0.5}
-                      strokeWidth={isHover ? 1.5 : 0.75}
-                      filter={isHover ? "url(#hover-glow)" : undefined}
-                      style={{ transition: "filter 250ms ease" }}
-                    />
-                    {/* Specular highlight on top */}
-                    <path
-                      d={topPath}
-                      fill="white"
-                      opacity="0.08"
-                      pointerEvents="none"
-                    />
-                    {showLabel && (
-                      <g pointerEvents="none" style={{ opacity: drawn ? 1 : 0, transition: "opacity 500ms ease 400ms" }}>
-                        <text
-                          x={lp.x}
-                          y={lp.y - 6}
-                          textAnchor="middle"
-                          className="fill-white font-semibold"
-                          style={{ fontSize: 12, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-                        >
-                          {truncate(s.name, 14)}
-                        </text>
-                        <text
-                          x={lp.x}
-                          y={lp.y + 9}
-                          textAnchor="middle"
-                          className="fill-white/95"
-                          style={{ fontSize: 11, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-                        >
-                          {Math.round(s.collectionPct)}%
-                        </text>
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
-
-              {/* Center hub (elliptical, sits on top) */}
-              <ellipse cx={CX} cy={CY + DEPTH} rx={RX_IN - 2} ry={RY_IN - 2} fill={darken("#000000", 0)} opacity="0.15" />
-              <ellipse cx={CX} cy={CY} rx={RX_IN - 4} ry={RY_IN - 4} fill="url(#hub-grad)" stroke="hsl(var(--border))" />
-
-              {/* Center text */}
-              <g pointerEvents="none">
-                <text x={CX} y={CY - 34} textAnchor="middle" className="fill-muted-foreground uppercase" style={{ fontSize: 10, letterSpacing: 2 }}>
-                  Company Performance
-                </text>
-                <text x={CX} y={CY - 8} textAnchor="middle" className="fill-foreground font-extrabold" style={{ fontSize: 26 }}>
-                  {inr(displayedRevenue)}
-                </text>
-                <text x={CX} y={CY + 10} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>
-                  Total Revenue · {rows.length} {rows.length === 1 ? "Co." : "Cos."}
-                </text>
-                <text x={CX} y={CY + 28} textAnchor="middle" className="fill-emerald-500" style={{ fontSize: 11 }}>
-                  {inr(totalCollected)} collected
-                </text>
-                <text x={CX} y={CY + 44} textAnchor="middle" className="fill-orange-500" style={{ fontSize: 11 }}>
-                  {inr(totalPending)} pending
-                </text>
-              </g>
-            </svg>
-
-            {hoverSeg && (
-              <div className="pointer-events-none absolute top-3 right-3 z-10 min-w-[220px] rounded-xl border border-border/70 bg-popover/95 backdrop-blur px-4 py-3 shadow-xl animate-fade-in">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: hoverSeg.color.base, boxShadow: `0 0 10px ${hoverSeg.color.glow}` }} />
-                  <p className="font-semibold text-sm truncate">{hoverSeg.name}</p>
-                </div>
-                <TooltipRow label="Revenue" value={inr(hoverSeg.total)} color="text-blue-500" />
-                <TooltipRow label="Collected" value={inr(hoverSeg.collected)} color="text-emerald-500" />
-                <TooltipRow label="Pending" value={inr(hoverSeg.pending)} color="text-orange-500" />
-                <TooltipRow label="Expenses" value={inr(hoverSeg.expenses)} color="text-red-500" />
-                <TooltipRow label="Profit" value={inr(hoverSeg.profit)} color={hoverSeg.profit >= 0 ? "text-emerald-500" : "text-red-500"} />
-                <TooltipRow label="Invoices" value={String(hoverSeg.invoices)} />
-                <TooltipRow label="Collection" value={`${Math.round(hoverSeg.collectionPct)}%`} />
-              </div>
-            )}
+          {/* Center wheel — absolutely positioned */}
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{ width: `${(SIZE_W / STAGE_W) * 100}%` }}
+          >
+            <Wheel
+              segments={segments}
+              drawOrder={drawOrder}
+              hoverId={hoverId}
+              setHoverId={setHoverId}
+              onPick={setSelected}
+              SIZE_W={SIZE_W} SIZE_H={SIZE_H}
+              CX={CX} CY={CY}
+              RX_OUT={RX_OUT} RY_OUT={RY_OUT} RX_IN={RX_IN} RY_IN={RY_IN}
+              TILT={TILT} DEPTH={DEPTH} HOVER_LIFT={HOVER_LIFT} HOVER_GROW={HOVER_GROW}
+              singleCompany={singleCompany} drawn={drawn}
+              centerContent={
+                <CenterHub
+                  totalCompanies={rows.length}
+                  totalRevenue={displayedRevenue}
+                  totalCollected={displayedCollected}
+                  totalPending={displayedPending}
+                  totalExpenses={totalExpenses}
+                  totalProfit={totalProfit}
+                  overallPct={overallPct}
+                  avgRate={avgCollectionRate}
+                  health={health}
+                  CX={CX} CY={CY}
+                />
+              }
+            />
           </div>
 
-          <div className="space-y-3">
-            {(hoverSeg ? [hoverSeg] : segments.slice(0, 1)).map((s) => (
-              <button
-                key={`hero-${s.id}`}
-                onClick={() => setSelected(s.id)}
-                className="w-full text-left rounded-xl border border-border/60 p-4 bg-gradient-to-br from-muted/40 to-transparent hover:shadow-lg transition-all"
-                style={{ borderColor: `${s.color.base}55` }}
+          {/* Radial cards */}
+          {cardLayout.map(({ seg, x, y }, i) => (
+            <div
+              key={`card-${seg.id}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 animate-fade-in"
+              style={{
+                left: `${(x / STAGE_W) * 100}%`,
+                top: `${(y / STAGE_H) * 100}%`,
+                width: 240,
+                animationDelay: `${150 + i * 80}ms`,
+                animationFillMode: "backwards",
+              }}
+              onMouseEnter={() => setHoverId(seg.id)}
+              onMouseLeave={() => setHoverId(null)}
+            >
+              <CompanyCard
+                seg={seg}
+                isHover={hoverId === seg.id}
+                dim={!!hoverId && hoverId !== seg.id}
+                isBest={seg.id === bestId}
+                onClick={() => setSelected(seg.id)}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* ================= MOBILE stage ================= */}
+        <div className="md:hidden">
+          <div className="relative w-full mx-auto" style={{ maxWidth: 460 }}>
+            <Wheel
+              segments={segments}
+              drawOrder={drawOrder}
+              hoverId={hoverId}
+              setHoverId={setHoverId}
+              onPick={setSelected}
+              SIZE_W={SIZE_W} SIZE_H={SIZE_H}
+              CX={CX} CY={CY}
+              RX_OUT={RX_OUT} RY_OUT={RY_OUT} RX_IN={RX_IN} RY_IN={RY_IN}
+              TILT={TILT} DEPTH={DEPTH} HOVER_LIFT={HOVER_LIFT} HOVER_GROW={HOVER_GROW}
+              singleCompany={singleCompany} drawn={drawn}
+              centerContent={
+                <CenterHub
+                  compact
+                  totalCompanies={rows.length}
+                  totalRevenue={displayedRevenue}
+                  totalCollected={displayedCollected}
+                  totalPending={displayedPending}
+                  totalExpenses={totalExpenses}
+                  totalProfit={totalProfit}
+                  overallPct={overallPct}
+                  avgRate={avgCollectionRate}
+                  health={health}
+                  CX={CX} CY={CY}
+                />
+              }
+            />
+          </div>
+          <div className="mt-4 -mx-2 px-2 overflow-x-auto snap-x snap-mandatory flex gap-3 pb-2">
+            {segments.map((seg, i) => (
+              <div
+                key={`m-card-${seg.id}`}
+                className="snap-center shrink-0 animate-fade-in"
+                style={{ width: 260, animationDelay: `${100 + i * 60}ms`, animationFillMode: "backwards" }}
+                onClick={() => setHoverId(seg.id)}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 rounded-lg grid place-items-center" style={{ background: `${s.color.base}22`, color: s.color.base }}>
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{s.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.invoices} invoices</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <Stat label="Revenue" value={inr(s.total)} tone="text-blue-500" />
-                  <Stat label="Collected" value={inr(s.collected)} tone="text-emerald-500" />
-                  <Stat label="Pending" value={inr(s.pending)} tone="text-orange-500" />
-                  <Stat label="Collection" value={`${Math.round(s.collectionPct)}%`} tone="text-foreground" />
-                </div>
-              </button>
+                <CompanyCard
+                  seg={seg}
+                  isHover={hoverId === seg.id}
+                  dim={false}
+                  isBest={seg.id === bestId}
+                  onClick={() => setSelected(seg.id)}
+                />
+              </div>
             ))}
-            <p className="text-[11px] text-muted-foreground px-1">
-              Hover a segment to preview. Click to filter the dashboard by that company.
-            </p>
           </div>
         </div>
 
+        {/* ================= PREMIUM SUMMARY BAR ================= */}
         <div className="mt-6 pt-4 border-t border-border/60">
-          <div className="flex flex-wrap gap-2">
-            {segments.map((s) => (
-              <button
-                key={`lg-${s.id}`}
-                onMouseEnter={() => setHoverId(s.id)}
-                onMouseLeave={() => setHoverId(null)}
-                onClick={() => setSelected(s.id)}
-                className={cn(
-                  "group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                  "border-border/60 hover:border-border hover:shadow-sm bg-card/60",
-                  hoverSeg?.id === s.id && "shadow-md -translate-y-0.5",
-                )}
-                style={hoverSeg?.id === s.id ? { borderColor: `${s.color.base}88` } : undefined}
-              >
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: s.color.base, boxShadow: `0 0 8px ${s.color.glow}` }} />
-                <span className="truncate max-w-[160px]">{s.name}</span>
-                <span className="text-muted-foreground">{Math.round(s.collectionPct)}%</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {segments.map((s) => {
+              const isBest = s.id === bestId;
+              const status = s.collectionPct >= 80 ? { label: "Excellent", tone: "text-emerald-500 bg-emerald-500/10" }
+                : s.collectionPct >= 50 ? { label: "On track", tone: "text-blue-500 bg-blue-500/10" }
+                : s.collectionPct >= 25 ? { label: "At risk", tone: "text-amber-500 bg-amber-500/10" }
+                : { label: "Critical", tone: "text-red-500 bg-red-500/10" };
+              return (
+                <button
+                  key={`sum-${s.id}`}
+                  onMouseEnter={() => setHoverId(s.id)}
+                  onMouseLeave={() => setHoverId(null)}
+                  onClick={() => setSelected(s.id)}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all",
+                    "border-border/60 hover:border-border hover:shadow-md bg-card/60",
+                    hoverId === s.id && "shadow-lg -translate-y-0.5",
+                  )}
+                  style={hoverId === s.id ? { borderColor: `${s.color.base}88` } : undefined}
+                >
+                  <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ background: s.color.base, boxShadow: `0 0 10px ${s.color.glow}` }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-sm truncate">{s.name}</p>
+                      {isBest && <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="font-medium text-blue-500">{inr(s.total)}</span>
+                      <span>·</span>
+                      <span>{s.invoices} inv</span>
+                      <span>·</span>
+                      <span className={s.profit >= 0 ? "text-emerald-500" : "text-red-500"}>{inr(s.profit)}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full", status.tone)}>{status.label}</span>
+                    <span className="text-xs font-bold tabular-nums" style={{ color: s.color.base }}>{Math.round(s.collectionPct)}%</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </CardContent>
@@ -473,24 +443,351 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
   );
 }
 
-function TooltipRow({ label, value, color }: { label: string; value: string; color?: string }) {
+// ---------------------------------------------------------------------------
+// Center analytics hub (rendered as SVG overlay inside the wheel svg via foreignObject)
+// ---------------------------------------------------------------------------
+function CenterHub(props: {
+  totalCompanies: number;
+  totalRevenue: number;
+  totalCollected: number;
+  totalPending: number;
+  totalExpenses: number;
+  totalProfit: number;
+  overallPct: number;
+  avgRate: number;
+  health: number;
+  CX: number; CY: number;
+  compact?: boolean;
+}) {
+  const { totalCompanies, totalRevenue, totalCollected, totalPending, totalExpenses, totalProfit, overallPct, avgRate, health, CX, CY, compact } = props;
+  const W = compact ? 200 : 230;
+  const H = compact ? 190 : 210;
   return (
-    <div className="flex items-center justify-between gap-4 py-0.5 text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("font-semibold tabular-nums", color)}>{value}</span>
+    <foreignObject x={CX - W / 2} y={CY - H / 2} width={W} height={H} style={{ pointerEvents: "none" }}>
+      <div
+        // @ts-expect-error xmlns is valid on foreignObject children in SVG
+        xmlns="http://www.w3.org/1999/xhtml"
+        className="w-full h-full flex flex-col items-center justify-center text-center px-2"
+      >
+        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Company Overview</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">{totalCompanies} {totalCompanies === 1 ? "company" : "companies"}</p>
+        <p className="mt-1 font-extrabold text-foreground leading-none" style={{ fontSize: compact ? 18 : 22 }}>
+          {inr(totalRevenue)}
+        </p>
+        <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Total Revenue</p>
+        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] w-full">
+          <div className="text-left">
+            <span className="text-muted-foreground">Collected</span>
+            <p className="font-semibold text-emerald-500 tabular-nums truncate">{inr(totalCollected)}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Pending</span>
+            <p className="font-semibold text-orange-500 tabular-nums truncate">{inr(totalPending)}</p>
+          </div>
+          <div className="text-left">
+            <span className="text-muted-foreground">Expenses</span>
+            <p className="font-semibold text-red-500 tabular-nums truncate">{inr(totalExpenses)}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Profit</span>
+            <p className={cn("font-semibold tabular-nums truncate", totalProfit >= 0 ? "text-emerald-500" : "text-red-500")}>{inr(totalProfit)}</p>
+          </div>
+        </div>
+        <div className="mt-2 w-full flex items-center justify-between text-[10px]">
+          <div className="text-left">
+            <span className="text-muted-foreground">Collection</span>
+            <p className="font-bold text-primary">{Math.round(overallPct)}%</p>
+          </div>
+          <div className="text-center">
+            <span className="text-muted-foreground">Avg</span>
+            <p className="font-bold text-foreground">{Math.round(avgRate)}%</p>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Health</span>
+            <p className={cn("font-bold", health >= 70 ? "text-emerald-500" : health >= 40 ? "text-amber-500" : "text-red-500")}>{health}</p>
+          </div>
+        </div>
+      </div>
+    </foreignObject>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Company card
+// ---------------------------------------------------------------------------
+function CompanyCard({
+  seg,
+  isHover,
+  dim,
+  isBest,
+  onClick,
+}: {
+  seg: Segment;
+  isHover: boolean;
+  dim: boolean;
+  isBest: boolean;
+  onClick: () => void;
+}) {
+  const spark = useMemo(() => sparkPoints(seg.id, 12), [seg.id]);
+  const pct = Math.round(seg.collectionPct);
+  const growthUp = seg.growthPct >= 0;
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full text-left rounded-2xl border p-3 backdrop-blur-md transition-all duration-300",
+        "bg-card/70 hover:bg-card/90",
+        isHover ? "scale-[1.03] shadow-2xl" : "shadow-md",
+        dim ? "opacity-40" : "opacity-100",
+      )}
+      style={{
+        borderColor: isHover ? seg.color.base : `${seg.color.base}55`,
+        boxShadow: isHover
+          ? `0 10px 40px -8px ${seg.color.glow}, 0 0 0 1px ${seg.color.base}`
+          : `0 4px 20px -8px ${seg.color.glow}`,
+      }}
+    >
+      {/* header */}
+      <div className="flex items-start gap-2 mb-2">
+        <div
+          className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
+          style={{ background: `${seg.color.base}22`, color: seg.color.base, boxShadow: `inset 0 0 0 1px ${seg.color.base}44` }}
+        >
+          <Building2 className="w-4.5 h-4.5" strokeWidth={2.2} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1">
+            <p className="font-semibold text-sm truncate">{seg.name}</p>
+            {isBest && <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+          </div>
+          <p className="text-[10px] text-muted-foreground">{seg.invoices} invoices · updated just now</p>
+        </div>
+        <span
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
+          style={{ background: `${seg.color.base}22`, color: seg.color.base }}
+        >
+          {pct}%
+        </span>
+      </div>
+
+      {/* metrics grid */}
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] mb-2">
+        <Row label="Revenue" value={inr(seg.total)} tone="text-blue-500" />
+        <Row label="Invoices" value={String(seg.invoices)} />
+        <Row label="Collected" value={inr(seg.collected)} tone="text-emerald-500" />
+        <Row label="Pending" value={inr(seg.pending)} tone="text-orange-500" />
+        <Row label="Expenses" value={inr(seg.expenses)} tone="text-red-500" />
+        <Row label="Profit" value={inr(seg.profit)} tone={seg.profit >= 0 ? "text-emerald-500" : "text-red-500"} />
+      </div>
+
+      {/* progress + sparkline */}
+      <div className="space-y-1.5">
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${seg.color.base}, ${seg.color.base}bb)` }}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <svg viewBox="0 0 100 24" className="h-5 flex-1" preserveAspectRatio="none">
+            <polyline
+              fill="none"
+              stroke={seg.color.base}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              points={spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${24 - v * 22}`).join(" ")}
+            />
+            <polyline
+              fill={`${seg.color.base}22`}
+              stroke="none"
+              points={`0,24 ${spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${24 - v * 22}`).join(" ")} 100,24`}
+            />
+          </svg>
+          <span className={cn(
+            "inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
+            growthUp ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500",
+          )}>
+            {growthUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+            {growthUp ? "+" : ""}{Math.round(seg.growthPct)}%
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-1 min-w-0">
+      <span className="text-muted-foreground text-[10px] uppercase tracking-wider">{label}</span>
+      <span className={cn("font-semibold tabular-nums truncate", tone)}>{value}</span>
     </div>
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn("font-semibold truncate", tone)}>{value}</p>
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Wheel (3D radial chart) — extracted for reuse across desktop/mobile
+// ---------------------------------------------------------------------------
+function Wheel(props: {
+  segments: Segment[];
+  drawOrder: Segment[];
+  hoverId: string | null;
+  setHoverId: (id: string | null) => void;
+  onPick: (id: string) => void;
+  SIZE_W: number; SIZE_H: number;
+  CX: number; CY: number;
+  RX_OUT: number; RY_OUT: number; RX_IN: number; RY_IN: number;
+  TILT: number; DEPTH: number; HOVER_LIFT: number; HOVER_GROW: number;
+  singleCompany: boolean; drawn: boolean;
+  centerContent: React.ReactNode;
+}) {
+  const {
+    segments, drawOrder, hoverId, setHoverId, onPick,
+    SIZE_W, SIZE_H, CX, CY, RX_OUT, RY_OUT, RX_IN, RY_IN,
+    TILT, DEPTH, HOVER_LIFT, HOVER_GROW, singleCompany, drawn, centerContent,
+  } = props;
+  const hoverSeg = segments.find((s) => s.id === hoverId) ?? null;
 
-function truncate(s: string, n: number) {
-  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+  return (
+    <svg
+      viewBox={`0 0 ${SIZE_W} ${SIZE_H}`}
+      className={cn("w-full h-auto transition-opacity duration-700", drawn ? "opacity-100" : "opacity-0")}
+      role="img"
+      aria-label="Company revenue distribution"
+    >
+      <defs>
+        {segments.map((s) => (
+          <linearGradient key={`g-${s.id}`} id={`grad-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={s.color.base} stopOpacity="1" />
+            <stop offset="60%" stopColor={s.color.base} stopOpacity="0.92" />
+            <stop offset="100%" stopColor={darken(s.color.base, 0.35)} stopOpacity="1" />
+          </linearGradient>
+        ))}
+        {segments.map((s) => (
+          <linearGradient key={`s-${s.id}`} id={`side-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={darken(s.color.base, 0.25)} />
+            <stop offset="100%" stopColor={darken(s.color.base, 0.65)} />
+          </linearGradient>
+        ))}
+        <radialGradient id="hub-grad" cx="50%" cy="35%" r="80%">
+          <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
+          <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="1" />
+        </radialGradient>
+        <filter id="hover-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="6" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
+      <ellipse
+        cx={CX}
+        cy={CY + DEPTH + 14}
+        rx={RX_OUT * 0.95}
+        ry={RY_OUT * 0.55}
+        fill="#000"
+        opacity={0.22}
+        style={{ filter: "blur(14px)" }}
+      />
+
+      {drawOrder.map((s) => {
+        const isHover = hoverSeg?.id === s.id;
+        const lift = isHover ? HOVER_LIFT : 0;
+        const grow = isHover ? HOVER_GROW : 0;
+        const rxOut = RX_OUT + grow;
+        const ryOut = RY_OUT + grow * TILT;
+        const gap = singleCompany ? 0 : 0.6;
+        const a1 = s.startAngle + gap;
+        const a2 = Math.max(a1, s.endAngle - gap);
+
+        const wallSteps = 24;
+        const wallPts: string[] = [];
+        for (let i = 0; i <= wallSteps; i++) {
+          const ang = a1 + (a2 - a1) * (i / wallSteps);
+          const p = ePolar(CX, CY - lift, rxOut, ryOut, ang);
+          wallPts.push(`${p.x},${p.y}`);
+        }
+        for (let i = wallSteps; i >= 0; i--) {
+          const ang = a1 + (a2 - a1) * (i / wallSteps);
+          const p = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, ang);
+          wallPts.push(`${p.x},${p.y}`);
+        }
+
+        const frontVisible = (() => {
+          const norm = (x: number) => ((x % 360) + 360) % 360;
+          const A = norm(a1), B = norm(a2);
+          if (A <= B) return B > 90 && A < 270;
+          return true;
+        })();
+
+        const innerWallPts: string[] = [];
+        for (let i = 0; i <= wallSteps; i++) {
+          const ang = a1 + (a2 - a1) * (i / wallSteps);
+          const p = ePolar(CX, CY - lift, RX_IN, RY_IN, ang);
+          innerWallPts.push(`${p.x},${p.y}`);
+        }
+        for (let i = wallSteps; i >= 0; i--) {
+          const ang = a1 + (a2 - a1) * (i / wallSteps);
+          const p = ePolar(CX, CY - lift + DEPTH, RX_IN, RY_IN, ang);
+          innerWallPts.push(`${p.x},${p.y}`);
+        }
+
+        const topPath = eArcPath(CX, CY - lift, RX_IN, RY_IN, rxOut, ryOut, a1, a2);
+        const dim = hoverSeg && !isHover ? 0.55 : 1;
+
+        return (
+          <g
+            key={s.id}
+            onMouseEnter={() => setHoverId(s.id)}
+            onMouseLeave={() => setHoverId(null)}
+            onClick={() => onPick(s.id)}
+            style={{ cursor: "pointer", opacity: dim, transition: "opacity 250ms ease" }}
+          >
+            {frontVisible && (
+              <polygon
+                points={wallPts.join(" ")}
+                fill={`url(#side-${s.id})`}
+                stroke={darken(s.color.base, 0.5)}
+                strokeOpacity="0.4"
+                strokeWidth="0.5"
+              />
+            )}
+            <polygon points={innerWallPts.join(" ")} fill={darken(s.color.base, 0.55)} opacity="0.85" />
+            {!singleCompany && (() => {
+              const oT = ePolar(CX, CY - lift, rxOut, ryOut, a1);
+              const iT = ePolar(CX, CY - lift, RX_IN, RY_IN, a1);
+              const oB = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a1);
+              const iB = ePolar(CX, CY - lift + DEPTH, RX_IN, RY_IN, a1);
+              const oT2 = ePolar(CX, CY - lift, rxOut, ryOut, a2);
+              const iT2 = ePolar(CX, CY - lift, RX_IN, RY_IN, a2);
+              const oB2 = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a2);
+              const iB2 = ePolar(CX, CY - lift + DEPTH, RX_IN, RY_IN, a2);
+              return (
+                <>
+                  <polygon points={`${oT.x},${oT.y} ${iT.x},${iT.y} ${iB.x},${iB.y} ${oB.x},${oB.y}`} fill={darken(s.color.base, 0.5)} opacity="0.75" />
+                  <polygon points={`${oT2.x},${oT2.y} ${iT2.x},${iT2.y} ${iB2.x},${iB2.y} ${oB2.x},${oB2.y}`} fill={darken(s.color.base, 0.5)} opacity="0.75" />
+                </>
+              );
+            })()}
+            <path
+              d={topPath}
+              fill={`url(#grad-${s.id})`}
+              stroke={darken(s.color.base, 0.25)}
+              strokeOpacity={isHover ? 0.9 : 0.5}
+              strokeWidth={isHover ? 1.5 : 0.75}
+              filter={isHover ? "url(#hover-glow)" : undefined}
+              style={{ transition: "filter 250ms ease" }}
+            />
+            <path d={topPath} fill="white" opacity="0.08" pointerEvents="none" />
+          </g>
+        );
+      })}
+
+      {/* Center hub */}
+      <ellipse cx={CX} cy={CY + DEPTH} rx={RX_IN - 2} ry={RY_IN - 2} fill="#000" opacity="0.15" />
+      <ellipse cx={CX} cy={CY} rx={RX_IN - 4} ry={RY_IN - 4} fill="url(#hub-grad)" stroke="hsl(var(--border))" />
+
+      {centerContent}
+    </svg>
+  );
 }

@@ -348,10 +348,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 
   return (
-    <Card className="overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">
+    <Card className="min-w-0 max-w-full overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">
       {/* HEADER */}
-      <div className="border-b border-border/60 bg-gradient-to-r from-card/80 via-card/60 to-card/80 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="border-b border-border/60 bg-gradient-to-r from-card/80 via-card/60 to-card/80 p-3 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/20">

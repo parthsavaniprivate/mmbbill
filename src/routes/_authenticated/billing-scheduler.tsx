@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarClock, AlertTriangle, TrendingUp, IndianRupee, Users, ArrowRight } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
-import { daysBetween, priorityForOverdue, intervalMonths, todayISO, type BillingType } from "@/lib/billing/cycle";
+import { daysBetween, priorityForOverdue, intervalMonths, todayISO, computeServiceAmount, computeBillingPeriod, formatPeriodShort, type BillingType } from "@/lib/billing/cycle";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/billing-scheduler")({
@@ -27,7 +27,7 @@ type Row = {
   last_generated_date: string | null;
   is_active: boolean;
   clients?: { client_name: string; business_name: string | null } | null;
-  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string }[];
+  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string; interval_months: number | null }[];
 };
 
 function BillingSchedulerPage() {
@@ -40,7 +40,7 @@ function BillingSchedulerPage() {
     queryFn: async () => {
       let q = supabase
         .from("billing_schedules")
-        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, last_generated_date, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit)")
+        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, last_generated_date, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit, interval_months)")
         .eq("is_active", true);
       if (!isAll) q = q.eq("company_id", selected);
       const { data } = await q.order("next_billing_date", { ascending: true });
@@ -77,11 +77,21 @@ function BillingSchedulerPage() {
   const analytics = useMemo(() => {
     const thisMonth = today.slice(0, 7);
     const generatedThisMonth = invoices.filter((i) => i.source_schedule_id && i.invoice_date.slice(0, 7) === thisMonth).length;
-    const rowTotal = (r: Row) => (r.billing_schedule_services ?? []).reduce((s, x) => s + Number(x.price || 0), 0);
+    const rowTotal = (r: Row) => {
+      const step = intervalMonths(r.billing_type, r.custom_interval_months);
+      return (r.billing_schedule_services ?? []).reduce((s, x) => {
+        const iv = Number(x.interval_months ?? step);
+        return s + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+      }, 0);
+    };
     const upcoming30 = [...buckets.dueToday, ...buckets.week, ...buckets.month].reduce((s, r) => s + rowTotal(r), 0);
     const mrr = rows.reduce((s, r) => {
-      const step = intervalMonths(r.billing_type, r.custom_interval_months);
-      return s + rowTotal(r) / step;
+      return s + (r.billing_schedule_services ?? []).reduce((sum, x) => {
+        const p = Number(x.price || 0);
+        if (x.unit === "one_time") return sum;
+        if (x.unit === "year") return sum + p / 12;
+        return sum + p;
+      }, 0);
     }, 0);
     return {
       generated: generatedThisMonth,
@@ -174,30 +184,68 @@ function RowGroup({ title, rows, today, tone }: { title: string; rows: Row[]; to
         </CardTitle>
         <Badge variant="outline">{rows.length}</Badge>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         {rows.map((r) => {
           const name = r.clients?.business_name || r.clients?.client_name || "Client";
-          const services = (r.billing_schedule_services ?? []).map((x) => x.service_name).slice(0, 3).join(", ");
-          const total = (r.billing_schedule_services ?? []).reduce((s, x) => s + Number(x.price || 0), 0);
+          const step = intervalMonths(r.billing_type, r.custom_interval_months);
+          const periodStart = r.last_generated_date
+            ? (() => { const d = new Date(r.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
+            : r.next_billing_date;
+          const svcs = r.billing_schedule_services ?? [];
+          const total = svcs.reduce((s, x) => {
+            const iv = Number(x.interval_months ?? step);
+            return s + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+          }, 0);
           const overdueDays = -daysBetween(today, r.next_billing_date);
           const priority = overdueDays > 0 ? priorityForOverdue(overdueDays) : null;
           return (
-            <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-card/50 p-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link to="/clients/$id" params={{ id: r.client_id }} className="font-medium hover:underline truncate">{name}</Link>
-                  {overdueDays > 0 && <Badge variant="destructive">{overdueDays}d overdue</Badge>}
-                  {priority && <Badge variant={priority === "high" ? "destructive" : "outline"}>{priority}</Badge>}
+            <div key={r.id} className="rounded-lg border border-border/60 bg-card/50 p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Link to="/clients/$id" params={{ id: r.client_id }} className="font-medium hover:underline truncate">{name}</Link>
+                    {overdueDays > 0 && <Badge variant="destructive">{overdueDays}d overdue</Badge>}
+                    {priority && <Badge variant={priority === "high" ? "destructive" : "outline"}>{priority}</Badge>}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Next Billing: <span className="text-foreground font-medium">{formatDate(r.next_billing_date)}</span>
+                    <span className="mx-2">·</span>
+                    Invoice Total: <span className="text-foreground font-semibold">{inr(total)}</span>
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {services || "No services"} · {inr(total)} · {formatDate(r.next_billing_date)}
-                </div>
+                <Button asChild size="sm">
+                  <Link to="/invoices/new" search={{ client: r.client_id, schedule: r.id }}>
+                    Generate <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Link>
+                </Button>
               </div>
-              <Button asChild size="sm">
-                <Link to="/invoices/new" search={{ client: r.client_id, schedule: r.id }}>
-                  Generate <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Link>
-              </Button>
+              {svcs.length > 0 && (
+                <div className="space-y-1 pl-1 border-l-2 border-primary/30">
+                  {svcs.map((x, i) => {
+                    const iv = Number(x.interval_months ?? step);
+                    const rate = Number(x.price || 0);
+                    const amount = x.unit === "one_time" ? rate : computeServiceAmount(rate, iv);
+                    const period = x.unit === "one_time" ? null : computeBillingPeriod(periodStart, iv);
+                    return (
+                      <div key={i} className="pl-2 text-xs">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="font-medium text-foreground">{x.service_name}</span>
+                          <span className="text-muted-foreground">
+                            {inr(rate)} / {x.unit === "year" ? "Year" : x.unit === "one_time" ? "one-time" : "Month"}
+                            {x.unit !== "one_time" && <> × {iv} {iv === 1 ? "Month" : "Months"}</>}
+                            {" = "}<b className="text-foreground">{inr(amount)}</b>
+                          </span>
+                        </div>
+                        {period && (
+                          <div className="text-[11px] text-muted-foreground">
+                            Period: {formatPeriodShort(period.start, period.end)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
@@ -239,7 +287,11 @@ function CalendarView({ rows, today }: { rows: Row[]; today: string }) {
           {dayRows.length === 0 && <div className="text-sm text-muted-foreground">No billing on this date.</div>}
           {dayRows.map((r) => {
             const name = r.clients?.business_name || r.clients?.client_name || "Client";
-            const total = (r.billing_schedule_services ?? []).reduce((s, x) => s + Number(x.price || 0), 0);
+            const step = intervalMonths(r.billing_type, r.custom_interval_months);
+            const total = (r.billing_schedule_services ?? []).reduce((s, x) => {
+              const iv = Number(x.interval_months ?? step);
+              return s + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+            }, 0);
             return (
               <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 p-2">
                 <div className="min-w-0">

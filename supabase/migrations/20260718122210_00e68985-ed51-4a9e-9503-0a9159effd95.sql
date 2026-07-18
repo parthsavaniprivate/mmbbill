@@ -1,0 +1,1 @@
+ALTER TABLE public.billing_schedule_services ADD COLUMN IF NOT EXISTS interval_months INT;

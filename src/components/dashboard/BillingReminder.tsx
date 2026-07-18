@@ -8,17 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, AlertTriangle, ArrowRight } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
-import { daysBetween, priorityForOverdue, todayISO } from "@/lib/billing/cycle";
+import { daysBetween, priorityForOverdue, todayISO, intervalMonths, computeServiceAmount, type BillingType } from "@/lib/billing/cycle";
 
 type ScheduleRow = {
   id: string;
   company_id: string;
   client_id: string;
+  billing_type: BillingType;
+  custom_interval_months: number | null;
   next_billing_date: string;
   auto_suggest: boolean;
   is_active: boolean;
   clients?: { client_name: string; business_name: string | null } | null;
-  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string }[];
+  billing_schedule_services?: { service_name: string; price: number; gst_rate: number | null; unit: string; interval_months: number | null }[];
 };
 
 export function BillingReminder() {
@@ -31,7 +33,7 @@ export function BillingReminder() {
     queryFn: async () => {
       let q = supabase
         .from("billing_schedules")
-        .select("id, company_id, client_id, next_billing_date, auto_suggest, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit)")
+        .select("id, company_id, client_id, billing_type, custom_interval_months, next_billing_date, auto_suggest, is_active, clients(client_name, business_name), billing_schedule_services(service_name, price, gst_rate, unit, interval_months)")
         .eq("is_active", true)
         .eq("auto_suggest", true);
       if (!isAll) q = q.eq("company_id", selected);
@@ -93,7 +95,11 @@ function Group({ title, tone, rows, today }: { title: string; tone: "destructive
         {rows.slice(0, 5).map((s) => {
           const name = s.clients?.business_name || s.clients?.client_name || "Client";
           const services = (s.billing_schedule_services ?? []).map((x) => x.service_name).slice(0, 3).join(", ");
-          const total = (s.billing_schedule_services ?? []).reduce((sum, x) => sum + Number(x.price || 0), 0);
+          const step = intervalMonths(s.billing_type, s.custom_interval_months);
+          const total = (s.billing_schedule_services ?? []).reduce((sum, x) => {
+            const iv = Number(x.interval_months ?? step);
+            return sum + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+          }, 0);
           const overdueDays = -daysBetween(today, s.next_billing_date);
           const priority = overdueDays > 0 ? priorityForOverdue(overdueDays) : null;
           return (

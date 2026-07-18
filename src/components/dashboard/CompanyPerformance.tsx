@@ -36,7 +36,7 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                   {r.growthPct.toFixed(1)}%
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="min-w-0">
                   <p className="text-muted-foreground">Collected</p>
                   <p className="font-semibold text-emerald-500 truncate">{inr(r.collected)}</p>
@@ -44,10 +44,6 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                 <div className="min-w-0">
                   <p className="text-muted-foreground">Expenses</p>
                   <p className="font-semibold text-orange-500 truncate">{inr(r.expenses)}</p>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-muted-foreground">Profit</p>
-                  <p className={cn("font-bold truncate", r.profit >= 0 ? "text-emerald-500" : "text-red-500")}>{inr(r.profit)}</p>
                 </div>
               </div>
             </li>
@@ -63,7 +59,6 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                 <th className="text-right px-4 py-2">Invoices</th>
                 <th className="text-right px-4 py-2">Collected</th>
                 <th className="text-right px-4 py-2">Expenses</th>
-                <th className="text-right px-4 py-2">Profit</th>
                 <th className="text-right px-4 py-2">Growth</th>
               </tr>
             </thead>
@@ -74,7 +69,6 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                   <td className="px-4 py-2 text-right">{r.invoices}</td>
                   <td className="px-4 py-2 text-right text-emerald-500 font-semibold">{inr(r.collected)}</td>
                   <td className="px-4 py-2 text-right text-orange-500 font-semibold">{inr(r.expenses)}</td>
-                  <td className={cn("px-4 py-2 text-right font-bold", r.profit >= 0 ? "text-emerald-500" : "text-red-500")}>{inr(r.profit)}</td>
                   <td className="px-4 py-2 text-right">
                     <span className={cn("inline-flex items-center gap-1 font-semibold", r.growthPct >= 0 ? "text-emerald-500" : "text-red-500")}>
                       {r.growthPct >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -90,4 +84,3 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
     </Card>
   );
 }
-

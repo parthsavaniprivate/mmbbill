@@ -160,6 +160,7 @@ function NewInvoicePage() {
         gst_rate: Number(gstRate || 0),
         discount: Number(discount || 0),
         notes: notes.trim() || null, terms: terms.trim() || null,
+        source_schedule_id: scheduleId ?? null,
       }).select().single();
       if (error) throw error;
 
@@ -185,6 +186,18 @@ function NewInvoicePage() {
       if (itErr) throw itErr;
 
       await supabase.from("clients").update({ last_invoice_date: date }).eq("id", clientId);
+
+      // Advance the billing schedule (if this invoice originated from one)
+      if (scheduleId && schedule) {
+        const { intervalMonths, addMonths } = await import("@/lib/billing/cycle");
+        const step = intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
+        const nextDate = addMonths(schedule.next_billing_date ?? date, step);
+        await supabase.from("billing_schedules").update({
+          last_generated_date: date,
+          next_billing_date: nextDate,
+        }).eq("id", scheduleId);
+      }
+
       return inv.id;
     },
     onSuccess: (id) => { toast.success("Invoice created"); navigate({ to: "/invoices/$id", params: { id } }); },

@@ -15,6 +15,9 @@ import { ServiceCombobox } from "@/components/billing/ServiceCombobox";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourDot, BehaviourFilter, BehaviourInfoCard } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
   validateSearch: (s: Record<string, unknown>): { client?: string; schedule?: string } => ({

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2, Trash2, Upload, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { ClientLogo, fileToLogoDataUrl } from "@/components/clients/ClientLogo";
 
 type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Status = Database["public"]["Enums"]["client_status"];

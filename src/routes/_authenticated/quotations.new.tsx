@@ -103,7 +103,17 @@ function NewQuotationPage() {
           {items.map((it, idx) => (
             <div key={idx} className="grid grid-cols-12 gap-2 items-end">
               <div className="col-span-12 md:col-span-4 space-y-1"><Label className="text-xs">Item</Label>
-                <Input value={it.item_name} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, item_name: e.target.value } : x))} />
+                <ServiceCombobox
+                  value={it.item_name}
+                  companyId={companyId}
+                  onChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, item_name: v } : x))}
+                  onSelect={(svc) => setItems(items.map((x, i) => i === idx ? {
+                    ...x,
+                    item_name: svc.name,
+                    description: x.description || svc.description || "",
+                    amount: svc.default_price != null ? Number(svc.default_price) : x.amount,
+                  } : x))}
+                />
               </div>
               <div className="col-span-12 md:col-span-3 space-y-1"><Label className="text-xs">Description</Label>
                 <Input value={it.description} onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />

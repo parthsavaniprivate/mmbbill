@@ -52,8 +52,9 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-muted-foreground">Expenses</p>
-                    <p className="font-semibold text-orange-500 truncate">{inr(r.expenses)}</p>
+                    <p className="text-muted-foreground">Pending</p>
+                    <p className="font-semibold text-orange-500 truncate">{inr(Math.max(0, r.total - r.collected))}</p>
+                    <p className="text-[10px] font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</p>
                   </div>
                 </div>
               </li>
@@ -70,7 +71,7 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                 <th className="text-right px-4 py-2">Invoices</th>
                 <th className="text-right px-4 py-2">Total</th>
                 <th className="text-right px-4 py-2">Collected</th>
-                <th className="text-right px-4 py-2">Expenses</th>
+                <th className="text-right px-4 py-2">Pending</th>
               </tr>
             </thead>
             <tbody>
@@ -88,7 +89,10 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                         {pct.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-right text-orange-500 font-semibold">{inr(r.expenses)}</td>
+                    <td className="px-4 py-2 text-right font-semibold">
+                      <span className="text-orange-500">{inr(Math.max(0, r.total - r.collected))}</span>
+                      <span className="ml-2 text-xs font-medium text-orange-500/80">{(100 - pct).toFixed(1)}%</span>
+                    </td>
                   </tr>
                 );
               })}

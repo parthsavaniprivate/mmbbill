@@ -73,7 +73,7 @@ function EditInvoicePage() {
   const { data: companies = [] } = useQuery({
     queryKey: ["all-companies-edit"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("companies").select("id, name").order("name");
+      const { data, error } = await supabase.from("companies").select("id, name, gst_enabled, default_gst_rate").order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -89,6 +89,9 @@ function EditInvoicePage() {
       return data ?? [];
     },
   });
+  const activeCompany = companies.find((c) => c.id === companyId);
+  const gstEnabled = activeCompany?.gst_enabled ?? true;
+  const defaultGst = Number(activeCompany?.default_gst_rate ?? 18);
 
   useEffect(() => {
     if (!data?.inv) return;

@@ -236,47 +236,87 @@ function ExpensesPage() {
             {scopedRecurring.length === 0 ? (
               <div className="p-10 text-center text-muted-foreground text-sm">No fixed expenses yet.</div>
             ) : (
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead>Name</TableHead><TableHead>Company</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Cycle</TableHead><TableHead>Next Due</TableHead>
-                  <TableHead>Status</TableHead><TableHead></TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile card list */}
+                <div className="sm:hidden divide-y">
                   {scopedRecurring.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.title}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === r.company_id)?.name}</TableCell>
-                      <TableCell className="text-right font-medium">{inr(Number(r.amount))}</TableCell>
-                      <TableCell><Badge variant="outline">{CYCLES.find((c) => c.value === r.cycle)?.label}</Badge></TableCell>
-                      <TableCell>{r.next_due_date ? formatDate(r.next_due_date) : "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={r.is_active}
-                            onCheckedChange={(v) => toggleActive.mutate({ id: r.id, value: v })}
-                          />
-                          {r.is_active
-                            ? <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Active</span>
-                            : <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><XCircle className="w-3 h-3" />Inactive</span>}
+                    <div key={r.id} className="p-3 space-y-2 min-w-0">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold truncate">{r.title}</div>
+                          <div className="text-xs text-muted-foreground truncate">{companies.find((c) => c.id === r.company_id)?.name}</div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => { setEditingFix(r); setOpenFix(true); }}>
+                        <div className="text-right shrink-0">
+                          <div className="font-semibold">{inr(Number(r.amount))}</div>
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{CYCLES.find((c) => c.value === r.cycle)?.label}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        <Badge variant="outline" className="text-[10px]">Next: {r.next_due_date ? formatDate(r.next_due_date) : "—"}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Switch checked={r.is_active} onCheckedChange={(v) => toggleActive.mutate({ id: r.id, value: v })} />
+                          {r.is_active
+                            ? <span className="text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Active</span>
+                            : <span className="text-muted-foreground inline-flex items-center gap-1"><XCircle className="w-3 h-3" />Inactive</span>}
+                        </div>
+                        <div className="ml-auto flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingFix(r); setOpenFix(true); }}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => delRecurring.mutate(r.id)}>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => delRecurring.mutate(r.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+                {/* Desktop table */}
+                <div className="hidden sm:block">
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead>Name</TableHead><TableHead>Company</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Cycle</TableHead><TableHead>Next Due</TableHead>
+                    <TableHead>Status</TableHead><TableHead></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {scopedRecurring.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">{r.title}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === r.company_id)?.name}</TableCell>
+                        <TableCell className="text-right font-medium">{inr(Number(r.amount))}</TableCell>
+                        <TableCell><Badge variant="outline">{CYCLES.find((c) => c.value === r.cycle)?.label}</Badge></TableCell>
+                        <TableCell>{r.next_due_date ? formatDate(r.next_due_date) : "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={r.is_active}
+                              onCheckedChange={(v) => toggleActive.mutate({ id: r.id, value: v })}
+                            />
+                            {r.is_active
+                              ? <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Active</span>
+                              : <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><XCircle className="w-3 h-3" />Inactive</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => { setEditingFix(r); setOpenFix(true); }}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => delRecurring.mutate(r.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                </div>
+              </>
             )}
+
           </CardContent>
         </Card>
 
@@ -330,31 +370,61 @@ function ExpensesPage() {
           {variableExpenses.length === 0 ? (
             <div className="p-10 text-center text-muted-foreground text-sm">No variable expenses for this period.</div>
           ) : (
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Date</TableHead><TableHead>Category</TableHead>
-                <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
-                <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card list */}
+              <div className="sm:hidden divide-y">
                 {variableExpenses.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell>{formatDate(e.expense_date)}</TableCell>
-                    <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
-                    <TableCell>{e.vendor || "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
-                    <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <div key={e.id} className="p-3 space-y-2 min-w-0">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold truncate">{e.vendor || CATEGORIES.find((c) => c.value === e.category)?.label}</div>
+                        <div className="text-xs text-muted-foreground truncate">{companies.find((c) => c.id === e.company_id)?.name}</div>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                      <div className="text-right shrink-0">
+                        <div className="font-semibold">{inr(Number(e.amount))}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatDate(e.expense_date)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-[10px] max-w-full"><span className="truncate">{CATEGORIES.find((c) => c.value === e.category)?.label}</span></Badge>
+                      <div className="ml-auto flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Date</TableHead><TableHead>Category</TableHead>
+                  <TableHead>Vendor</TableHead><TableHead>Company</TableHead>
+                  <TableHead className="text-right">Amount</TableHead><TableHead></TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {variableExpenses.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell>{formatDate(e.expense_date)}</TableCell>
+                      <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
+                      <TableCell>{e.vendor || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
+                      <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => { setEditingVar(e); setOpenVar(true); }}><Pencil className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => delExpense.mutate(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              </div>
+            </>
           )}
+
         </CardContent>
       </Card>
     </div>

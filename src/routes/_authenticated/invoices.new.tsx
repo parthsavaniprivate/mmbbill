@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { intervalMonths as _intervalMonths, addMonths as _addMonths, BILLING_TYPE_OPTIONS } from "@/lib/billing/cycle";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -84,6 +85,23 @@ function NewInvoicePage() {
         .from("billing_schedules")
         .select("id, client_id, company_id, billing_type, custom_interval_months, next_billing_date, billing_schedule_services(service_name, price, gst_rate, unit, position)")
         .eq("id", scheduleId!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Fetch the client's active billing schedule (for the Early Billing Warning)
+  const { data: clientSchedule } = useQuery({
+    queryKey: ["client-schedule-warning", clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("billing_schedules")
+        .select("id, billing_type, custom_interval_months, next_billing_date, is_active")
+        .eq("client_id", clientId!)
+        .eq("is_active", true)
+        .order("next_billing_date", { ascending: true })
+        .limit(1)
         .maybeSingle();
       return data;
     },
@@ -188,15 +206,16 @@ function NewInvoicePage() {
 
       await supabase.from("clients").update({ last_invoice_date: date }).eq("id", clientId);
 
-      // Advance the billing schedule (if this invoice originated from one)
-      if (scheduleId && schedule) {
-        const { intervalMonths, addMonths } = await import("@/lib/billing/cycle");
-        const step = intervalMonths(schedule.billing_type as never, schedule.custom_interval_months);
-        const nextDate = addMonths(schedule.next_billing_date ?? date, step);
+      // Advance the billing schedule (originating schedule OR the client's active schedule)
+      const advanceId = scheduleId ?? clientSchedule?.id;
+      const advanceSrc = scheduleId ? schedule : clientSchedule;
+      if (advanceId && advanceSrc) {
+        const step = _intervalMonths(advanceSrc.billing_type as never, advanceSrc.custom_interval_months);
+        const nextDate = _addMonths(advanceSrc.next_billing_date ?? date, step);
         await supabase.from("billing_schedules").update({
           last_generated_date: date,
           next_billing_date: nextDate,
-        }).eq("id", scheduleId);
+        }).eq("id", advanceId);
       }
 
       return inv.id;
@@ -237,6 +256,14 @@ function NewInvoicePage() {
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => { setDate(e.target.value); if (e.target.value) setDueDate(addMonth(e.target.value)); }} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
       </CardContent></Card>
+      {clientId && clientSchedule?.next_billing_date && (
+        <BillingWarningCard
+          nextBillingDate={clientSchedule.next_billing_date}
+          billingType={clientSchedule.billing_type}
+          customMonths={clientSchedule.custom_interval_months}
+          invoiceDate={date}
+        />
+      )}
 
 
 
@@ -385,6 +412,56 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   return (
     <div className={`flex justify-between text-sm ${bold ? "font-bold text-base" : ""}`}>
       <span className="text-muted-foreground">{label}</span><span>{value}</span>
+    </div>
+  );
+}
+
+function BillingWarningCard({
+  nextBillingDate, billingType, customMonths, invoiceDate,
+}: { nextBillingDate: string; billingType: string; customMonths: number | null; invoiceDate: string }) {
+  const fmt = (s: string) => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+  const today = invoiceDate || new Date().toISOString().slice(0, 10);
+  const diffDays = Math.round(
+    (new Date(nextBillingDate + "T00:00:00").getTime() - new Date(today + "T00:00:00").getTime()) / 86400000
+  );
+  const cycleLabel =
+    billingType === "custom"
+      ? `Every ${customMonths || 1} Month${(customMonths || 1) > 1 ? "s" : ""}`
+      : (BILLING_TYPE_OPTIONS.find((o) => o.value === billingType)?.label ?? billingType);
+
+  if (diffDays > 0) {
+    return (
+      <div className="rounded-xl border border-amber-400/60 bg-amber-50 dark:bg-amber-500/10 p-4 flex gap-3 shadow-sm">
+        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-1 text-sm">
+          <div className="font-semibold text-amber-900 dark:text-amber-200">Billing Cycle Warning</div>
+          <div className="text-amber-800 dark:text-amber-100/90">This client is not yet due for billing.</div>
+          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-amber-900 dark:text-amber-100">
+            <div><span className="opacity-70">Next Billing Date:</span> <span className="font-medium">{fmt(nextBillingDate)}</span></div>
+            <div><span className="opacity-70">Billing Cycle:</span> <span className="font-medium">{cycleLabel}</span></div>
+          </div>
+          <div className="text-amber-800 dark:text-amber-100/90 pt-1">
+            You are creating this invoice <span className="font-semibold">{diffDays} day{diffDays > 1 ? "s" : ""} early</span>. This invoice can still be created if required.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const overdue = -diffDays;
+  return (
+    <div className="rounded-xl border border-emerald-400/60 bg-emerald-50 dark:bg-emerald-500/10 p-4 flex gap-3 shadow-sm">
+      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+      <div className="space-y-1 text-sm">
+        <div className="font-semibold text-emerald-900 dark:text-emerald-200">Ready for Billing</div>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-emerald-900 dark:text-emerald-100">
+          <div>
+            <span className="opacity-70">Next Billing Date:</span>{" "}
+            <span className="font-medium">{overdue === 0 ? "Today" : `Overdue by ${overdue} day${overdue > 1 ? "s" : ""}`}</span>
+          </div>
+          <div><span className="opacity-70">Billing Cycle:</span> <span className="font-medium">{cycleLabel}</span></div>
+        </div>
+      </div>
     </div>
   );
 }

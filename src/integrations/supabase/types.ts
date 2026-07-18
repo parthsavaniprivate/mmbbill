@@ -161,6 +161,7 @@ export type Database = {
           last_invoice_date: string | null
           last_meta_sync: string | null
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           mobile: string | null
           notes: string | null
@@ -188,6 +189,7 @@ export type Database = {
           last_invoice_date?: string | null
           last_meta_sync?: string | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           mobile?: string | null
           notes?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           last_invoice_date?: string | null
           last_meta_sync?: string | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           mobile?: string | null
           notes?: string | null

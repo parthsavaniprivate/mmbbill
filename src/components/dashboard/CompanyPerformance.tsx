@@ -46,7 +46,10 @@ export function CompanyPerformance({ rows }: { rows: CompanyRow[] }) {
                   <div className="min-w-0">
                     <p className="text-muted-foreground">Collected</p>
                     <p className="font-semibold text-emerald-500 truncate">{inr(r.collected)}</p>
-                    <p className="text-[10px] font-medium text-emerald-500/80">{pct.toFixed(1)}%</p>
+                    <p className={cn("text-[10px] font-medium inline-flex items-center gap-0.5", pct >= 100 ? "text-emerald-500" : "text-red-500")}>
+                      {pct >= 100 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                      {pct.toFixed(1)}%
+                    </p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-muted-foreground">Expenses</p>

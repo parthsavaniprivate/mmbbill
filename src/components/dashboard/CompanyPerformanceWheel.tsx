@@ -8,21 +8,20 @@ import type { CompanyRow } from "./CompanyPerformance";
 
 // Premium palette — stable across the app (index-based per company id sort order)
 const PALETTE = [
-  { base: "#3b82f6", glow: "rgba(59,130,246,0.55)" },   // blue
-  { base: "#a855f7", glow: "rgba(168,85,247,0.55)" },   // purple
-  { base: "#f97316", glow: "rgba(249,115,22,0.55)" },   // orange
-  { base: "#10b981", glow: "rgba(16,185,129,0.55)" },   // emerald
-  { base: "#ec4899", glow: "rgba(236,72,153,0.55)" },   // pink
-  { base: "#14b8a6", glow: "rgba(20,184,166,0.55)" },   // teal
-  { base: "#eab308", glow: "rgba(234,179,8,0.55)" },    // yellow
-  { base: "#6366f1", glow: "rgba(99,102,241,0.55)" },   // indigo
-  { base: "#ef4444", glow: "rgba(239,68,68,0.55)" },    // red
-  { base: "#06b6d4", glow: "rgba(6,182,212,0.55)" },    // cyan
+  { base: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { base: "#a855f7", glow: "rgba(168,85,247,0.55)" },
+  { base: "#f97316", glow: "rgba(249,115,22,0.55)" },
+  { base: "#10b981", glow: "rgba(16,185,129,0.55)" },
+  { base: "#ec4899", glow: "rgba(236,72,153,0.55)" },
+  { base: "#14b8a6", glow: "rgba(20,184,166,0.55)" },
+  { base: "#eab308", glow: "rgba(234,179,8,0.55)" },
+  { base: "#6366f1", glow: "rgba(99,102,241,0.55)" },
+  { base: "#ef4444", glow: "rgba(239,68,68,0.55)" },
+  { base: "#06b6d4", glow: "rgba(6,182,212,0.55)" },
 ];
 
 const colorFor = (idx: number) => PALETTE[idx % PALETTE.length];
 
-// Simple animated count-up (integer INR)
 function useCountUp(target: number, duration = 900) {
   const [val, setVal] = useState(0);
   const start = useRef<number | null>(null);
@@ -45,30 +44,46 @@ function useCountUp(target: number, duration = 900) {
   return val;
 }
 
-// Polar helpers
-const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
+// Elliptical polar point (tilted top-down view). angleDeg: 0 = top of ellipse.
+const ePolar = (cx: number, cy: number, rx: number, ry: number, angleDeg: number) => {
   const a = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
 };
-const arcPath = (cx: number, cy: number, rInner: number, rOuter: number, startAngle: number, endAngle: number) => {
+
+// Elliptical annulus arc (donut slice) with independent inner/outer rx,ry.
+const eArcPath = (
+  cx: number, cy: number,
+  rxIn: number, ryIn: number, rxOut: number, ryOut: number,
+  startAngle: number, endAngle: number,
+) => {
   const large = endAngle - startAngle > 180 ? 1 : 0;
-  const p1 = polar(cx, cy, rOuter, startAngle);
-  const p2 = polar(cx, cy, rOuter, endAngle);
-  const p3 = polar(cx, cy, rInner, endAngle);
-  const p4 = polar(cx, cy, rInner, startAngle);
+  const p1 = ePolar(cx, cy, rxOut, ryOut, startAngle);
+  const p2 = ePolar(cx, cy, rxOut, ryOut, endAngle);
+  const p3 = ePolar(cx, cy, rxIn, ryIn, endAngle);
+  const p4 = ePolar(cx, cy, rxIn, ryIn, startAngle);
   return [
     `M ${p1.x} ${p1.y}`,
-    `A ${rOuter} ${rOuter} 0 ${large} 1 ${p2.x} ${p2.y}`,
+    `A ${rxOut} ${ryOut} 0 ${large} 1 ${p2.x} ${p2.y}`,
     `L ${p3.x} ${p3.y}`,
-    `A ${rInner} ${rInner} 0 ${large} 0 ${p4.x} ${p4.y}`,
+    `A ${rxIn} ${ryIn} 0 ${large} 0 ${p4.x} ${p4.y}`,
     "Z",
   ].join(" ");
 };
 
+// Darken a hex color by mixing toward black.
+const darken = (hex: string, amt: number) => {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const mix = (c: number) => Math.max(0, Math.min(255, Math.round(c * (1 - amt))));
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+};
+
 interface Segment extends CompanyRow {
   pending: number;
-  pct: number;             // slice size (share of revenue)
-  collectionPct: number;   // collected / total
+  pct: number;
+  collectionPct: number;
   startAngle: number;
   endAngle: number;
   color: { base: string; glow: string };
@@ -87,14 +102,11 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
   const displayedRevenue = useCountUp(totalRevenue);
 
   const segments: Segment[] = useMemo(() => {
-    // Stable color per company id — sort ids alphabetically for consistency
     const idOrder = [...rows].map((r) => r.id).sort();
     const colorIndex = new Map(idOrder.map((id, i) => [id, i]));
     let angle = 0;
-    // Ensure at least a minimum visible slice even for tiny values
-    const safeTotal = totalRevenue > 0 ? totalRevenue : rows.length || 1;
     return rows.map((r) => {
-      const share = totalRevenue > 0 ? r.total / safeTotal : 1 / (rows.length || 1);
+      const share = totalRevenue > 0 ? r.total / totalRevenue : 1 / (rows.length || 1);
       const sweep = share * 360;
       const seg: Segment = {
         ...r,
@@ -113,12 +125,36 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 
   const singleCompany = segments.length === 1;
 
-  const SIZE = 560;
-  const CX = SIZE / 2;
-  const CY = SIZE / 2;
-  const R_OUTER = 250;
-  const R_INNER = 150;
-  const R_HOVER_OUT = 262;
+  // 3D geometry
+  const SIZE_W = 620;
+  const SIZE_H = 460;
+  const CX = SIZE_W / 2;
+  const CY = SIZE_H / 2 - 20;      // shift up to leave room for depth
+  const RX_OUT = 260;
+  const TILT = 0.5;                 // ellipse squish (ry/rx)
+  const RY_OUT = RX_OUT * TILT;
+  const RX_IN = 150;
+  const RY_IN = RX_IN * TILT;
+  const DEPTH = 42;                 // total 3D height
+  const HOVER_LIFT = 10;            // lift on hover
+  const HOVER_GROW = 12;            // extra radius on hover
+
+  // Draw order: back-to-front. In tilted view (viewer looks slightly down from
+  // the front), segments whose mid-angle is near 0/360 (top of ellipse) are
+  // FARTHEST; near 180 (bottom) are CLOSEST. Sort ascending by "closeness".
+  const closeness = (mid: number) => {
+    // 0 (top/back) -> 0 ; 180 (front) -> 1
+    const m = ((mid % 360) + 360) % 360;
+    return 1 - Math.cos((m * Math.PI) / 180) / 2 - 0.5; // = (1 - cos)/2
+  };
+  const drawOrder = [...segments].sort((a, b) => {
+    const ma = (a.startAngle + a.endAngle) / 2;
+    const mb = (b.startAngle + b.endAngle) / 2;
+    // hovered always last (on top)
+    if (hoverId && a.id === hoverId) return 1;
+    if (hoverId && b.id === hoverId) return -1;
+    return closeness(ma) - closeness(mb);
+  });
 
   const hoverSeg = segments.find((s) => s.id === hoverId) ?? null;
 
@@ -126,91 +162,209 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
     <Card className="shadow-card border-border/60 overflow-hidden">
       <CardHeader>
         <CardTitle>Company Performance</CardTitle>
-        <CardDescription>Radial share of revenue across companies — hover for details, click to drill in</CardDescription>
+        <CardDescription>3D radial share of revenue — hover for details, click to drill in</CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-6 items-center">
-          {/* Wheel */}
           <div className="relative w-full flex items-center justify-center">
             <svg
-              viewBox={`0 0 ${SIZE} ${SIZE}`}
-              className={cn("w-full max-w-[560px] h-auto transition-opacity duration-700", drawn ? "opacity-100" : "opacity-0")}
+              viewBox={`0 0 ${SIZE_W} ${SIZE_H}`}
+              className={cn("w-full max-w-[620px] h-auto transition-opacity duration-700", drawn ? "opacity-100" : "opacity-0")}
               role="img"
-              aria-label="Company revenue distribution"
+              aria-label="3D company revenue distribution"
             >
               <defs>
                 {segments.map((s) => (
-                  <radialGradient key={`g-${s.id}`} id={`grad-${s.id}`} cx="50%" cy="50%" r="65%">
-                    <stop offset="0%" stopColor={s.color.base} stopOpacity="0.55" />
-                    <stop offset="100%" stopColor={s.color.base} stopOpacity="1" />
-                  </radialGradient>
+                  <linearGradient key={`g-${s.id}`} id={`grad-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={s.color.base} stopOpacity="1" />
+                    <stop offset="60%" stopColor={s.color.base} stopOpacity="0.92" />
+                    <stop offset="100%" stopColor={darken(s.color.base, 0.35)} stopOpacity="1" />
+                  </linearGradient>
                 ))}
-                <filter id="wheel-glow" x="-20%" y="-20%" width="140%" height="140%">
+                {segments.map((s) => (
+                  <linearGradient key={`s-${s.id}`} id={`side-${s.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={darken(s.color.base, 0.25)} />
+                    <stop offset="100%" stopColor={darken(s.color.base, 0.65)} />
+                  </linearGradient>
+                ))}
+                <radialGradient id="hub-grad" cx="50%" cy="35%" r="80%">
+                  <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
+                  <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="1" />
+                </radialGradient>
+                <filter id="wheel-shadow" x="-20%" y="-20%" width="140%" height="160%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="8" />
+                  <feOffset dy="10" result="off" />
+                  <feComponentTransfer><feFuncA type="linear" slope="0.35" /></feComponentTransfer>
+                  <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="hover-glow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="6" result="b" />
-                  <feMerge>
-                    <feMergeNode in="b" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
                 </filter>
               </defs>
 
-              {/* Backdrop ring */}
-              <circle cx={CX} cy={CY} r={R_OUTER + 6} fill="none" stroke="hsl(var(--border))" strokeOpacity="0.35" strokeWidth="1" />
-              <circle cx={CX} cy={CY} r={R_INNER - 6} fill="none" stroke="hsl(var(--border))" strokeOpacity="0.35" strokeWidth="1" />
+              {/* Ground shadow */}
+              <ellipse
+                cx={CX}
+                cy={CY + DEPTH + 14}
+                rx={RX_OUT * 0.95}
+                ry={RY_OUT * 0.55}
+                fill="#000"
+                opacity={0.22}
+                style={{ filter: "blur(14px)" }}
+              />
 
-              {segments.map((s) => {
+              {/* Segments — extruded 3D */}
+              {drawOrder.map((s) => {
                 const isHover = hoverSeg?.id === s.id;
-                const outer = isHover ? R_HOVER_OUT : R_OUTER;
-                // Slight gap between segments unless single company
+                const lift = isHover ? HOVER_LIFT : 0;
+                const grow = isHover ? HOVER_GROW : 0;
+                const rxOut = RX_OUT + grow;
+                const ryOut = RY_OUT + grow * TILT;
                 const gap = singleCompany ? 0 : 0.6;
-                const path = arcPath(
-                  CX, CY, R_INNER, outer,
-                  s.startAngle + gap,
-                  Math.max(s.startAngle + gap, s.endAngle - gap),
-                );
-                // Label position (mid-angle, at mid-radius)
-                const mid = (s.startAngle + s.endAngle) / 2;
-                const labelR = (R_INNER + outer) / 2;
-                const lp = polar(CX, CY, labelR, mid);
-                const showLabel = s.pct >= 6 || singleCompany;
+                const a1 = s.startAngle + gap;
+                const a2 = Math.max(a1, s.endAngle - gap);
+
+                // ---- Side wall (extrusion) ----
+                // Build wall polygon: outer arc top -> outer arc bottom, only visible
+                // where segment crosses the "front" (angles 90..270 in top-based coords).
+                const wallSteps = 28;
+                const wallPts: string[] = [];
+                for (let i = 0; i <= wallSteps; i++) {
+                  const ang = a1 + (a2 - a1) * (i / wallSteps);
+                  const p = ePolar(CX, CY - lift, rxOut, ryOut, ang);
+                  wallPts.push(`${p.x},${p.y}`);
+                }
+                for (let i = wallSteps; i >= 0; i--) {
+                  const ang = a1 + (a2 - a1) * (i / wallSteps);
+                  const p = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, ang);
+                  wallPts.push(`${p.x},${p.y}`);
+                }
+
+                // Determine if a wall is visible at all: any angle in [a1,a2] with
+                // sin(angle-90) > 0 → y goes down (front). We approximate: render
+                // wall only when part of the arc is on the front half. If entirely
+                // back (a2 < 180 or a1 > 360 etc.), skip wall to reduce clutter.
+                const frontVisible = (() => {
+                  // The front half is angles where ePolar's y is greater than cy.
+                  // ePolar uses angle-90 rotation: y = cy + ry*sin(angle-90).
+                  // sin(angle-90) > 0 when angle in (90, 270).
+                  const norm = (x: number) => ((x % 360) + 360) % 360;
+                  const A = norm(a1), B = norm(a2);
+                  if (A <= B) return B > 90 && A < 270;
+                  return true; // wraps
+                })();
+
+                // ---- Inner wall (donut hole) ----
+                const rxIn = RX_IN;
+                const ryIn = RY_IN;
+                const innerWallPts: string[] = [];
+                for (let i = 0; i <= wallSteps; i++) {
+                  const ang = a1 + (a2 - a1) * (i / wallSteps);
+                  const p = ePolar(CX, CY - lift, rxIn, ryIn, ang);
+                  innerWallPts.push(`${p.x},${p.y}`);
+                }
+                for (let i = wallSteps; i >= 0; i--) {
+                  const ang = a1 + (a2 - a1) * (i / wallSteps);
+                  const p = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, ang);
+                  innerWallPts.push(`${p.x},${p.y}`);
+                }
+
+                // ---- Top face ----
+                const topPath = eArcPath(CX, CY - lift, rxIn, ryIn, rxOut, ryOut, a1, a2);
+
+                // Label at mid-angle
+                const mid = (a1 + a2) / 2;
+                const labelR = (rxOut + rxIn) / 2;
+                const labelRy = (ryOut + ryIn) / 2;
+                const lp = ePolar(CX, CY - lift, labelR, labelRy, mid);
+                const showLabel = s.pct >= 7 || singleCompany;
+
+                const dim = hoverSeg && !isHover ? 0.55 : 1;
+
                 return (
                   <g
                     key={s.id}
                     onMouseEnter={() => setHoverId(s.id)}
                     onMouseLeave={() => setHoverId(null)}
                     onClick={() => setSelected(s.id)}
-                    style={{ cursor: "pointer", transformOrigin: `${CX}px ${CY}px` }}
-                    className="transition-transform duration-300"
+                    style={{ cursor: "pointer", opacity: dim, transition: "opacity 250ms ease" }}
                   >
+                    {/* Outer wall */}
+                    {frontVisible && (
+                      <polygon
+                        points={wallPts.join(" ")}
+                        fill={`url(#side-${s.id})`}
+                        stroke={darken(s.color.base, 0.5)}
+                        strokeOpacity="0.4"
+                        strokeWidth="0.5"
+                      />
+                    )}
+                    {/* Inner wall (visible on back side of donut hole) */}
+                    <polygon
+                      points={innerWallPts.join(" ")}
+                      fill={darken(s.color.base, 0.55)}
+                      opacity="0.85"
+                    />
+                    {/* Radial cut walls at slice edges */}
+                    {!singleCompany && (() => {
+                      const outerTop = ePolar(CX, CY - lift, rxOut, ryOut, a1);
+                      const innerTop = ePolar(CX, CY - lift, rxIn, ryIn, a1);
+                      const outerBot = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a1);
+                      const innerBot = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, a1);
+                      const outerTop2 = ePolar(CX, CY - lift, rxOut, ryOut, a2);
+                      const innerTop2 = ePolar(CX, CY - lift, rxIn, ryIn, a2);
+                      const outerBot2 = ePolar(CX, CY - lift + DEPTH, rxOut, ryOut, a2);
+                      const innerBot2 = ePolar(CX, CY - lift + DEPTH, rxIn, ryIn, a2);
+                      return (
+                        <>
+                          <polygon
+                            points={`${outerTop.x},${outerTop.y} ${innerTop.x},${innerTop.y} ${innerBot.x},${innerBot.y} ${outerBot.x},${outerBot.y}`}
+                            fill={darken(s.color.base, 0.5)}
+                            opacity="0.75"
+                          />
+                          <polygon
+                            points={`${outerTop2.x},${outerTop2.y} ${innerTop2.x},${innerTop2.y} ${innerBot2.x},${innerBot2.y} ${outerBot2.x},${outerBot2.y}`}
+                            fill={darken(s.color.base, 0.5)}
+                            opacity="0.75"
+                          />
+                        </>
+                      );
+                    })()}
+                    {/* Top face */}
                     <path
-                      d={path}
+                      d={topPath}
                       fill={`url(#grad-${s.id})`}
-                      stroke={s.color.base}
-                      strokeOpacity={isHover ? 0.9 : 0.4}
-                      strokeWidth={isHover ? 2 : 1}
-                      filter={isHover ? "url(#wheel-glow)" : undefined}
-                      style={{
-                        transition: "d 300ms ease, filter 300ms ease, stroke-opacity 300ms ease",
-                        opacity: hoverSeg && !isHover ? 0.55 : 1,
-                      }}
+                      stroke={darken(s.color.base, 0.25)}
+                      strokeOpacity={isHover ? 0.9 : 0.5}
+                      strokeWidth={isHover ? 1.5 : 0.75}
+                      filter={isHover ? "url(#hover-glow)" : undefined}
+                      style={{ transition: "filter 250ms ease" }}
+                    />
+                    {/* Specular highlight on top */}
+                    <path
+                      d={topPath}
+                      fill="white"
+                      opacity="0.08"
+                      pointerEvents="none"
                     />
                     {showLabel && (
                       <g pointerEvents="none" style={{ opacity: drawn ? 1 : 0, transition: "opacity 500ms ease 400ms" }}>
                         <text
                           x={lp.x}
-                          y={lp.y - 8}
+                          y={lp.y - 6}
                           textAnchor="middle"
                           className="fill-white font-semibold"
-                          style={{ fontSize: 12, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
+                          style={{ fontSize: 12, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
                         >
                           {truncate(s.name, 14)}
                         </text>
                         <text
                           x={lp.x}
-                          y={lp.y + 8}
+                          y={lp.y + 9}
                           textAnchor="middle"
-                          className="fill-white/90"
-                          style={{ fontSize: 11, textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
+                          className="fill-white/95"
+                          style={{ fontSize: 11, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
                         >
                           {Math.round(s.collectionPct)}%
                         </text>
@@ -220,29 +374,30 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
                 );
               })}
 
-              {/* Center hub */}
-              <circle cx={CX} cy={CY} r={R_INNER - 10} fill="hsl(var(--card))" stroke="hsl(var(--border))" />
-              <text x={CX} y={CY - 40} textAnchor="middle" className="fill-muted-foreground uppercase" style={{ fontSize: 11, letterSpacing: 2 }}>
-                Company Performance
-              </text>
-              <text x={CX} y={CY - 8} textAnchor="middle" className="fill-foreground font-extrabold" style={{ fontSize: 34 }}>
-                {inr(displayedRevenue)}
-              </text>
-              <text x={CX} y={CY + 14} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12 }}>
-                Total Revenue
-              </text>
-              <text x={CX} y={CY + 42} textAnchor="middle" className="fill-foreground font-semibold" style={{ fontSize: 14 }}>
-                {rows.length} {rows.length === 1 ? "Company" : "Companies"}
-              </text>
-              <text x={CX} y={CY + 62} textAnchor="middle" className="fill-emerald-500" style={{ fontSize: 12 }}>
-                {inr(totalCollected)} collected
-              </text>
-              <text x={CX} y={CY + 80} textAnchor="middle" className="fill-orange-500" style={{ fontSize: 12 }}>
-                {inr(totalPending)} pending
-              </text>
+              {/* Center hub (elliptical, sits on top) */}
+              <ellipse cx={CX} cy={CY + DEPTH} rx={RX_IN - 2} ry={RY_IN - 2} fill={darken("#000000", 0)} opacity="0.15" />
+              <ellipse cx={CX} cy={CY} rx={RX_IN - 4} ry={RY_IN - 4} fill="url(#hub-grad)" stroke="hsl(var(--border))" />
+
+              {/* Center text */}
+              <g pointerEvents="none">
+                <text x={CX} y={CY - 34} textAnchor="middle" className="fill-muted-foreground uppercase" style={{ fontSize: 10, letterSpacing: 2 }}>
+                  Company Performance
+                </text>
+                <text x={CX} y={CY - 8} textAnchor="middle" className="fill-foreground font-extrabold" style={{ fontSize: 26 }}>
+                  {inr(displayedRevenue)}
+                </text>
+                <text x={CX} y={CY + 10} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>
+                  Total Revenue · {rows.length} {rows.length === 1 ? "Co." : "Cos."}
+                </text>
+                <text x={CX} y={CY + 28} textAnchor="middle" className="fill-emerald-500" style={{ fontSize: 11 }}>
+                  {inr(totalCollected)} collected
+                </text>
+                <text x={CX} y={CY + 44} textAnchor="middle" className="fill-orange-500" style={{ fontSize: 11 }}>
+                  {inr(totalPending)} pending
+                </text>
+              </g>
             </svg>
 
-            {/* Hover tooltip (positioned over the wheel) */}
             {hoverSeg && (
               <div className="pointer-events-none absolute top-3 right-3 z-10 min-w-[220px] rounded-xl border border-border/70 bg-popover/95 backdrop-blur px-4 py-3 shadow-xl animate-fade-in">
                 <div className="flex items-center gap-2 mb-2">
@@ -260,7 +415,6 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
             )}
           </div>
 
-          {/* Side legend / selected card */}
           <div className="space-y-3">
             {(hoverSeg ? [hoverSeg] : segments.slice(0, 1)).map((s) => (
               <button
@@ -292,7 +446,6 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
           </div>
         </div>
 
-        {/* Legend */}
         <div className="mt-6 pt-4 border-t border-border/60">
           <div className="flex flex-wrap gap-2">
             {segments.map((s) => (

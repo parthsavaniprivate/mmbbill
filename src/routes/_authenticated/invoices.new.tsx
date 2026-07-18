@@ -35,7 +35,7 @@ const monthsInclusive = (from: string, to: string) => {
 };
 
 function NewInvoicePage() {
-  const { client: presetClient } = Route.useSearch();
+  const { client: presetClient, schedule: scheduleId } = Route.useSearch();
   const navigate = useNavigate();
   const { companies, selected, isAll } = useCompany();
 

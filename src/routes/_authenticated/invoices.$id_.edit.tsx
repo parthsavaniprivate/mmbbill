@@ -319,15 +319,26 @@ function EditInvoicePage() {
                     <Input
                       type="number"
                       placeholder="0"
-                      value={Number(it.quantity || 0) * Number(it.rate || 0) || ""}
+                      value={+(Number(it.quantity || 0) * Number(it.rate || 0)).toFixed(2) || ""}
                       onChange={(e) => {
                         const total = e.target.value === "" ? 0 : Number(e.target.value);
                         const m = !it.oneTime && it.fromDate && it.toDate ? monthsInclusive(it.fromDate, it.toDate) : 0;
                         const q = m || Number(it.quantity || 0) || 1;
-                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: q, rate: +(total / q).toFixed(2) } : x));
+                        setItems(items.map((x, i) => i === idx ? { ...x, quantity: q, rate: total / q } : x));
                       }}
                     />
                   </div>
+                  {gstEnabled && (
+                    <div className="col-span-1 space-y-1.5">
+                      <Label className="text-xs font-medium">GST %</Label>
+                      <Input
+                        type="number"
+                        placeholder={String(defaultGst)}
+                        value={it.gstRate ?? ""}
+                        onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, gstRate: e.target.value === "" ? "" : Number(e.target.value) } : x))}
+                      />
+                    </div>
+                  )}
                   <div className="col-span-1 flex justify-end">
                     <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => setItems(items.filter((_, i) => i !== idx))} disabled={items.length === 1}>
                       <Trash2 className="w-4 h-4" />

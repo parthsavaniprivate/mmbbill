@@ -631,3 +631,77 @@ function FileUpload({ onUpload }: { onUpload: (file: File, category: string) => 
     </Card>
   );
 }
+
+function PaymentBehaviourCard({
+  clientId,
+  invoices,
+  payments,
+  override,
+  onChanged,
+}: {
+  clientId: string;
+  invoices: Array<{ id: string; client_id: string | null; due_date: string | null; invoice_date: string; total: number | null; amount_paid: number | null; status: string | null }>;
+  payments: Array<{ invoice_id: string; payment_date: string }>;
+  override: PaymentBehaviour | null;
+  onChanged: () => void;
+}) {
+  const stats = computeBehaviour(invoices, payments);
+  const effective: PaymentBehaviour = override ?? stats.behaviour;
+  const isAuto = !override;
+
+  const save = useMutation({
+    mutationFn: async (val: PaymentBehaviour | null) => {
+      const { error } = await supabase
+        .from("clients")
+        .update({ payment_behaviour_override: val } as never)
+        .eq("id", clientId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Payment behaviour updated");
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center justify-between gap-2 flex-wrap">
+          <span>Payment Behaviour</span>
+          <BehaviourPill behaviour={effective} />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          {isAuto ? "Auto Calculate — " : "Manual override — "}
+          {behaviourDescription({ ...stats, behaviour: effective })}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Stat label="Avg Delay" value={`${stats.avgDelayDays}d`} />
+          <Stat label="Overdue Invoices" value={String(stats.overdueCount)} />
+          <Stat label="Unpaid" value={String(stats.unpaidCount)} />
+          <Stat label="Outstanding" value={inr(stats.outstanding)} />
+        </div>
+        <div className="space-y-1.5 max-w-xs">
+          <Label className="text-xs">Behaviour</Label>
+          <Select
+            value={override ?? "auto"}
+            onValueChange={(v) => save.mutate(v === "auto" ? null : (v as PaymentBehaviour))}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto Calculate ({BEHAVIOUR_LABEL[stats.behaviour]})</SelectItem>
+              {BEHAVIOUR_ORDER.map((b) => (
+                <SelectItem key={b} value={b}>{BEHAVIOUR_LABEL[b]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-muted-foreground">
+            Auto uses avg delay, overdue count and outstanding amount. Override when you know better.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

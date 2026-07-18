@@ -65,3 +65,33 @@ export function priorityForOverdue(days: number): "high" | "medium" | "low" {
 }
 
 export const todayISO = () => new Date().toISOString().slice(0, 10);
+
+/** Subtract one day from an ISO date (YYYY-MM-DD). */
+export function subDays(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Compute the billing period for a service given a period-start date and interval (months).
+ * period_end = start + interval months - 1 day
+ * next_invoice_date = start + interval months (i.e. the day after period_end)
+ */
+export function computeBillingPeriod(startISO: string, intervalMonths: number) {
+  const months = Math.max(1, Number(intervalMonths || 1));
+  const nextStart = addMonths(startISO, months);
+  const end = subDays(nextStart, 1);
+  return { start: startISO, end, nextInvoiceDate: nextStart, months };
+}
+
+/** Invoice amount = monthly rate × interval months. */
+export function computeServiceAmount(monthlyRate: number, intervalMonths: number): number {
+  return +(Number(monthlyRate || 0) * Math.max(1, Number(intervalMonths || 1))).toFixed(2);
+}
+
+/** Short human label like "01 Jul 2026 → 31 Oct 2026". */
+export function formatPeriodShort(startISO: string, endISO: string): string {
+  const f = (iso: string) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return `${f(startISO)} → ${f(endISO)}`;
+}

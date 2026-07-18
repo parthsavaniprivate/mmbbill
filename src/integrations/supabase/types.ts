@@ -58,6 +58,7 @@ export type Database = {
           created_at: string
           gst_rate: number | null
           id: string
+          interval_months: number | null
           position: number
           price: number
           schedule_id: string
@@ -68,6 +69,7 @@ export type Database = {
           created_at?: string
           gst_rate?: number | null
           id?: string
+          interval_months?: number | null
           position?: number
           price?: number
           schedule_id: string
@@ -78,6 +80,7 @@ export type Database = {
           created_at?: string
           gst_rate?: number | null
           id?: string
+          interval_months?: number | null
           position?: number
           price?: number
           schedule_id?: string

@@ -17,6 +17,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
 import { daysBetween } from "@/lib/reminders";
 import { toast } from "sonner";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourFilter, BehaviourPill } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
 
 type Status = Database["public"]["Enums"]["invoice_status"];
 type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };

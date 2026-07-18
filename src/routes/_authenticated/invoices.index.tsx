@@ -278,7 +278,7 @@ function InvoicesPage() {
                           <Link to="/invoices/$id" params={{ id: i.id }} className="font-semibold text-sm hover:underline block truncate">{i.invoice_number}</Link>
                           <div className="flex items-center gap-1.5 min-w-0">
                             <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
-                            {i.client_id && behaviours.get(i.client_id) && (
+                            {behaviourFilter !== "all" && i.client_id && behaviours.get(i.client_id) && (
                               <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[9px] py-0 px-1.5 shrink-0" />
                             )}
                           </div>
@@ -382,7 +382,7 @@ function InvoicesPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span>{cl?.business_name || cl?.client_name}</span>
-                            {i.client_id && behaviours.get(i.client_id) && (
+                            {behaviourFilter !== "all" && i.client_id && behaviours.get(i.client_id) && (
                               <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[10px] py-0 px-1.5" />
                             )}
                           </div>

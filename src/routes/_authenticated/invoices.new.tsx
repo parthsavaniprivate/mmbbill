@@ -99,7 +99,7 @@ function NewInvoicePage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("billing_schedules")
-        .select("id, client_id, company_id, billing_type, custom_interval_months, next_billing_date, billing_schedule_services(service_name, price, gst_rate, unit, position)")
+        .select("id, client_id, company_id, billing_type, custom_interval_months, next_billing_date, last_generated_date, billing_schedule_services(service_name, price, gst_rate, unit, interval_months, position)")
         .eq("id", scheduleId!)
         .maybeSingle();
       return data;

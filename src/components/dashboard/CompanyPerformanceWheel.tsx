@@ -464,11 +464,7 @@ function CenterHub(props: {
   const H = compact ? 190 : 210;
   return (
     <foreignObject x={CX - W / 2} y={CY - H / 2} width={W} height={H} style={{ pointerEvents: "none" }}>
-      <div
-        // @ts-expect-error xmlns is valid on foreignObject children in SVG
-        xmlns="http://www.w3.org/1999/xhtml"
-        className="w-full h-full flex flex-col items-center justify-center text-center px-2"
-      >
+      <div className="w-full h-full flex flex-col items-center justify-center text-center px-2">
         <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Company Overview</p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">{totalCompanies} {totalCompanies === 1 ? "company" : "companies"}</p>
         <p className="mt-1 font-extrabold text-foreground leading-none" style={{ fontSize: compact ? 18 : 22 }}>

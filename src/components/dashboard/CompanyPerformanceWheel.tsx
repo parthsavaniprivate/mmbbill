@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useCompany } from "@/lib/company";
-import { Building2, TrendingUp, TrendingDown, Trophy, Activity, Clock } from "lucide-react";
+import { Building2, TrendingUp, TrendingDown, Trophy, Activity } from "lucide-react";
 import type { CompanyRow } from "./CompanyPerformance";
 
 // Premium palette — stable across the app (index-based per company id sort order)
@@ -96,43 +96,6 @@ function sparkPoints(seed: string, len = 12) {
   return out;
 }
 
-// Ensure card angles have a minimum angular gap while staying close to segment midpoints.
-function distributeAngles(rawAngles: number[], minGapDeg = 34): number[] {
-  const n = rawAngles.length;
-  if (n <= 1) return rawAngles.slice();
-  const norm = (x: number) => ((x % 360) + 360) % 360;
-  const items = rawAngles.map((a, i) => ({ a: norm(a), i }));
-  items.sort((x, y) => x.a - y.a);
-  const gap = Math.min(minGapDeg, 360 / n);
-  // Forward pass
-  for (let k = 1; k < n; k++) {
-    if (items[k].a - items[k - 1].a < gap) items[k].a = items[k - 1].a + gap;
-  }
-  // Wrap fix
-  const wrap = items[0].a + 360 - items[n - 1].a;
-  if (wrap < gap) {
-    const shift = (gap - wrap) / 2;
-    for (let k = 0; k < n; k++) items[k].a -= shift;
-  }
-  const out = new Array<number>(n);
-  for (const { a, i } of items) out[i] = norm(a);
-  return out;
-}
-
-// Intersect a ray from card center outward with the card's rectangle.
-// Returns the edge point (in stage coords) closest to the anchor.
-function rectEdgePoint(cx: number, cy: number, w: number, h: number, tx: number, ty: number) {
-  const dx = tx - cx;
-  const dy = ty - cy;
-  if (dx === 0 && dy === 0) return { x: cx, y: cy };
-  const hw = w / 2;
-  const hh = h / 2;
-  const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
-  const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
-  const s = Math.min(sx, sy);
-  return { x: cx + dx * s, y: cy + dy * s };
-}
-
 interface Segment extends CompanyRow {
   pending: number;
   pct: number;
@@ -153,11 +116,13 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
   const totalCollected = rows.reduce((s, r) => s + r.collected, 0);
   const totalExpenses = rows.reduce((s, r) => s + r.expenses, 0);
   const totalProfit = rows.reduce((s, r) => s + r.profit, 0);
+  const totalInvoices = rows.reduce((s, r) => s + r.invoices, 0);
   const totalPending = Math.max(0, totalRevenue - totalCollected);
   const overallPct = totalRevenue > 0 ? (totalCollected / totalRevenue) * 100 : 0;
   const avgCollectionRate = rows.length
     ? rows.reduce((s, r) => s + (r.total > 0 ? (r.collected / r.total) * 100 : 0), 0) / rows.length
     : 0;
+  // Business health: weighted combo of collection rate and profit margin.
   const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
   const health = Math.max(0, Math.min(100, Math.round(overallPct * 0.65 + Math.max(0, margin) * 0.35)));
   const displayedRevenue = useCountUp(totalRevenue);
@@ -193,19 +158,18 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
   }, [segments]);
 
   // ---------------------- 3D wheel geometry (SVG-local coords) ----------------------
-  // ~10% larger diameter, thicker ring, deeper 3D.
-  const SIZE_W = 680;
-  const SIZE_H = 500;
+  const SIZE_W = 620;
+  const SIZE_H = 460;
   const CX = SIZE_W / 2;
-  const CY = SIZE_H / 2 - 22;
-  const RX_OUT = 244;
+  const CY = SIZE_H / 2 - 20;
+  const RX_OUT = 220;
   const TILT = 0.5;
   const RY_OUT = RX_OUT * TILT;
-  const RX_IN = 108;
+  const RX_IN = 120;
   const RY_IN = RX_IN * TILT;
-  const DEPTH = 44;
-  const HOVER_LIFT = 12;
-  const HOVER_GROW = 12;
+  const DEPTH = 36;
+  const HOVER_LIFT = 10;
+  const HOVER_GROW = 10;
 
   const closeness = (mid: number) => {
     const m = ((mid % 360) + 360) % 360;
@@ -219,38 +183,41 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
     return closeness(ma) - closeness(mb);
   });
 
-  // ---------------------- Radial card layout (stage coords) ----------------------
-  const STAGE_W = 1240;
-  const STAGE_H = 820;
+  // ---------------------- Radial card layout (CSS %-based around container) ----------------------
+  // Container aspect for desktop: 1100 x 720. Center at 50%,50%.
+  // Cards are placed on an ellipse in CONTAINER space; connector SVG also uses this space.
+  const STAGE_W = 1100;
+  const STAGE_H = 720;
   const STAGE_CX = STAGE_W / 2;
   const STAGE_CY = STAGE_H / 2;
-  // Wheel is drawn 1:1 into stage (its SVG is 680×500 stage px, centered).
-  const CARD_W = 290;
-  const CARD_H = 250;
-  const CARD_RX = 480;
-  const CARD_RY = 335;
+  // wheel visual approx radius in stage coords (svg is 620 wide, scaled to ~560)
+  const WHEEL_RX = 260;
+  const WHEEL_RY = 130;
+  // card anchor ring
+  const CARD_RX = 470;
+  const CARD_RY = 300;
 
+  // Distribute cards around the circle. Start at top (-90°) and go clockwise.
   const cardLayout = useMemo(() => {
-    if (segments.length === 0) return [] as Array<{
-      seg: Segment; angle: number; x: number; y: number; anchor: { x: number; y: number };
-    }>;
-    // Card angle = segment midpoint (0° = top, clockwise).
-    const rawMids = segments.map((s) => (s.startAngle + s.endAngle) / 2);
-    const spread = distributeAngles(rawMids, Math.min(52, 360 / segments.length));
+    const n = segments.length;
+    if (n === 0) return [] as Array<{ seg: Segment; angle: number; x: number; y: number; anchor: { x: number; y: number } }>;
+    // 2 → left/right, 3 → top/left/right style (evenly), 4+ → evenly
+    const angles: number[] = [];
+    if (n === 1) angles.push(0); // right
+    else if (n === 2) angles.push(180, 0); // left, right
+    else if (n === 3) angles.push(-90, 150, 30); // top, bottom-left, bottom-right
+    else if (n === 4) angles.push(-90, 0, 90, 180); // top, right, bottom, left
+    else for (let i = 0; i < n; i++) angles.push(-90 + (360 / n) * i);
     return segments.map((seg, i) => {
-      const angle = spread[i]; // 0 = top, clockwise
-      const rad = ((angle - 90) * Math.PI) / 180; // convert to standard math (0 = right)
-      const x = STAGE_CX + CARD_RX * Math.cos(rad);
-      const y = STAGE_CY + CARD_RY * Math.sin(rad);
-      // anchor = MIDDLE of the segment's radial band (in stage coords)
-      const midR_x = (RX_IN + RX_OUT) / 2;
-      const midR_y = (RY_IN + RY_OUT) / 2;
-      const svgMid = ePolar(CX, CY, midR_x, midR_y, rawMids[i]);
-      const ax = STAGE_CX + (svgMid.x - CX);
-      const ay = STAGE_CY + (svgMid.y - CY);
-      return { seg, angle, x, y, anchor: { x: ax, y: ay } };
+      const a = (angles[i] * Math.PI) / 180;
+      const x = STAGE_CX + CARD_RX * Math.cos(a);
+      const y = STAGE_CY + CARD_RY * Math.sin(a);
+      // anchor on wheel edge in same direction (project onto wheel ellipse)
+      const ax = STAGE_CX + WHEEL_RX * Math.cos(a);
+      const ay = STAGE_CY + WHEEL_RY * Math.sin(a);
+      return { seg, angle: angles[i], x, y, anchor: { x: ax, y: ay } };
     });
-  }, [segments, CX, CY, RX_IN, RX_OUT, RY_IN, RY_OUT]);
+  }, [segments]);
 
   return (
     <Card className="shadow-card border-border/60 overflow-hidden">
@@ -271,60 +238,52 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
             aria-hidden
           >
             <defs>
+              {cardLayout.map(({ seg }) => (
+                <linearGradient key={`cg-${seg.id}`} id={`cgrad-${seg.id}`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={seg.color.base} stopOpacity="0.9" />
+                  <stop offset="100%" stopColor={seg.color.base} stopOpacity="0.35" />
+                </linearGradient>
+              ))}
               <filter id="line-glow" x="-30%" y="-30%" width="160%" height="160%">
                 <feGaussianBlur stdDeviation="3" result="b" />
                 <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
             </defs>
-            {cardLayout.map(({ seg, x, y, anchor }) => {
+            {cardLayout.map(({ seg, x, y, anchor, angle }) => {
               const isHover = hoverId === seg.id;
-              // End point = card edge closest to the segment anchor
-              const edge = rectEdgePoint(x, y, CARD_W, CARD_H, anchor.x, anchor.y);
-              // Curved path: control point pulled outward from wheel toward card
-              const dx = edge.x - anchor.x;
-              const dy = edge.y - anchor.y;
-              const midX = (anchor.x + edge.x) / 2;
-              const midY = (anchor.y + edge.y) / 2;
-              const len = Math.hypot(dx, dy) || 1;
-              // perpendicular offset scaled by distance for a graceful curve
-              const nx = -dy / len;
-              const ny = dx / len;
-              // outward push: away from center
-              const away_x = midX - STAGE_CX;
-              const away_y = midY - STAGE_CY;
-              const awayLen = Math.hypot(away_x, away_y) || 1;
-              const cx1 = midX + (away_x / awayLen) * 32 + nx * 6;
-              const cy1 = midY + (away_y / awayLen) * 32 + ny * 6;
-              const d = `M ${anchor.x} ${anchor.y} Q ${cx1} ${cy1} ${edge.x} ${edge.y}`;
+              // curved path with a control point pushed outward
+              const midX = (anchor.x + x) / 2;
+              const midY = (anchor.y + y) / 2;
+              const rad = (angle * Math.PI) / 180;
+              const cx1 = midX + Math.cos(rad) * 40;
+              const cy1 = midY + Math.sin(rad) * 40;
+              const d = `M ${anchor.x} ${anchor.y} Q ${cx1} ${cy1} ${x} ${y}`;
               return (
-                <g key={`ln-${seg.id}`} style={{ opacity: hoverId && !isHover ? 0.18 : 1, transition: "opacity 250ms" }}>
+                <g key={`ln-${seg.id}`} style={{ opacity: hoverId && !isHover ? 0.2 : 1, transition: "opacity 250ms" }}>
                   <path
                     d={d}
                     fill="none"
                     stroke={seg.color.base}
-                    strokeOpacity={isHover ? 0.95 : 0.6}
-                    strokeWidth={isHover ? 3 : 1.75}
-                    strokeLinecap="round"
-                    strokeDasharray="800"
-                    strokeDashoffset={drawn ? 0 : 800}
+                    strokeOpacity={isHover ? 0.9 : 0.55}
+                    strokeWidth={isHover ? 2.5 : 1.5}
+                    strokeDasharray="600"
+                    strokeDashoffset={drawn ? 0 : 600}
                     filter="url(#line-glow)"
                     style={{
                       transition: "stroke-dashoffset 1.2s ease-out, stroke-width 250ms, stroke-opacity 250ms",
                     }}
                   />
-                  {/* pulsing dot at segment anchor */}
-                  <circle cx={anchor.x} cy={anchor.y} r={isHover ? 7 : 5} fill={seg.color.base} filter="url(#line-glow)">
-                    <animate attributeName="r" values={`${isHover ? 7 : 5};${isHover ? 10 : 7};${isHover ? 7 : 5}`} dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0.55;1" dur="2s" repeatCount="indefinite" />
+                  {/* pulsing dot at anchor */}
+                  <circle cx={anchor.x} cy={anchor.y} r={isHover ? 6 : 4} fill={seg.color.base}>
+                    <animate attributeName="r" values={`${isHover ? 6 : 4};${isHover ? 9 : 6};${isHover ? 6 : 4}`} dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
                   </circle>
-                  {/* solid dot at card edge */}
-                  <circle cx={edge.x} cy={edge.y} r={isHover ? 5 : 3.5} fill={seg.color.base} stroke="hsl(var(--card))" strokeWidth="1.5" />
                 </g>
               );
             })}
           </svg>
 
-          {/* Center wheel */}
+          {/* Center wheel — absolutely positioned */}
           <div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{ width: `${(SIZE_W / STAGE_W) * 100}%` }}
@@ -340,7 +299,6 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
               RX_OUT={RX_OUT} RY_OUT={RY_OUT} RX_IN={RX_IN} RY_IN={RY_IN}
               TILT={TILT} DEPTH={DEPTH} HOVER_LIFT={HOVER_LIFT} HOVER_GROW={HOVER_GROW}
               singleCompany={singleCompany} drawn={drawn}
-              showLabels
               centerContent={
                 <CenterHub
                   totalCompanies={rows.length}
@@ -366,7 +324,7 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
               style={{
                 left: `${(x / STAGE_W) * 100}%`,
                 top: `${(y / STAGE_H) * 100}%`,
-                width: `${(CARD_W / STAGE_W) * 100}%`,
+                width: 240,
                 animationDelay: `${150 + i * 80}ms`,
                 animationFillMode: "backwards",
               }}
@@ -386,6 +344,7 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 
         {/* ================= MOBILE stage ================= */}
         <div className="md:hidden">
+          {/* Analytics KPI grid — real HTML so it's crisp on small screens */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             <MobileKpi label="Revenue" value={inr(displayedRevenue)} tone="text-blue-500" />
             <MobileKpi label="Collected" value={inr(displayedCollected)} tone="text-emerald-500" />
@@ -395,7 +354,8 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
             <MobileKpi label="Health" value={`${health}`} tone={health >= 70 ? "text-emerald-500" : health >= 40 ? "text-amber-500" : "text-red-500"} />
           </div>
 
-          <div className="relative w-full mx-auto" style={{ maxWidth: 360 }}>
+          {/* Compact wheel */}
+          <div className="relative w-full mx-auto" style={{ maxWidth: 340 }}>
             <Wheel
               segments={segments}
               drawOrder={drawOrder}
@@ -407,25 +367,25 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
               RX_OUT={RX_OUT} RY_OUT={RY_OUT} RX_IN={RX_IN} RY_IN={RY_IN}
               TILT={TILT} DEPTH={DEPTH} HOVER_LIFT={HOVER_LIFT} HOVER_GROW={HOVER_GROW}
               singleCompany={singleCompany} drawn={drawn}
-              showLabels={false}
               centerContent={
-                <foreignObject x={CX - 110} y={CY - 46} width={220} height={92} style={{ pointerEvents: "none" }}>
+                <foreignObject x={CX - 100} y={CY - 40} width={200} height={80} style={{ pointerEvents: "none" }}>
                   <div className="w-full h-full flex flex-col items-center justify-center text-center">
                     <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Total Revenue</p>
-                    <p className="font-extrabold text-foreground leading-none mt-1" style={{ fontSize: 22 }}>{inr(displayedRevenue)}</p>
-                    <p className="text-[10px] text-primary font-semibold mt-1.5">{Math.round(overallPct)}% collected · {rows.length} {rows.length === 1 ? "co." : "cos."}</p>
+                    <p className="font-extrabold text-foreground leading-none mt-0.5" style={{ fontSize: 20 }}>{inr(displayedRevenue)}</p>
+                    <p className="text-[10px] text-primary font-semibold mt-1">{Math.round(overallPct)}% collected · {rows.length} {rows.length === 1 ? "co." : "cos."}</p>
                   </div>
                 </foreignObject>
               }
             />
           </div>
 
+          {/* Swipeable cards */}
           <div className="mt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto snap-x snap-mandatory flex gap-3 pb-2 scrollbar-none">
             {segments.map((seg, i) => (
               <div
                 key={`m-card-${seg.id}`}
                 className="snap-center shrink-0 animate-fade-in"
-                style={{ width: 280, animationDelay: `${100 + i * 60}ms`, animationFillMode: "backwards" }}
+                style={{ width: 260, animationDelay: `${100 + i * 60}ms`, animationFillMode: "backwards" }}
                 onClick={() => setHoverId(seg.id)}
               >
                 <CompanyCard
@@ -443,8 +403,8 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 
 
         {/* ================= PREMIUM SUMMARY BAR ================= */}
-        <div className="mt-8 pt-5 border-t border-border/60">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="mt-6 pt-4 border-t border-border/60">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {segments.map((s) => {
               const isBest = s.id === bestId;
               const status = s.collectionPct >= 80 ? { label: "Excellent", tone: "text-emerald-500 bg-emerald-500/10" }
@@ -458,7 +418,7 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
                   onMouseLeave={() => setHoverId(null)}
                   onClick={() => setSelected(s.id)}
                   className={cn(
-                    "group flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all",
+                    "group flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all",
                     "border-border/60 hover:border-border hover:shadow-md bg-card/60",
                     hoverId === s.id && "shadow-lg -translate-y-0.5",
                   )}
@@ -470,12 +430,12 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
                       <p className="font-semibold text-sm truncate">{s.name}</p>
                       {isBest && <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground whitespace-nowrap">
-                      <span className="font-medium text-blue-500 tabular-nums">{inr(s.total)}</span>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="font-medium text-blue-500">{inr(s.total)}</span>
                       <span>·</span>
                       <span>{s.invoices} inv</span>
                       <span>·</span>
-                      <span className={cn("tabular-nums", s.profit >= 0 ? "text-emerald-500" : "text-red-500")}>{inr(s.profit)}</span>
+                      <span className={s.profit >= 0 ? "text-emerald-500" : "text-red-500"}>{inr(s.profit)}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
@@ -493,7 +453,7 @@ export function CompanyPerformanceWheel({ rows }: { rows: CompanyRow[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Center analytics hub
+// Center analytics hub (rendered as SVG overlay inside the wheel svg via foreignObject)
 // ---------------------------------------------------------------------------
 function CenterHub(props: {
   totalCompanies: number;
@@ -506,52 +466,54 @@ function CenterHub(props: {
   avgRate: number;
   health: number;
   CX: number; CY: number;
+  compact?: boolean;
 }) {
-  const { totalCompanies, totalRevenue, totalCollected, totalPending, totalExpenses, totalProfit, overallPct, avgRate, health, CX, CY } = props;
-  const W = 210;
-  const H = 210;
+  const { totalCompanies, totalRevenue, totalCollected, totalPending, totalExpenses, totalProfit, overallPct, avgRate, health, CX, CY, compact } = props;
+  const W = compact ? 200 : 230;
+  const H = compact ? 190 : 210;
   return (
     <foreignObject x={CX - W / 2} y={CY - H / 2} width={W} height={H} style={{ pointerEvents: "none" }}>
-      <div className="w-full h-full flex flex-col items-center justify-center text-center px-3 py-2">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-muted-foreground font-semibold">Company Overview</p>
-        <p className="mt-1 text-[10px] text-muted-foreground">{totalCompanies} {totalCompanies === 1 ? "company" : "companies"}</p>
-        <p className="mt-2 font-extrabold text-foreground leading-none tabular-nums" style={{ fontSize: 20 }}>
+      <div className="w-full h-full flex flex-col items-center justify-center text-center px-2">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Company Overview</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">{totalCompanies} {totalCompanies === 1 ? "company" : "companies"}</p>
+        <p className="mt-1 font-extrabold text-foreground leading-none" style={{ fontSize: compact ? 18 : 22 }}>
           {inr(totalRevenue)}
         </p>
-        <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-1">Total Revenue</p>
-
-        <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] w-full">
-          <HubRow label="Collected" value={inr(totalCollected)} tone="text-emerald-500" align="left" />
-          <HubRow label="Pending" value={inr(totalPending)} tone="text-orange-500" align="right" />
-          <HubRow label="Expenses" value={inr(totalExpenses)} tone="text-red-500" align="left" />
-          <HubRow label="Profit" value={inr(totalProfit)} tone={totalProfit >= 0 ? "text-emerald-500" : "text-red-500"} align="right" />
+        <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Total Revenue</p>
+        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] w-full">
+          <div className="text-left">
+            <span className="text-muted-foreground">Collected</span>
+            <p className="font-semibold text-emerald-500 tabular-nums truncate">{inr(totalCollected)}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Pending</span>
+            <p className="font-semibold text-orange-500 tabular-nums truncate">{inr(totalPending)}</p>
+          </div>
+          <div className="text-left">
+            <span className="text-muted-foreground">Expenses</span>
+            <p className="font-semibold text-red-500 tabular-nums truncate">{inr(totalExpenses)}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Profit</span>
+            <p className={cn("font-semibold tabular-nums truncate", totalProfit >= 0 ? "text-emerald-500" : "text-red-500")}>{inr(totalProfit)}</p>
+          </div>
         </div>
-
-        <div className="mt-2.5 grid grid-cols-3 gap-2 text-[10px] w-full pt-2 border-t border-border/50">
-          <div className="text-center">
-            <p className="text-muted-foreground text-[8px] uppercase tracking-wider">Coll.</p>
-            <p className="font-bold text-primary tabular-nums">{Math.round(overallPct)}%</p>
+        <div className="mt-2 w-full flex items-center justify-between text-[10px]">
+          <div className="text-left">
+            <span className="text-muted-foreground">Collection</span>
+            <p className="font-bold text-primary">{Math.round(overallPct)}%</p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground text-[8px] uppercase tracking-wider">Avg</p>
-            <p className="font-bold text-foreground tabular-nums">{Math.round(avgRate)}%</p>
+            <span className="text-muted-foreground">Avg</span>
+            <p className="font-bold text-foreground">{Math.round(avgRate)}%</p>
           </div>
-          <div className="text-center">
-            <p className="text-muted-foreground text-[8px] uppercase tracking-wider">Health</p>
-            <p className={cn("font-bold tabular-nums", health >= 70 ? "text-emerald-500" : health >= 40 ? "text-amber-500" : "text-red-500")}>{health}</p>
+          <div className="text-right">
+            <span className="text-muted-foreground">Health</span>
+            <p className={cn("font-bold", health >= 70 ? "text-emerald-500" : health >= 40 ? "text-amber-500" : "text-red-500")}>{health}</p>
           </div>
         </div>
       </div>
     </foreignObject>
-  );
-}
-
-function HubRow({ label, value, tone, align }: { label: string; value: string; tone?: string; align: "left" | "right" }) {
-  return (
-    <div className={cn(align === "left" ? "text-left" : "text-right")}>
-      <p className="text-muted-foreground text-[8.5px] uppercase tracking-wider">{label}</p>
-      <p className={cn("font-semibold tabular-nums whitespace-nowrap", tone)} style={{ fontSize: 10.5 }}>{value}</p>
-    </div>
   );
 }
 
@@ -571,101 +533,87 @@ function CompanyCard({
   isBest: boolean;
   onClick: () => void;
 }) {
-  const spark = useMemo(() => sparkPoints(seg.id, 14), [seg.id]);
+  const spark = useMemo(() => sparkPoints(seg.id, 12), [seg.id]);
   const pct = Math.round(seg.collectionPct);
   const growthUp = seg.growthPct >= 0;
   return (
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left rounded-2xl border p-4 backdrop-blur-md transition-all duration-300",
-        "bg-card/75 hover:bg-card/95",
+        "w-full text-left rounded-2xl border p-3 backdrop-blur-md transition-all duration-300",
+        "bg-card/70 hover:bg-card/90",
         isHover ? "scale-[1.03] shadow-2xl" : "shadow-md",
         dim ? "opacity-40" : "opacity-100",
       )}
       style={{
         borderColor: isHover ? seg.color.base : `${seg.color.base}55`,
         boxShadow: isHover
-          ? `0 12px 40px -8px ${seg.color.glow}, 0 0 0 1px ${seg.color.base}`
-          : `0 4px 22px -10px ${seg.color.glow}`,
+          ? `0 10px 40px -8px ${seg.color.glow}, 0 0 0 1px ${seg.color.base}`
+          : `0 4px 20px -8px ${seg.color.glow}`,
       }}
     >
       {/* header */}
-      <div className="flex items-start gap-2.5 mb-3">
+      <div className="flex items-start gap-2 mb-2">
         <div
-          className="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+          className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
           style={{ background: `${seg.color.base}22`, color: seg.color.base, boxShadow: `inset 0 0 0 1px ${seg.color.base}44` }}
         >
-          <Building2 className="w-5 h-5" strokeWidth={2.2} />
+          <Building2 className="w-4 h-4" strokeWidth={2.2} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p className="font-semibold text-sm leading-tight line-clamp-2 break-words">{seg.name}</p>
+          <div className="flex items-center gap-1">
+            <p className="font-semibold text-sm truncate">{seg.name}</p>
             {isBest && <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5" /> updated just now
-          </p>
+          <p className="text-[10px] text-muted-foreground">{seg.invoices} invoices · updated just now</p>
         </div>
         <span
-          className="text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0 tabular-nums"
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
           style={{ background: `${seg.color.base}22`, color: seg.color.base }}
         >
           {pct}%
         </span>
       </div>
 
-      {/* metrics grid — evenly spaced rows */}
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] mb-3">
-        <Row label="Invoices" value={String(seg.invoices)} />
+      {/* metrics grid */}
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] mb-2">
         <Row label="Revenue" value={inr(seg.total)} tone="text-blue-500" />
+        <Row label="Invoices" value={String(seg.invoices)} />
         <Row label="Collected" value={inr(seg.collected)} tone="text-emerald-500" />
         <Row label="Pending" value={inr(seg.pending)} tone="text-orange-500" />
         <Row label="Expenses" value={inr(seg.expenses)} tone="text-red-500" />
         <Row label="Profit" value={inr(seg.profit)} tone={seg.profit >= 0 ? "text-emerald-500" : "text-red-500"} />
       </div>
 
-      {/* collection % bar */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between text-[9.5px] text-muted-foreground uppercase tracking-wider mb-1">
-          <span>Collection</span>
-          <span className="tabular-nums font-semibold" style={{ color: seg.color.base }}>{pct}%</span>
-        </div>
+      {/* progress + sparkline */}
+      <div className="space-y-1.5">
         <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${Math.min(100, pct)}%`, background: `linear-gradient(90deg, ${seg.color.base}, ${seg.color.base}bb)` }}
+            style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${seg.color.base}, ${seg.color.base}bb)` }}
           />
         </div>
-      </div>
-
-      {/* sparkline + monthly growth */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] uppercase tracking-wider text-muted-foreground mb-0.5">Trend</p>
-          <svg viewBox="0 0 100 26" className="h-6 w-full" preserveAspectRatio="none">
+        <div className="flex items-center justify-between gap-2">
+          <svg viewBox="0 0 100 24" className="h-5 flex-1" preserveAspectRatio="none">
             <polyline
               fill="none"
               stroke={seg.color.base}
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              points={spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${26 - v * 24}`).join(" ")}
+              points={spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${24 - v * 22}`).join(" ")}
             />
             <polyline
               fill={`${seg.color.base}22`}
               stroke="none"
-              points={`0,26 ${spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${26 - v * 24}`).join(" ")} 100,26`}
+              points={`0,24 ${spark.map((v, i) => `${(i / (spark.length - 1)) * 100},${24 - v * 22}`).join(" ")} 100,24`}
             />
           </svg>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-[9px] uppercase tracking-wider text-muted-foreground mb-0.5">MoM</p>
           <span className={cn(
-            "inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full tabular-nums",
+            "inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0",
             growthUp ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500",
           )}>
-            {growthUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            {growthUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             {growthUp ? "+" : ""}{Math.round(seg.growthPct)}%
           </span>
         </div>
@@ -676,9 +624,9 @@ function CompanyCard({
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex items-center justify-between gap-1.5 min-w-0">
-      <span className="text-muted-foreground text-[9.5px] uppercase tracking-wider shrink-0">{label}</span>
-      <span className={cn("font-semibold tabular-nums whitespace-nowrap text-[11px]", tone)}>{value}</span>
+    <div className="flex items-center justify-between gap-1 min-w-0">
+      <span className="text-muted-foreground text-[10px] uppercase tracking-wider">{label}</span>
+      <span className={cn("font-semibold tabular-nums truncate", tone)}>{value}</span>
     </div>
   );
 }
@@ -687,14 +635,14 @@ function MobileKpi({ label, value, tone }: { label: string; value: string; tone?
   return (
     <div className="rounded-lg border border-border/60 bg-card/60 backdrop-blur px-2 py-1.5 min-w-0">
       <p className="text-[9px] uppercase tracking-wider text-muted-foreground truncate">{label}</p>
-      <p className={cn("text-xs font-bold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis", tone)}>{value}</p>
+      <p className={cn("text-xs font-bold tabular-nums truncate", tone)}>{value}</p>
     </div>
   );
 }
 
 
 // ---------------------------------------------------------------------------
-// Wheel (3D radial chart)
+// Wheel (3D radial chart) — extracted for reuse across desktop/mobile
 // ---------------------------------------------------------------------------
 function Wheel(props: {
   segments: Segment[];
@@ -708,12 +656,11 @@ function Wheel(props: {
   TILT: number; DEPTH: number; HOVER_LIFT: number; HOVER_GROW: number;
   singleCompany: boolean; drawn: boolean;
   centerContent: React.ReactNode;
-  showLabels?: boolean;
 }) {
   const {
     segments, drawOrder, hoverId, setHoverId, onPick,
     SIZE_W, SIZE_H, CX, CY, RX_OUT, RY_OUT, RX_IN, RY_IN,
-    TILT, DEPTH, HOVER_LIFT, HOVER_GROW, singleCompany, drawn, centerContent, showLabels,
+    TILT, DEPTH, HOVER_LIFT, HOVER_GROW, singleCompany, drawn, centerContent,
   } = props;
   const hoverSeg = segments.find((s) => s.id === hoverId) ?? null;
 
@@ -750,12 +697,12 @@ function Wheel(props: {
 
       <ellipse
         cx={CX}
-        cy={CY + DEPTH + 16}
+        cy={CY + DEPTH + 14}
         rx={RX_OUT * 0.95}
         ry={RY_OUT * 0.55}
         fill="#000"
         opacity={0.22}
-        style={{ filter: "blur(16px)" }}
+        style={{ filter: "blur(14px)" }}
       />
 
       {drawOrder.map((s) => {
@@ -801,42 +748,7 @@ function Wheel(props: {
         }
 
         const topPath = eArcPath(CX, CY - lift, RX_IN, RY_IN, rxOut, ryOut, a1, a2);
-        const dim = hoverSeg && !isHover ? 0.5 : 1;
-
-        // ---- In-segment label (name + percentage) ----
-        const midAngle = (a1 + a2) / 2;
-        const midR_x = (RX_IN + rxOut) / 2;
-        const midR_y = (RY_IN + ryOut) / 2;
-        const lbl = ePolar(CX, CY - lift, midR_x, midR_y, midAngle);
-        // available arc length at mid radius (approx)
-        const sweep = Math.abs(a2 - a1);
-        const arcLen = (sweep * Math.PI / 180) * midR_x;
-        const ringThick = rxOut - RX_IN;
-        // pick font size that fits both dimensions
-        const nameFont = Math.max(8.5, Math.min(13, Math.min(arcLen / Math.max(6, s.name.length * 0.55), ringThick * 0.36)));
-        const pctFont = Math.max(8, Math.min(11, nameFont * 0.85));
-        const showLabel = showLabels && arcLen > 32 && ringThick > 22;
-        // wrap name into two lines if long and narrow
-        let line1 = s.name;
-        let line2 = "";
-        const approxCharW = nameFont * 0.55;
-        const maxChars = Math.max(4, Math.floor(arcLen / approxCharW) - 1);
-        if (s.name.length > maxChars) {
-          const parts = s.name.split(" ");
-          if (parts.length > 1) {
-            let acc = "";
-            let i = 0;
-            while (i < parts.length && (acc + " " + parts[i]).trim().length <= maxChars) {
-              acc = (acc + " " + parts[i]).trim();
-              i++;
-            }
-            line1 = acc || parts[0];
-            line2 = parts.slice(i).join(" ");
-            if (line2.length > maxChars) line2 = line2.slice(0, maxChars - 1) + "…";
-          } else {
-            line1 = s.name.slice(0, maxChars - 1) + "…";
-          }
-        }
+        const dim = hoverSeg && !isHover ? 0.55 : 1;
 
         return (
           <g
@@ -876,59 +788,12 @@ function Wheel(props: {
               d={topPath}
               fill={`url(#grad-${s.id})`}
               stroke={darken(s.color.base, 0.25)}
-              strokeOpacity={isHover ? 0.95 : 0.55}
-              strokeWidth={isHover ? 1.8 : 0.85}
+              strokeOpacity={isHover ? 0.9 : 0.5}
+              strokeWidth={isHover ? 1.5 : 0.75}
               filter={isHover ? "url(#hover-glow)" : undefined}
               style={{ transition: "filter 250ms ease" }}
             />
             <path d={topPath} fill="white" opacity="0.08" pointerEvents="none" />
-
-            {showLabel && (
-              <g pointerEvents="none" style={{ mixBlendMode: "normal" }}>
-                {line2 ? (
-                  <>
-                    <text
-                      x={lbl.x} y={lbl.y - nameFont * 0.55}
-                      textAnchor="middle" fontSize={nameFont}
-                      fontWeight={700}
-                      fill="#fff"
-                      style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2.5, strokeLinejoin: "round" }}
-                    >{line1}</text>
-                    <text
-                      x={lbl.x} y={lbl.y + nameFont * 0.45}
-                      textAnchor="middle" fontSize={nameFont}
-                      fontWeight={700}
-                      fill="#fff"
-                      style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2.5, strokeLinejoin: "round" }}
-                    >{line2}</text>
-                    <text
-                      x={lbl.x} y={lbl.y + nameFont * 0.45 + pctFont + 2}
-                      textAnchor="middle" fontSize={pctFont}
-                      fontWeight={800}
-                      fill="#fff" opacity={0.95}
-                      style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2, strokeLinejoin: "round" }}
-                    >{Math.round(s.collectionPct)}%</text>
-                  </>
-                ) : (
-                  <>
-                    <text
-                      x={lbl.x} y={lbl.y - 2}
-                      textAnchor="middle" fontSize={nameFont}
-                      fontWeight={700}
-                      fill="#fff"
-                      style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2.5, strokeLinejoin: "round" }}
-                    >{line1}</text>
-                    <text
-                      x={lbl.x} y={lbl.y + pctFont + 2}
-                      textAnchor="middle" fontSize={pctFont}
-                      fontWeight={800}
-                      fill="#fff" opacity={0.95}
-                      style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2, strokeLinejoin: "round" }}
-                    >{Math.round(s.collectionPct)}%</text>
-                  </>
-                )}
-              </g>
-            )}
           </g>
         );
       })}

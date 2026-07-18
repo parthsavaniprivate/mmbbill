@@ -587,7 +587,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         })}
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             </div>

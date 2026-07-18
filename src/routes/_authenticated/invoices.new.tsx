@@ -63,13 +63,25 @@ function NewInvoicePage() {
     enabled: !!companyId,
     queryFn: async () => {
       const { data, error } = await supabase.from("clients")
-        .select("id, client_name, business_name, company_id")
+        .select("id, client_name, business_name, company_id, payment_behaviour_override")
         .eq("company_id", companyId)
         .order("business_name", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Array<{
+        id: string; client_name: string; business_name: string | null; company_id: string;
+        payment_behaviour_override: PaymentBehaviour | null;
+      }>;
     },
   });
+
+  // Payment behaviour map (auto-calculated + manual overrides).
+  const overrides = useMemo(() => {
+    const m: Record<string, PaymentBehaviour | null> = {};
+    for (const c of clients) m[c.id] = c.payment_behaviour_override ?? null;
+    return m;
+  }, [clients]);
+  const behaviours = useClientBehaviours(companyId || null, overrides);
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
 
   const { data: companyMeta } = useQuery({
     queryKey: ["company-meta", companyId],

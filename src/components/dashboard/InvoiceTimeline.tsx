@@ -144,6 +144,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -433,18 +434,26 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
 
                 {/* Rows */}
                 <div className="relative" style={{ height: bodyHeight }}>
-                  {clientRows.map((row, rowIdx) => (
+                  {clientRows.map((row, rowIdx) => {
+                    const isSelected = selectedClientId === row.client.id;
+                    return (
                     <div
                       key={row.client.id}
                       className={cn(
                         "group/row flex border-b border-border/40 transition-colors",
                         rowIdx % 2 === 1 ? "bg-muted/40" : "bg-background/20",
                         "hover:bg-primary/[0.06]",
+                        isSelected && "bg-primary/10 ring-1 ring-inset ring-primary/50",
                       )}
                       style={{ height: rowHeightOf(row.laneCount) }}
                     >
-                      <div
-                        className="sticky left-0 z-10 flex items-center gap-2 border-r border-border/60 bg-card/90 px-2 sm:gap-3 sm:px-4 backdrop-blur-md"
+                      <button
+                        type="button"
+                        onClick={() => setSelectedClientId((prev) => (prev === row.client.id ? null : row.client.id))}
+                        className={cn(
+                          "sticky left-0 z-10 flex items-center gap-2 border-r border-border/60 px-2 text-left sm:gap-3 sm:px-4 backdrop-blur-md cursor-pointer transition-colors",
+                          isSelected ? "bg-primary/15" : "bg-card/90 hover:bg-primary/[0.08]",
+                        )}
                         style={{ width: CLIENT_COL, minWidth: CLIENT_COL }}
                       >
                         {row.client.logo_url ? (
@@ -460,12 +469,12 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-medium leading-tight sm:text-sm" title={row.client.client_name}>{row.client.client_name}</p>
+                          <p className={cn("truncate text-[13px] font-medium leading-tight sm:text-sm", isSelected && "text-primary")} title={row.client.client_name}>{row.client.client_name}</p>
                           {row.client.business_name && (
                             <p className="truncate text-[10px] leading-tight text-muted-foreground sm:text-[11px]" title={row.client.business_name}>{row.client.business_name}</p>
                           )}
                         </div>
-                      </div>
+                      </button>
                       <div className="relative flex-1" style={{ width: totalWidth }}>
                         {ticks.map((_, idx) => (
                           <div
@@ -578,7 +587,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
                         })}
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             </div>

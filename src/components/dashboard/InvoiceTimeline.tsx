@@ -144,6 +144,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 

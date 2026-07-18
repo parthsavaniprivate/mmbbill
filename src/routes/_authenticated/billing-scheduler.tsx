@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarClock, AlertTriangle, TrendingUp, IndianRupee, Users, ArrowRight } from "lucide-react";
 import { inr, formatDate } from "@/lib/format";
-import { daysBetween, priorityForOverdue, intervalMonths, todayISO, computeServiceAmount, computeBillingPeriod, formatPeriodShort, type BillingType } from "@/lib/billing/cycle";
+import { daysBetween, priorityForOverdue, intervalMonths, todayISO, computeServiceAmount, computePriorBillingPeriod, formatPeriodShort, type BillingType } from "@/lib/billing/cycle";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/billing-scheduler")({
@@ -188,9 +188,6 @@ function RowGroup({ title, rows, today, tone }: { title: string; rows: Row[]; to
         {rows.map((r) => {
           const name = r.clients?.business_name || r.clients?.client_name || "Client";
           const step = intervalMonths(r.billing_type, r.custom_interval_months);
-          const periodStart = r.last_generated_date
-            ? (() => { const d = new Date(r.last_generated_date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()
-            : r.next_billing_date;
           const svcs = r.billing_schedule_services ?? [];
           const total = svcs.reduce((s, x) => {
             const iv = Number(x.interval_months ?? step);
@@ -225,7 +222,8 @@ function RowGroup({ title, rows, today, tone }: { title: string; rows: Row[]; to
                     const iv = Number(x.interval_months ?? step);
                     const rate = Number(x.price || 0);
                     const amount = x.unit === "one_time" ? rate : computeServiceAmount(rate, iv);
-                    const period = x.unit === "one_time" ? null : computeBillingPeriod(periodStart, iv);
+                    const period = x.unit === "one_time" ? null : computePriorBillingPeriod(r.next_billing_date, iv, r.last_generated_date);
+
                     return (
                       <div key={i} className="pl-2 text-xs">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">

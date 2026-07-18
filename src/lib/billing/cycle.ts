@@ -85,6 +85,33 @@ export function computeBillingPeriod(startISO: string, intervalMonths: number) {
   return { start: startISO, end, nextInvoiceDate: nextStart, months };
 }
 
+/**
+ * Backward-looking billing period: bill AFTER providing the service.
+ * Given next_billing_date (the day the next invoice is due), the period being
+ * billed is the interval that just ended:
+ *   end   = next_billing_date - 1 day
+ *   start = last_generated_date + 1 day (if set), else next_billing_date - interval months
+ */
+export function computePriorBillingPeriod(
+  nextBillingDate: string,
+  intervalMonths: number,
+  lastGeneratedDate?: string | null,
+) {
+  const months = Math.max(1, Number(intervalMonths || 1));
+  const end = subDays(nextBillingDate, 1);
+  const start = lastGeneratedDate
+    ? addDaysISO(lastGeneratedDate, 1)
+    : addMonths(nextBillingDate, -months);
+  return { start, end, nextInvoiceDate: nextBillingDate, months };
+}
+
+function addDaysISO(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+
 /** Invoice amount = monthly rate × interval months. */
 export function computeServiceAmount(monthlyRate: number, intervalMonths: number): number {
   return +(Number(monthlyRate || 0) * Math.max(1, Number(intervalMonths || 1))).toFixed(2);

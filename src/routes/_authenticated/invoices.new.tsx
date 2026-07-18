@@ -301,13 +301,26 @@ function NewInvoicePage() {
                   </div>
                 </div>
 
-                {/* Row 1: Service / Description */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Service / Description</Label>
-                  <Input
-                    placeholder="e.g. Social Media Management"
+                  <ServiceCombobox
                     value={it.description}
-                    onChange={(e) => setItems(items.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                    companyId={companyId}
+                    clientId={clientId}
+                    placeholder="e.g. Social Media Management"
+                    onChange={(v) => setItems(items.map((x, i) => i === idx ? { ...x, description: v } : x))}
+                    onSelect={(svc) => setItems(items.map((x, i) => {
+                      if (i !== idx) return x;
+                      return {
+                        ...x,
+                        description: svc.name,
+                        rate: svc.default_price != null ? Number(svc.default_price) : x.rate,
+                        gstRate: gstEnabled && svc.default_gst_rate != null ? Number(svc.default_gst_rate) : x.gstRate,
+                        quantity: (x.oneTime || !x.fromDate || !x.toDate)
+                          ? (svc.default_quantity != null ? Number(svc.default_quantity) : (x.quantity === "" ? 1 : x.quantity))
+                          : x.quantity,
+                      };
+                    }))}
                   />
                 </div>
 

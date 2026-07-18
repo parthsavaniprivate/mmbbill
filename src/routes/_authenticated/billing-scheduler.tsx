@@ -77,11 +77,21 @@ function BillingSchedulerPage() {
   const analytics = useMemo(() => {
     const thisMonth = today.slice(0, 7);
     const generatedThisMonth = invoices.filter((i) => i.source_schedule_id && i.invoice_date.slice(0, 7) === thisMonth).length;
-    const rowTotal = (r: Row) => (r.billing_schedule_services ?? []).reduce((s, x) => s + Number(x.price || 0), 0);
+    const rowTotal = (r: Row) => {
+      const step = intervalMonths(r.billing_type, r.custom_interval_months);
+      return (r.billing_schedule_services ?? []).reduce((s, x) => {
+        const iv = Number(x.interval_months ?? step);
+        return s + (x.unit === "one_time" ? Number(x.price || 0) : computeServiceAmount(Number(x.price || 0), iv));
+      }, 0);
+    };
     const upcoming30 = [...buckets.dueToday, ...buckets.week, ...buckets.month].reduce((s, r) => s + rowTotal(r), 0);
     const mrr = rows.reduce((s, r) => {
-      const step = intervalMonths(r.billing_type, r.custom_interval_months);
-      return s + rowTotal(r) / step;
+      return s + (r.billing_schedule_services ?? []).reduce((sum, x) => {
+        const p = Number(x.price || 0);
+        if (x.unit === "one_time") return sum;
+        if (x.unit === "year") return sum + p / 12;
+        return sum + p;
+      }, 0);
     }, 0);
     return {
       generated: generatedThisMonth,

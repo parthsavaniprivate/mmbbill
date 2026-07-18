@@ -121,10 +121,12 @@ export function computeBehaviour(
     : 0;
 
   // Simple 3-tier classification.
+  // Currently-overdue unpaid invoices also downgrade behaviour — a client
+  // with an overdue bill should never show as Excellent.
   let behaviour: PaymentBehaviour = "excellent";
   if (avgDelayDays > 45 || worstDelayDays > 45) {
     behaviour = "high_risk";
-  } else if (avgDelayDays > 30) {
+  } else if (avgDelayDays > 30 || overdueCount > 0) {
     behaviour = "average";
   } else {
     behaviour = "excellent";

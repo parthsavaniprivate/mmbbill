@@ -17,6 +17,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { SendReminderDialog, MarkAsPaidButton } from "@/components/invoices/SendReminderDialog";
 import { daysBetween } from "@/lib/reminders";
 import { toast } from "sonner";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourFilter, BehaviourPill } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
 
 type Status = Database["public"]["Enums"]["invoice_status"];
 type ClientLite = { client_name: string; business_name: string | null; whatsapp: string | null; mobile: string | null };
@@ -58,6 +61,23 @@ function InvoicesPage() {
   const [to, setTo] = useState("");
   const [reminderFor, setReminderFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
+
+  const { data: clientOverrides = {} } = useQuery({
+    queryKey: ["client-behaviour-overrides"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clients").select("id, payment_behaviour_override");
+      const map: Record<string, PaymentBehaviour | null> = {};
+      (data ?? []).forEach((c: { id: string; payment_behaviour_override: string | null }) => {
+        map[c.id] = (c.payment_behaviour_override as PaymentBehaviour | null) ?? null;
+      });
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
+  const behaviourCompanyId = !isAll ? selected : null;
+  const behaviours = useClientBehaviours(behaviourCompanyId, clientOverrides);
 
   const del = useMutation({
     mutationFn: async (id: string) => {
@@ -120,6 +140,10 @@ function InvoicesPage() {
     if (status !== "all" && i.status !== status) return false;
     if (range && i.invoice_date) {
       if (i.invoice_date < range.from || i.invoice_date > range.to) return false;
+    }
+    if (behaviourFilter !== "all") {
+      const b = i.client_id ? behaviours.get(i.client_id)?.behaviour : undefined;
+      if (b !== behaviourFilter) return false;
     }
     if (search) {
       const cl = i.clients as ClientLite | null;
@@ -222,6 +246,7 @@ function InvoicesPage() {
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
           </>
         )}
+        <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
       </div>
 
       <Card className="shadow-card">
@@ -251,7 +276,12 @@ function InvoicesPage() {
                       <div className="flex items-start justify-between gap-2 min-w-0">
                         <div className="min-w-0 flex-1">
                           <Link to="/invoices/$id" params={{ id: i.id }} className="font-semibold text-sm hover:underline block truncate">{i.invoice_number}</Link>
-                          <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">{cl?.business_name || cl?.client_name}</p>
+                            {i.client_id && behaviours.get(i.client_id) && (
+                              <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[9px] py-0 px-1.5 shrink-0" />
+                            )}
+                          </div>
                         </div>
                         <Badge className={`${STATUS_COLORS[i.status]} shrink-0 text-[10px]`} variant="outline">{i.status.replace("_", " ")}</Badge>
                       </div>
@@ -349,7 +379,14 @@ function InvoicesPage() {
                         <TableCell>
                           <Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:underline">{i.invoice_number}</Link>
                         </TableCell>
-                        <TableCell>{cl?.business_name || cl?.client_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{cl?.business_name || cl?.client_name}</span>
+                            {i.client_id && behaviours.get(i.client_id) && (
+                              <BehaviourPill short behaviour={behaviours.get(i.client_id)!.behaviour} className="text-[10px] py-0 px-1.5" />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-sm">{i.invoice_date ? formatDate(i.invoice_date) : "—"}</TableCell>
                         <TableCell className="text-sm">
                           {pending <= 0 ? "—" : (i.due_date ? formatDate(i.due_date) : "—")}

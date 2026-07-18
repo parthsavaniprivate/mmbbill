@@ -18,6 +18,10 @@ import { Plus, MessageCircle, Phone, Mail, ChevronRight, Building2, Trash2, Uplo
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { ClientLogo, fileToLogoDataUrl } from "@/components/clients/ClientLogo";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourPill, BehaviourFilter } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
+import { useMemo } from "react";
 
 type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Status = Database["public"]["Enums"]["client_status"];
@@ -51,6 +55,7 @@ function ClientsPage() {
   
   const [search, setSearch] = useState(q);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
 
@@ -63,9 +68,21 @@ function ClientsPage() {
     },
   });
 
+  const overrides = useMemo(() => {
+    const m: Record<string, PaymentBehaviour | null> = {};
+    for (const c of clients) {
+      const v = (c as unknown as { payment_behaviour_override?: PaymentBehaviour | null }).payment_behaviour_override ?? null;
+      m[c.id] = v;
+    }
+    return m;
+  }, [clients]);
+  // Company scope: when "All", pass null to compute across all invoices/payments.
+  const behaviours = useClientBehaviours(isAll ? null : selected, overrides);
+
   const filtered = clients.filter((c) => {
     if (!isAll && c.company_id !== selected) return false;
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (behaviourFilter !== "all" && behaviours.get(c.id)?.behaviour !== behaviourFilter) return false;
     if (search) {
       const s = search.toLowerCase();
       return (c.client_name + " " + (c.business_name || "") + " " + (c.mobile || "") + " " + (c.email || ""))
@@ -103,6 +120,7 @@ function ClientsPage() {
             <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
+        <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
       </div>
 
       {isLoading ? (
@@ -138,6 +156,10 @@ function ClientsPage() {
 
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <Badge className={STATUS_COLORS[c.status]} variant="outline">{c.status.replace("_", " ")}</Badge>
+                      {(() => {
+                        const b = behaviours.get(c.id)?.behaviour;
+                        return b ? <BehaviourPill behaviour={b} short /> : null;
+                      })()}
                       {co?.name && (
                         <Badge variant="outline" className="font-normal gap-1 max-w-full">
                           <Building2 className="w-3 h-3 shrink-0" /><span className="truncate">{co.name}</span>

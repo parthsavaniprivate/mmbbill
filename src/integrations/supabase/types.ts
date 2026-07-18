@@ -278,6 +278,7 @@ export type Database = {
           longitude: number | null
           mobile: string | null
           notes: string | null
+          payment_behaviour_override: string | null
           service_charge_amount: number
           service_charge_type: string
           status: Database["public"]["Enums"]["client_status"]
@@ -306,6 +307,7 @@ export type Database = {
           longitude?: number | null
           mobile?: string | null
           notes?: string | null
+          payment_behaviour_override?: string | null
           service_charge_amount?: number
           service_charge_type?: string
           status?: Database["public"]["Enums"]["client_status"]
@@ -334,6 +336,7 @@ export type Database = {
           longitude?: number | null
           mobile?: string | null
           notes?: string | null
+          payment_behaviour_override?: string | null
           service_charge_amount?: number
           service_charge_type?: string
           status?: Database["public"]["Enums"]["client_status"]

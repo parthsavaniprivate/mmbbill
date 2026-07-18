@@ -15,6 +15,9 @@ import { ServiceCombobox } from "@/components/billing/ServiceCombobox";
 import { inr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useClientBehaviours } from "@/hooks/use-client-behaviours";
+import { BehaviourDot, BehaviourFilter, BehaviourInfoCard } from "@/components/clients/BehaviourBadge";
+import type { PaymentBehaviour } from "@/lib/payment-behaviour";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
   validateSearch: (s: Record<string, unknown>): { client?: string; schedule?: string } => ({
@@ -60,13 +63,25 @@ function NewInvoicePage() {
     enabled: !!companyId,
     queryFn: async () => {
       const { data, error } = await supabase.from("clients")
-        .select("id, client_name, business_name, company_id")
+        .select("id, client_name, business_name, company_id, payment_behaviour_override")
         .eq("company_id", companyId)
         .order("business_name", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Array<{
+        id: string; client_name: string; business_name: string | null; company_id: string;
+        payment_behaviour_override: PaymentBehaviour | null;
+      }>;
     },
   });
+
+  // Payment behaviour map (auto-calculated + manual overrides).
+  const overrides = useMemo(() => {
+    const m: Record<string, PaymentBehaviour | null> = {};
+    for (const c of clients) m[c.id] = c.payment_behaviour_override ?? null;
+    return m;
+  }, [clients]);
+  const behaviours = useClientBehaviours(companyId || null, overrides);
+  const [behaviourFilter, setBehaviourFilter] = useState<PaymentBehaviour | "all">("all");
 
   const { data: companyMeta } = useQuery({
     queryKey: ["company-meta", companyId],
@@ -126,7 +141,10 @@ function NewInvoicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedule]);
 
-  const filteredClients = clients.filter((c) => c.company_id === companyId);
+  const filteredClients = clients
+    .filter((c) => c.company_id === companyId)
+    .filter((c) => behaviourFilter === "all" || behaviours.get(c.id)?.behaviour === behaviourFilter);
+  const selectedBehaviour = clientId ? behaviours.get(clientId) : undefined;
   const gstEnabled = companyMeta?.gst_enabled ?? true;
   const defaultGst = Number(companyMeta?.default_gst_rate ?? 18);
 
@@ -247,16 +265,52 @@ function NewInvoicePage() {
           </Select>
         </div>
         <div className="space-y-1.5"><Label>Client</Label>
-          <Select value={clientId} onValueChange={setClientId}>
-            <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
-            <SelectContent>
-              {filteredClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.business_name || c.client_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <div className="flex-1 min-w-0">
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client">
+                    {clientId ? (() => {
+                      const c = filteredClients.find((x) => x.id === clientId) ?? clients.find((x) => x.id === clientId);
+                      const b = behaviours.get(clientId)?.behaviour;
+                      return (
+                        <span className="flex items-center gap-2 min-w-0">
+                          {b && <BehaviourDot behaviour={b} />}
+                          <span className="truncate">{c?.business_name || c?.client_name}</span>
+                        </span>
+                      );
+                    })() : null}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredClients.map((c) => {
+                    const b = behaviours.get(c.id)?.behaviour;
+                    return (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="flex items-center gap-2">
+                          {b && <BehaviourDot behaviour={b} />}
+                          {c.business_name || c.client_name}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                  {filteredClients.length === 0 && (
+                    <div className="px-2 py-4 text-xs text-muted-foreground text-center">
+                      No clients match this filter.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <BehaviourFilter value={behaviourFilter} onChange={setBehaviourFilter} />
+          </div>
         </div>
         <div className="space-y-1.5"><Label>Invoice Date</Label><Input type="date" value={date} onChange={(e) => { setDate(e.target.value); if (e.target.value) setDueDate(addMonth(e.target.value)); }} /></div>
         <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
       </CardContent></Card>
+      {clientId && selectedBehaviour && (
+        <BehaviourInfoCard stats={selectedBehaviour} />
+      )}
       {clientId && clientSchedule?.next_billing_date && (
         <BillingWarningCard
           nextBillingDate={clientSchedule.next_billing_date}

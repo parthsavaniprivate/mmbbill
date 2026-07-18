@@ -17,6 +17,7 @@ import {
 import { inr, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SendReminderDialog } from "@/components/invoices/SendReminderDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Invoice = {
   id: string;
@@ -119,7 +120,6 @@ function parseItemPeriod(desc: string | null | undefined): { from: Date; to: Dat
 
 
 const ROW_H = 56;
-const CLIENT_COL = 240;
 
 type Props = {
   invoices: Invoice[];
@@ -134,6 +134,9 @@ type Props = {
 
 export function InvoiceTimeline({ invoices, clients, companies, payments, from: _from, to, selectedCompany, isAll }: Props) {
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
+  const CLIENT_COL = isMobile ? 140 : 240;
+  const tickWidth = isMobile ? 84 : 110;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
@@ -230,7 +233,7 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   );
   const ticks: Date[] = [];
   for (let i = 0; i < monthCount; i++) ticks.push(addUnit(gStart, granularity, i));
-  const tickWidth = 110;
+  // tickWidth defined above based on viewport
   const totalWidth = ticks.length * tickWidth;
   const totalMs = Math.max(1, +addUnit(gStart, granularity, ticks.length) - +gStart);
   const spanDays = Math.max(1, Math.round(totalMs / 86400000));
@@ -345,10 +348,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
   const bodyHeight = Math.max(240, clientRows.reduce((sum, r) => sum + rowHeightOf(r.laneCount), 0) + 8);
 
   return (
-    <Card className="overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">
+    <Card className="min-w-0 max-w-full overflow-hidden border-border/60 bg-gradient-to-b from-card via-card to-card/60 shadow-xl backdrop-blur">
       {/* HEADER */}
-      <div className="border-b border-border/60 bg-gradient-to-r from-card/80 via-card/60 to-card/80 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="border-b border-border/60 bg-gradient-to-r from-card/80 via-card/60 to-card/80 p-3 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/20">
@@ -394,10 +397,10 @@ export function InvoiceTimeline({ invoices, clients, companies, payments, from: 
           <TooltipProvider delayDuration={120}>
             <div
               ref={scrollRef}
-              className="timeline-scroll relative overflow-auto border-t border-border/60 bg-background/30"
-              style={{ maxHeight: 620 }}
+              className="timeline-scroll relative w-full overflow-auto overscroll-contain border-t border-border/60 bg-background/30"
+              style={{ maxHeight: isMobile ? 480 : 620, WebkitOverflowScrolling: "touch" }}
             >
-              <div style={{ width: CLIENT_COL + totalWidth, minWidth: "100%" }}>
+              <div style={{ width: CLIENT_COL + totalWidth }}>
                 {/* Sticky header */}
                 <div className="sticky top-0 z-20 flex border-b border-border/60 bg-card/85 backdrop-blur-md">
                   <div

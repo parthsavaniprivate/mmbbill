@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/lib/company";
@@ -38,6 +38,7 @@ function NewInvoicePage() {
   const { client: presetClient, schedule: scheduleId } = Route.useSearch();
   const navigate = useNavigate();
   const { companies, selected, isAll } = useCompany();
+  const qc = useQueryClient();
 
   const [companyId, setCompanyId] = useState(isAll ? companies[0]?.id ?? "" : selected);
   const [clientId, setClientId] = useState(presetClient);
@@ -200,7 +201,13 @@ function NewInvoicePage() {
 
       return inv.id;
     },
-    onSuccess: (id) => { toast.success("Invoice created"); navigate({ to: "/invoices/$id", params: { id } }); },
+    onSuccess: (id) => {
+      toast.success("Invoice created");
+      qc.invalidateQueries({ queryKey: ["billing-schedules-all"] });
+      qc.invalidateQueries({ queryKey: ["billing-schedule"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-data"] });
+      navigate({ to: "/invoices/$id", params: { id } });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 

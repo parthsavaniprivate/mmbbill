@@ -414,7 +414,7 @@ function ExpensesPage() {
                     <TableRow key={e.id}>
                       <TableCell>{formatDate(e.expense_date)}</TableCell>
                       <TableCell><Badge variant="outline">{CATEGORIES.find((c) => c.value === e.category)?.label}</Badge></TableCell>
-                      <TableCell>{e.vendor || "—"}</TableCell>
+                      <TableCell>{e.title ? <span className="font-medium">{e.title}</span> : (e.vendor || "—")}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{companies.find((c) => c.id === e.company_id)?.name}</TableCell>
                       <TableCell className="text-right font-medium">{inr(Number(e.amount))}</TableCell>
                       <TableCell>

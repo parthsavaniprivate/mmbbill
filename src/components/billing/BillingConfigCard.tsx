@@ -67,6 +67,7 @@ export function BillingConfigCard({ clientId, companyId }: { clientId: string; c
 
   useEffect(() => {
     if (schedule && existingServices.length) {
+      const fallback = scheduleIntervalMonths(schedule.billing_type as BillingType, schedule.custom_interval_months);
       setServices(
         existingServices.map((s) => ({
           id: s.id,
@@ -74,6 +75,7 @@ export function BillingConfigCard({ clientId, companyId }: { clientId: string; c
           price: Number(s.price),
           gst_rate: s.gst_rate != null ? Number(s.gst_rate) : null,
           unit: s.unit ?? "month",
+          interval_months: (s as { interval_months?: number | null }).interval_months ?? fallback,
         })),
       );
     }
@@ -87,13 +89,15 @@ export function BillingConfigCard({ clientId, companyId }: { clientId: string; c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, billingType, customMonths]);
 
-  const monthlyValue = useMemo(() => {
+  const scheduleInterval = scheduleIntervalMonths(billingType, customMonths);
+
+  const invoiceTotal = useMemo(() => {
     return services.reduce((s, x) => {
       const p = Number(x.price || 0);
-      if (x.unit === "year") return s + p / 12;
-      return s + p;
+      const iv = Number(x.interval_months || scheduleInterval || 1);
+      return s + (x.unit === "one_time" ? p : computeServiceAmount(p, iv));
     }, 0);
-  }, [services]);
+  }, [services, scheduleInterval]);
 
   const save = useMutation({
     mutationFn: async () => {

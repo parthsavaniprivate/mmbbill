@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useCompany, ALL } from "@/lib/company";
 import { useTheme } from "@/lib/theme";
 import { ShortcutsProvider, useShortcuts } from "@/lib/shortcuts";
+import { PasscodeGate } from "@/components/PasscodeGate";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LogOut, Moon, Sun, Search, Home, Keyboard } from "lucide-react";
@@ -41,6 +42,7 @@ function AuthedLayout() {
   }
 
   return (
+    <PasscodeGate>
     <ShortcutsProvider>
     <div className="min-h-screen flex flex-col w-full bg-background">
       <header className="h-14 border-b flex items-center gap-3 px-4 sticky top-0 z-30 bg-background/80 backdrop-blur-xl no-print">
@@ -89,6 +91,7 @@ function AuthedLayout() {
       </main>
     </div>
     </ShortcutsProvider>
+    </PasscodeGate>
   );
 }
 

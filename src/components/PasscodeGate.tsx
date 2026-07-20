@@ -52,12 +52,6 @@ export function PasscodeGate({ children }: { children: ReactNode }) {
         </div>
         <div>
           <h1 className="text-xl font-semibold">Enter passcode</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            The passcode is the current time in 24-hour format (HHMM).
-          </p>
-          <p className="mt-3 font-mono text-3xl tracking-widest tabular-nums">
-            {hh}:{mm}<span className="text-muted-foreground text-lg">:{ss}</span>
-          </p>
         </div>
         <div className={`flex justify-center ${error ? "animate-pulse" : ""}`}>
           <InputOTP maxLength={4} value={value} onChange={setValue} autoFocus>

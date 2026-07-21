@@ -134,7 +134,7 @@ function ExpensesPage() {
       const { error } = await supabase.from("expenses").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries({ queryKey: ["expenses"] }); },
+    onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries({ queryKey: ["expenses"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); },
   });
 
   const delRecurring = useMutation({
@@ -142,7 +142,7 @@ function ExpensesPage() {
       const { error } = await supabase.from("recurring_expenses").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Removed"); qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); },
+    onSuccess: () => { toast.success("Removed"); qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); },
   });
 
   const toggleActive = useMutation({
@@ -150,7 +150,7 @@ function ExpensesPage() {
       const { error } = await supabase.from("recurring_expenses").update({ is_active: value }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recurring_expenses"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); },
   });
 
   const runGenerator = useMutation({
@@ -163,6 +163,7 @@ function ExpensesPage() {
       toast.success(`Generated ${n ?? 0} due expense${n === 1 ? "" : "s"}`);
       qc.invalidateQueries({ queryKey: ["expenses"] });
       qc.invalidateQueries({ queryKey: ["recurring_expenses"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-data"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

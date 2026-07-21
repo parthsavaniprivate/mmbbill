@@ -368,7 +368,7 @@ function ExpensesPage() {
               <VariableForm
                 key={editingVar?.id ?? "new"}
                 initial={editingVar}
-                onClose={() => { setOpenVar(false); setEditingVar(null); qc.invalidateQueries({ queryKey: ["expenses"] }); }}
+                onClose={() => { setOpenVar(false); setEditingVar(null); qc.invalidateQueries({ queryKey: ["expenses"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); }}
               />
             </Dialog>
           </div>

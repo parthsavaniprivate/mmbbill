@@ -235,7 +235,7 @@ function ExpensesPage() {
               <RecurringForm
                 key={editingFix?.id ?? "new"}
                 initial={editingFix}
-                onClose={() => { setOpenFix(false); setEditingFix(null); qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); }}
+                onClose={() => { setOpenFix(false); setEditingFix(null); qc.invalidateQueries({ queryKey: ["recurring_expenses"] }); qc.invalidateQueries({ queryKey: ["dashboard-data"] }); }}
               />
             </Dialog>
           </CardHeader>
